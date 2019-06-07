@@ -237,6 +237,7 @@ class LndClient extends SwapClient {
       assert.fail('swap deal must have a destination to send payment');
     }
     request.setDestString(deal.destination!);
+    this.logger.info('sendpayment with destination to:', deal.destination);
     let sendPaymentResponse: lndrpc.SendResponse;
     try {
       sendPaymentResponse = await this.sendPaymentSync(request);
