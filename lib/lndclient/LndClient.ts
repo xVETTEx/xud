@@ -226,7 +226,7 @@ class LndClient extends SwapClient {
     if (deal.makerToTakerRoutes && deal.role === SwapRole.Maker) {
       const request = new lndrpc.SendRequest();
       request.setPaymentHashString(deal.rHash);
-      request.setAmt(deal.makerAmount);
+      request.setAmt(deal.takerAmount);
       if (!deal.destination) {
         throw new Error('no destination');
       }
