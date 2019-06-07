@@ -222,64 +222,33 @@ class LndClient extends SwapClient {
 
   public sendPayment = async (deal: SwapDeal): Promise<string> => {
     assert(deal.state === SwapState.Active);
-
-    if (deal.makerToTakerRoutes && deal.role === SwapRole.Maker) {
-      const request = new lndrpc.SendRequest();
-      request.setPaymentHashString(deal.rHash);
-      request.setAmt(deal.takerAmount);
-      if (!deal.destination) {
-        throw new Error('no destination');
-      }
-      request.setDestString(deal.destination);
-      request.setFinalCltvDelta(this.cltvDelta);
-
-      try {
-        this.logger.info(`executing new snnedPaymentSync: ${new Date().getTime()}`);
-        const sendToRouteResponse = await this.sendPaymentSync(request);
-        const sendPaymentError = sendToRouteResponse.getPaymentError();
-        if (sendPaymentError) {
-          this.logger.error(`new snnedPaymentSync failed with payment error: ${sendPaymentError}`);
-          throw new Error(sendPaymentError);
-        }
-
-        return base64ToHex(sendToRouteResponse.getPaymentPreimage_asB64());
-      } catch (err) {
-        this.logger.error(`got exception from sendToRouteSync: ${JSON.stringify(request.toObject())}`, err);
-        throw err;
-      }
-    } else if (deal.destination) {
-      const request = new lndrpc.SendRequest();
-      request.setDestString(deal.destination);
-      request.setPaymentHashString(deal.rHash);
-
-      if (deal.role === SwapRole.Taker) {
-        // we are the taker paying the maker
-        request.setFinalCltvDelta(deal.makerCltvDelta!);
-        request.setAmt(deal.makerAmount);
-      } else {
-        // we are the maker paying the taker
-        request.setFinalCltvDelta(deal.takerCltvDelta);
-        request.setAmt(deal.takerAmount);
-      }
-
-      try {
-        this.logger.info(`executing sendPaymentSync: ${new Date().getTime()}`);
-        const sendPaymentResponse = await this.sendPaymentSync(request);
-        const sendPaymentError = sendPaymentResponse.getPaymentError();
-        if (sendPaymentError) {
-          this.logger.error(`sendPaymentSync failed with payment error: ${sendPaymentError}`);
-          throw new Error(sendPaymentError);
-        }
-
-        return base64ToHex(sendPaymentResponse.getPaymentPreimage_asB64());
-      } catch (err) {
-        this.logger.error(`got exception from sendPaymentSync: ${JSON.stringify(request.toObject())}`, err);
-        throw err;
-      }
+    const request = new lndrpc.SendRequest();
+    request.setPaymentHashString(deal.rHash);
+    if (deal.role === SwapRole.Taker) {
+      // we are the taker paying the maker
+      request.setFinalCltvDelta(deal.makerCltvDelta!);
+      request.setAmt(deal.makerAmount);
     } else {
-      assert.fail('swap deal must have a route or destination to send payment');
-      return '';
+      // we are the maker paying the taker
+      request.setFinalCltvDelta(deal.takerCltvDelta);
+      request.setAmt(deal.takerAmount);
     }
+    if (!deal.destination) {
+      assert.fail('swap deal must have a destination to send payment');
+    }
+    request.setDestString(deal.destination!);
+    let sendPaymentResponse: lndrpc.SendResponse;
+    try {
+      sendPaymentResponse = await this.sendPaymentSync(request);
+    } catch (err) {
+      this.logger.error('got exception from sendPaymentSync', err.message);
+      throw err;
+    }
+    const paymentError = sendPaymentResponse.getPaymentError();
+    if (paymentError) {
+      throw new Error(paymentError);
+    }
+    return base64ToHex(sendPaymentResponse.getPaymentPreimage_asB64());
   }
 
   /**
