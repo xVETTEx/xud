@@ -151,7 +151,7 @@ class Swaps extends EventEmitter {
     this.swapClientManager.swapClients.forEach((swapClient, currency) => {
       swapClient.on('htlcAccepted', async (rHash, amount) => {
         try {
-          this.logger.info('htlcAccepted! resolving hash');
+          this.logger.info(`htlcAccepted! resolving hash for rHash: ${rHash} amount: ${amount} and currency ${currency}`);
           const rPreimage = await this.resolveHash(rHash, amount, currency);
           await swapClient.settleInvoice(rHash, rPreimage);
         } catch (err) {
@@ -753,6 +753,7 @@ class Swaps extends EventEmitter {
         throw new Error(`Got exception from sendPaymentSync ${err.message}`);
       }
     } else {
+      this.logger.debug('Executing taker code to resolve hash');
       // If we are here we are the taker
       assert(deal.rPreimage, 'preimage must be known if we are the taker');
       assert(htlcCurrency === undefined || htlcCurrency === deal.takerCurrency, 'incoming htlc does not match expected deal currency');
