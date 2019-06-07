@@ -224,15 +224,21 @@ class LndClient extends SwapClient {
     assert(deal.state === SwapState.Active);
 
     if (deal.makerToTakerRoutes && deal.role === SwapRole.Maker) {
-      const request = new lndrpc.SendToRouteRequest();
-      request.setRoutesList(deal.makerToTakerRoutes as lndrpc.Route[]);
+      const request = new lndrpc.SendRequest();
       request.setPaymentHashString(deal.rHash);
+      request.setAmt(deal.makerAmount);
+      if (!deal.destination) {
+        throw new Error('no destination');
+      }
+      request.setDestString(deal.destination);
+      request.setFinalCltvDelta(this.cltvDelta);
 
       try {
-        const sendToRouteResponse = await this.sendToRouteSync(request);
+        this.logger.info(`executing new snnedPaymentSync: ${new Date().getTime()}`);
+        const sendToRouteResponse = await this.sendPaymentSync(request);
         const sendPaymentError = sendToRouteResponse.getPaymentError();
         if (sendPaymentError) {
-          this.logger.error(`sendToRouteSync failed with payment error: ${sendPaymentError}`);
+          this.logger.error(`new snnedPaymentSync failed with payment error: ${sendPaymentError}`);
           throw new Error(sendPaymentError);
         }
 
@@ -257,6 +263,7 @@ class LndClient extends SwapClient {
       }
 
       try {
+        this.logger.info(`executing sendPaymentSync: ${new Date().getTime()}`);
         const sendPaymentResponse = await this.sendPaymentSync(request);
         const sendPaymentError = sendPaymentResponse.getPaymentError();
         if (sendPaymentError) {
@@ -375,9 +382,11 @@ class LndClient extends SwapClient {
   /**
    * Sends amount to destination using pre-defined routes.
    */
+    /*
   private sendToRouteSync = (request: lndrpc.SendToRouteRequest): Promise<lndrpc.SendResponse> => {
     return this.unaryCall<lndrpc.SendToRouteRequest, lndrpc.SendResponse>('sendToRouteSync', request);
   }
+     */
 
   public addInvoice = async (rHash: string, amount: number) => {
     const addHoldInvoiceRequest = new lndinvoices.AddHoldInvoiceRequest();
@@ -385,8 +394,8 @@ class LndClient extends SwapClient {
     addHoldInvoiceRequest.setValue(amount);
     addHoldInvoiceRequest.setCltvExpiry(this.cltvDelta); // TODO: use peer's cltv delta
     await this.addHoldInvoice(addHoldInvoiceRequest);
-    this.logger.debug(`added invoice of ${amount} for ${rHash}`);
-    this.subscribeSingleInvoice(rHash);
+    this.logger.debug(`added invoice of ${amount} for ${rHash} unixTime ${new Date().getTime()}`);
+    await this.subscribeSingleInvoice(rHash);
   }
 
   public settleInvoice = async (rHash: string, rPreimage: string) => {
@@ -406,7 +415,7 @@ class LndClient extends SwapClient {
       const cancelInvoiceRequest = new lndinvoices.CancelInvoiceMsg();
       cancelInvoiceRequest.setPaymentHash(hexToUint8Array(rHash));
       await this.cancelInvoice(cancelInvoiceRequest);
-      this.logger.debug(`canceled invoice for ${rHash}`);
+      this.logger.debug(`canceled invoice for ${rHash} ${new Date().getTime()}`);
       invoiceSubscription.cancel();
     }
   }
@@ -424,22 +433,29 @@ class LndClient extends SwapClient {
   }
 
   private subscribeSingleInvoice = (rHash: string) => {
-    const paymentHash = new lndrpc.PaymentHash();
-    // TODO: use RHashStr when bug fixed in lnd - https://github.com/lightningnetwork/lnd/pull/3019
-    paymentHash.setRHash(hexToUint8Array(rHash));
-    const invoiceSubscription = this.invoices.subscribeSingleInvoice(paymentHash, this.meta);
-    const deleteInvoiceSubscription = () => {
-      invoiceSubscription.removeAllListeners();
-      this.invoiceSubscriptions.delete(rHash);
-      this.logger.debug(`deleted invoice subscription for ${rHash}`);
-    };
-    invoiceSubscription.on('data', (invoice: lndrpc.Invoice) => {
-      if (invoice.getState() === lndrpc.Invoice.InvoiceState.ACCEPTED) {
-        // we have accepted an htlc for this invoice
-        this.emit('htlcAccepted', rHash, invoice.getValue());
-      }
-    }).on('end', deleteInvoiceSubscription).on('error', deleteInvoiceSubscription);
-    this.invoiceSubscriptions.set(rHash, invoiceSubscription);
+    return new Promise((resolve) => {
+      const paymentHash = new lndrpc.PaymentHash();
+      // TODO: use RHashStr when bug fixed in lnd - https://github.com/lightningnetwork/lnd/pull/3019
+      paymentHash.setRHash(hexToUint8Array(rHash));
+      const invoiceSubscription = this.invoices.subscribeSingleInvoice(paymentHash, this.meta);
+      const deleteInvoiceSubscription = () => {
+        invoiceSubscription.removeAllListeners();
+        this.invoiceSubscriptions.delete(rHash);
+        this.logger.debug(`deleted invoice subscription for ${rHash}`);
+      };
+      invoiceSubscription.on('data', async (invoice: lndrpc.Invoice) => {
+        if (invoice.getState() === lndrpc.Invoice.InvoiceState.OPEN) {
+          this.logger.debug(`invoice is now in a state of OPEN -> resolving amount ${invoice.getValue()}`);
+          setTimeout(resolve, 2000);
+        }
+        if (invoice.getState() === lndrpc.Invoice.InvoiceState.ACCEPTED) {
+          // we have accepted an htlc for this invoice
+          this.logger.debug(`emttting htlcAccepted with rHash ${rHash} and amount ${invoice.getValue()}`);
+          this.emit('htlcAccepted', rHash, invoice.getValue());
+        }
+      }).on('end', deleteInvoiceSubscription).on('error', deleteInvoiceSubscription);
+      this.invoiceSubscriptions.set(rHash, invoiceSubscription);
+    });
   }
 
   /**

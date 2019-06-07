@@ -151,6 +151,7 @@ class Swaps extends EventEmitter {
     this.swapClientManager.swapClients.forEach((swapClient, currency) => {
       swapClient.on('htlcAccepted', async (rHash, amount) => {
         try {
+          this.logger.info('htlcAccepted! resolving hash');
           const rPreimage = await this.resolveHash(rHash, amount, currency);
           await swapClient.settleInvoice(rHash, rPreimage);
         } catch (err) {
@@ -543,6 +544,7 @@ class Swaps extends EventEmitter {
       quantity: requestBody.proposedQuantity,
     };
 
+    this.logger.info('sending SwapAcceptedPacket');
     await peer.sendPacket(new packets.SwapAcceptedPacket(responseBody, requestPacket.header.id));
     this.setDealPhase(deal, SwapPhase.SwapAgreed);
     return true;
@@ -553,6 +555,7 @@ class Swaps extends EventEmitter {
    * accepted, initiates the swap.
    */
   private handleSwapAccepted = async (responsePacket: packets.SwapAcceptedPacket, peer: Peer) => {
+    this.logger.info('SWAPACCEPTED HANDLE IT MAN! HANDLE IT!');
     assert(responsePacket.body, 'SwapAcceptedPacket does not contain a body');
     const { quantity, rHash, makerCltvDelta } = responsePacket.body!;
     const deal = this.getDeal(rHash);
@@ -612,6 +615,7 @@ class Swaps extends EventEmitter {
       return;
     }
 
+    this.logger.debug('attempt payment within handleSwapAccepted');
     try {
       this.setDealPhase(deal, SwapPhase.SendingAmount);
       await makerSwapClient.sendPayment(deal);
