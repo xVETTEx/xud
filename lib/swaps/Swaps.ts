@@ -563,6 +563,16 @@ class Swaps extends EventEmitter {
    * accepted, initiates the swap.
    */
   private handleSwapAccepted = async (responsePacket: packets.SwapAcceptedPacket, peer: Peer) => {
+    if (process.env.ADVERSARY === 'TAKER_STALLING_SWAPACCEPTED') {
+      this.logger.info('ADVERSARY: TAKER_STALLING_SWAPACCEPTED');
+      return;
+    }
+
+    if (process.env.ADVERSARY === 'TAKER_OFFLINE_SWAPACCEPTED') {
+      this.logger.info('ADVERSARY: TAKER_OFFLINE_SWAPACCEPTED');
+      process.exit();
+    }
+
     assert(responsePacket.body, 'SwapAcceptedPacket does not contain a body');
     const { quantity, rHash, makerCltvDelta } = responsePacket.body!;
     const deal = this.getDeal(rHash);
