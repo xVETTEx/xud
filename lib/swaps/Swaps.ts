@@ -116,9 +116,14 @@ class Swaps extends EventEmitter {
 
   public init = async () => {
     // update pool with lnd pubkeys and raiden address
-    this.swapClientManager.getLndClientsMap().forEach((lndClient) => {
-      if (lndClient.pubKey && lndClient.chain) {
-        this.pool.updateLndState(lndClient.currency, lndClient.pubKey, lndClient.chain);
+    this.swapClientManager.getLndClientsMap().forEach(({ pubKey, chain, currency, uris }) => {
+      if (pubKey && chain) {
+        this.pool.updateLndState({
+          currency,
+          pubKey,
+          chain,
+          uris,
+        });
       }
     });
     if (this.swapClientManager.raidenClient.address) {

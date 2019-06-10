@@ -117,6 +117,10 @@ export class NodeState extends jspb.Message {
     clearTokenIdentifiersMap(): void;
 
 
+    getLndUrisMap(): jspb.Map<string, string>;
+    clearLndUrisMap(): void;
+
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): NodeState.AsObject;
     static toObject(includeInstance: boolean, msg: NodeState): NodeState.AsObject;
@@ -136,6 +140,8 @@ export namespace NodeState {
         lndPubKeysMap: Array<[string, string]>,
 
         tokenIdentifiersMap: Array<[string, string]>,
+
+        lndUrisMap: Array<[string, string]>,
     }
 }
 

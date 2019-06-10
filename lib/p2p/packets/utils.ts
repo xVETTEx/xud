@@ -8,6 +8,7 @@ export const validateNodeState = (nodeState?: pb.NodeState.AsObject) => {
     && nodeState.pairsList
     && nodeState.lndPubKeysMap
     && nodeState.tokenIdentifiersMap
+    && nodeState.lndUrisMap
     && nodeState.addressesList.every(addr => !!addr.host)
   );
 };
@@ -18,6 +19,7 @@ export const convertNodeState = (nodeState: pb.NodeState.AsObject) => {
     addresses: nodeState.addressesList,
     raidenAddress: nodeState.raidenAddress,
     lndPubKeys: convertKvpArrayToKvps(nodeState.lndPubKeysMap),
+    lndUris: convertKvpArrayToKvps(nodeState.lndUrisMap),
     tokenIdentifiers: convertKvpArrayToKvps(nodeState.tokenIdentifiersMap),
   });
 };
@@ -34,6 +36,9 @@ export const serializeNodeState = (nodeState: NodeState): pb.NodeState => {
   pbNodeState.setRaidenAddress(nodeState.raidenAddress);
   if (nodeState.lndPubKeys) {
     setObjectToMap(nodeState.lndPubKeys, pbNodeState.getLndPubKeysMap());
+  }
+  if (nodeState.lndUris) {
+    setObjectToMap(nodeState.lndUris, pbNodeState.getLndUrisMap());
   }
   if (nodeState.tokenIdentifiers) {
     setObjectToMap(nodeState.tokenIdentifiers, pbNodeState.getTokenIdentifiersMap());

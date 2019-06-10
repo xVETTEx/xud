@@ -17,9 +17,14 @@ type ChannelBalance = {
   pendingOpenBalance: number,
 };
 
+export interface ConnectionVerified {
+  newIdentifier?: string;
+  uris?: string[];
+}
+
 interface SwapClient {
-  on(event: 'connectionVerified', listener: (newIdentifier?: string) => void): this;
-  emit(event: 'connectionVerified', newIdentifier?: string): boolean;
+  on(event: 'connectionVerified', listener: (connVerified: ConnectionVerified) => void): this;
+  emit(event: 'connectionVerified', connectionVerified: ConnectionVerified): boolean;
 }
 
 /**
@@ -125,6 +130,16 @@ abstract class SwapClient extends EventEmitter {
    * Gets the block height of the chain backing this swap client.
    */
   public abstract async getHeight(): Promise<number>;
+
+  /**
+   * Opens a payment channel given peerPubKey, amount and optional currency.
+   */
+  public abstract async openChannel(
+    peerPubKey: string,
+    amount: number,
+    currency: string,
+    lndUris?: string[],
+  ): Promise<void>;
 
   public isConnected(): boolean {
     return this.status === ClientStatus.ConnectionVerified;

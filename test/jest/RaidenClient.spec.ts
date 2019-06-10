@@ -64,31 +64,111 @@ describe('RaidenClient', () => {
     await raiden.close();
   });
 
-  test('sendPayment removes 0x from secret', async () => {
-    raiden = new RaidenClient(config, raidenLogger);
-    await raiden.init();
-    const validTokenPaymentResponse: TokenPaymentResponse = getValidTokenPaymentResponse();
-    raiden['tokenPayment'] = jest.fn()
-        .mockReturnValue(Promise.resolve(validTokenPaymentResponse));
-    raiden.tokenAddresses.get = jest.fn().mockReturnValue(validTokenPaymentResponse.token_address);
-    const deal: SwapDeal = getValidDeal();
-    await expect(raiden.sendPayment(deal))
-      .resolves.toMatchSnapshot();
+  describe('sendPayment', () => {
+    test('it removes 0x from secret', async () => {
+      raiden = new RaidenClient(config, raidenLogger);
+      await raiden.init();
+      const validTokenPaymentResponse: TokenPaymentResponse = getValidTokenPaymentResponse();
+      raiden['tokenPayment'] = jest.fn()
+          .mockReturnValue(Promise.resolve(validTokenPaymentResponse));
+      raiden.tokenAddresses.get = jest.fn().mockReturnValue(validTokenPaymentResponse.token_address);
+      const deal: SwapDeal = getValidDeal();
+      await expect(raiden.sendPayment(deal))
+        .resolves.toMatchSnapshot();
+    });
+
+    test('it rejects in case of empty secret response', async () => {
+      raiden = new RaidenClient(config, raidenLogger);
+      await raiden.init();
+      const invalidTokenPaymentResponse: TokenPaymentResponse = {
+        ...getValidTokenPaymentResponse(),
+        secret: '',
+      };
+      raiden['tokenPayment'] = jest.fn()
+          .mockReturnValue(Promise.resolve(invalidTokenPaymentResponse));
+      raiden.tokenAddresses.get = jest.fn().mockReturnValue(invalidTokenPaymentResponse.token_address);
+      const deal: SwapDeal = getValidDeal();
+      await expect(raiden.sendPayment(deal))
+        .rejects.toMatchSnapshot();
+    });
   });
 
-  test('sendPayment rejects in case of empty secret response', async () => {
-    raiden = new RaidenClient(config, raidenLogger);
-    await raiden.init();
-    const invalidTokenPaymentResponse: TokenPaymentResponse = {
-      ...getValidTokenPaymentResponse(),
-      secret: '',
-    };
-    raiden['tokenPayment'] = jest.fn()
-        .mockReturnValue(Promise.resolve(invalidTokenPaymentResponse));
-    raiden.tokenAddresses.get = jest.fn().mockReturnValue(invalidTokenPaymentResponse.token_address);
-    const deal: SwapDeal = getValidDeal();
-    await expect(raiden.sendPayment(deal))
-      .rejects.toMatchSnapshot();
+  describe('openChannel', () => {
+    let peerRaidenAddress: string;
+    let amount: number;
+    let currency: string;
+
+    beforeEach(() => {
+      peerRaidenAddress = '0x10D8CCAD85C7dc123090B43aA1f98C00a303BFC5';
+      amount = 5000000;
+      currency = 'WETH';
+    });
+
+    test('it fails when tokenAddress for currency not found', async () => {
+      expect.assertions(1);
+      raiden = new RaidenClient(config, raidenLogger);
+      await raiden.init();
+      try {
+        await raiden.openChannel(
+          peerRaidenAddress,
+          amount,
+          currency,
+        );
+      } catch (e) {
+        expect(e).toMatchSnapshot();
+      }
+    });
+
+    test('it throws when openChannel fails', async () => {
+      expect.assertions(1);
+      raiden = new RaidenClient(config, raidenLogger);
+      const peerRaidenAddress = '0x10D8CCAD85C7dc123090B43aA1f98C00a303BFC5';
+      const amount = 5000000;
+      const currency = 'WETH';
+      const mockTokenAddresses = new Map<string, string>();
+      const wethTokenAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+      mockTokenAddresses.set('WETH', wethTokenAddress);
+      raiden.tokenAddresses = mockTokenAddresses;
+      raiden.openChannelRequest = jest.fn().mockImplementation(() => {
+        throw new Error('openChannelRequest error');
+      });
+      await raiden.init();
+      try {
+        await raiden.openChannel(
+          peerRaidenAddress,
+          amount,
+          currency,
+        );
+      } catch (e) {
+        expect(e).toMatchSnapshot();
+      }
+    });
+
+    test('it opens a channel', async () => {
+      expect.assertions(2);
+      raiden = new RaidenClient(config, raidenLogger);
+      const peerRaidenAddress = '0x10D8CCAD85C7dc123090B43aA1f98C00a303BFC5';
+      const amount = 5000000;
+      const currency = 'WETH';
+      const mockTokenAddresses = new Map<string, string>();
+      const wethTokenAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+      mockTokenAddresses.set('WETH', wethTokenAddress);
+      raiden.tokenAddresses = mockTokenAddresses;
+      raiden.openChannelRequest = jest.fn().mockReturnValue(Promise.resolve());
+      await raiden.init();
+      await raiden.openChannel(
+        peerRaidenAddress,
+        amount,
+        currency,
+      );
+      expect(raiden.openChannelRequest).toHaveBeenCalledTimes(1);
+      expect(raiden.openChannelRequest).toHaveBeenCalledWith({
+        partner_address: peerRaidenAddress,
+        token_address: wethTokenAddress,
+        total_deposit: amount,
+        settle_timeout: 500,
+      });
+    });
   });
 
 });

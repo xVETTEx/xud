@@ -5,7 +5,14 @@ import errors from './errors';
 import { SwapDeal } from '../swaps/types';
 import { SwapClientType, SwapState, SwapRole } from '../constants/enums';
 import assert from 'assert';
-import { RaidenClientConfig, RaidenInfo, OpenChannelPayload, Channel, TokenPaymentRequest, TokenPaymentResponse } from './types';
+import {
+  RaidenClientConfig,
+  RaidenInfo,
+  OpenChannelPayload,
+  Channel,
+  TokenPaymentRequest,
+  TokenPaymentResponse,
+} from './types';
 
 type RaidenErrorResponse = { errors: string };
 
@@ -77,7 +84,7 @@ class RaidenClient extends SwapClient {
         this.address = newAddress;
       }
 
-      this.emit('connectionVerified', newAddress);
+      this.emit('connectionVerified', { newIdentifier: newAddress });
       await this.setStatus(ClientStatus.ConnectionVerified);
     } catch (err) {
       this.logger.error(
@@ -285,9 +292,26 @@ class RaidenClient extends SwapClient {
 
   /**
    * Creates a payment channel.
+   */
+  public openChannel = async (peerAddress: string, amount: number, currency: string): Promise<void> => {
+    const tokenAddress = this.tokenAddresses.get(currency);
+    if (!tokenAddress) {
+      throw(errors.TOKEN_ADDRESS_NOT_FOUND);
+    }
+    await this.openChannelRequest({
+      partner_address: peerAddress,
+      token_address: tokenAddress,
+      total_deposit: amount,
+      // TODO: The amount of blocks that the settle timeout should have
+      settle_timeout: 500,
+    });
+  }
+
+  /**
+   * Creates a payment channel request.
    * @returns The channel_address for the newly created channel.
    */
-  public openChannel = async (payload: OpenChannelPayload): Promise<string> => {
+  public openChannelRequest = async (payload: OpenChannelPayload): Promise<string> => {
     const endpoint = 'channels';
     const res = await this.sendRequest(endpoint, 'PUT', payload);
 
