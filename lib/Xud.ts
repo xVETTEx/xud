@@ -61,6 +61,10 @@ class Xud extends EventEmitter {
     this.logger = loggers.global;
     this.logger.info('config loaded');
 
+    if (process.env.ADVERSARY) {
+      this.logger.info(`ADVERSARY=${process.env.ADVERSARY}`);
+    }
+
     try {
       this.db = new DB(loggers.db, this.config.dbpath);
       await this.db.init(this.config.network, this.config.initdb);
