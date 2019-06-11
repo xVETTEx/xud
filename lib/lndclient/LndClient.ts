@@ -267,6 +267,7 @@ class LndClient extends SwapClient {
     request.setAmt(amount);
     request.setFinalCltvDelta(cltvDelta);
     if (cltvLimit) {
+      this.logger.info('setting limit to 1!!!');
       request.setCltvLimit(cltvDelta);
     }
     return request;
