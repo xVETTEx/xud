@@ -258,14 +258,17 @@ class LndClient extends SwapClient {
    * Builds a lndrpc.SendRequest
    */
   private buildSendRequest = (
-    { rHash, destination, amount, cltvDelta }:
-    { rHash: string, destination: string, amount: number, cltvDelta: number },
+    { rHash, destination, amount, cltvDelta, cltvLimit = 1 }:
+    { rHash: string, destination: string, amount: number, cltvDelta: number, cltvLimit?: number },
   ): lndrpc.SendRequest => {
     const request = new lndrpc.SendRequest();
     request.setPaymentHashString(rHash);
     request.setDestString(destination);
     request.setAmt(amount);
     request.setFinalCltvDelta(cltvDelta);
+    if (cltvLimit) {
+      request.setCltvLimit(cltvDelta);
+    }
     return request;
   }
 
