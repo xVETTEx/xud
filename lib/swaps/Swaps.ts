@@ -161,6 +161,9 @@ class Swaps extends EventEmitter {
     this.swapClientManager.on('htlcAccepted', async (swapClient, rHash, amount, currency) => {
       try {
         const rPreimage = await this.resolveHash(rHash, amount, currency);
+        if (rPreimage !== '') {
+          return;
+        }
         await swapClient.settleInvoice(rHash, rPreimage);
       } catch (err) {
         this.logger.error('could not settle invoice', err);
@@ -775,6 +778,12 @@ class Swaps extends EventEmitter {
       this.logger.debug('Executing taker code to resolve hash');
 
       this.setDealPhase(deal, SwapPhase.AmountReceived);
+
+      if (process.env.BREAKSWAP === 'TAKER_2ND_HTLC_STALL') {
+        this.logger.info('BREAKSWAP: TAKER_2ND_HTLC_STALL');
+        return '';
+      }
+
       return deal.rPreimage!;
     }
   }
