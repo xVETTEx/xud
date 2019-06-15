@@ -61,8 +61,8 @@ class Xud extends EventEmitter {
     this.logger = loggers.global;
     this.logger.info('config loaded');
 
-    if (process.env.ADVERSARY) {
-      this.logger.info(`ADVERSARY=${process.env.ADVERSARY}`);
+    if (process.env.BREAKSWAP) {
+      this.logger.info(`BREAKSWAP=${process.env.BREAKSWAP}`);
     }
 
     try {

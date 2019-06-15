@@ -563,13 +563,13 @@ class Swaps extends EventEmitter {
    * accepted, initiates the swap.
    */
   private handleSwapAccepted = async (responsePacket: packets.SwapAcceptedPacket, peer: Peer) => {
-    if (process.env.ADVERSARY === 'TAKER_STALLING_SWAPACCEPTED') {
-      this.logger.info('ADVERSARY: TAKER_STALLING_SWAPACCEPTED');
+    if (process.env.BREAKSWAP === 'TAKER_SWAPACCEPTED_STALL') {
+      this.logger.info('BREAKSWAP: TAKER_SWAPACCEPTED_STALL');
       return;
     }
 
-    if (process.env.ADVERSARY === 'TAKER_OFFLINE_SWAPACCEPTED') {
-      this.logger.info('ADVERSARY: TAKER_OFFLINE_SWAPACCEPTED');
+    if (process.env.BREAKSWAP === 'TAKER_SWAPACCEPTED_QUIT') {
+      this.logger.info('BREAKSWAP: TAKER_SWAPACCEPTED_QUIT');
       process.exit();
     }
 
