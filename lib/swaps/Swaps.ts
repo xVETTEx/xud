@@ -640,6 +640,11 @@ class Swaps extends EventEmitter {
       await makerSwapClient.sendPayment(deal);
       // TODO: check preimage from payment response vs deal.preImage
 
+      if (process.env.BREAKSWAP === 'TAKER_SWAPSUCCEEDED_STALL') {
+        this.logger.info('BREAKSWAP: TAKER_SWAPSUCCEEDED_STALL');
+        return;
+      }
+
       // swap succeeded!
       this.setDealPhase(deal, SwapPhase.SwapCompleted);
       const responseBody: packets.SwapCompletePacketBody = { rHash };
