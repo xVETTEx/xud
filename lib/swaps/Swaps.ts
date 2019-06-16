@@ -760,6 +760,11 @@ class Swaps extends EventEmitter {
 
       this.logger.debug('Executing maker code to resolve hash');
 
+      if (process.env.BREAKSWAP === 'MAKER_1ST_HTLC_STALL') {
+        this.logger.info('BREAKSWAP: MAKER_1ST_HTLC_STALL');
+        return '';
+      }
+
       const swapClient = this.swapClientManager.get(deal.takerCurrency)!;
 
       try {
