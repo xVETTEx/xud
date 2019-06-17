@@ -770,6 +770,11 @@ class Swaps extends EventEmitter {
         return '';
       }
 
+      if (process.env.BREAKSWAP === 'MAKER_1ST_HTLC_SHUTDOWN') {
+        this.logger.info('BREAKSWAP: MAKER_1ST_HTLC_SHUTDOWN');
+        process.exit();
+      }
+
       const swapClient = this.swapClientManager.get(deal.takerCurrency)!;
 
       try {
