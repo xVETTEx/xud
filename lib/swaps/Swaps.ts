@@ -571,8 +571,8 @@ class Swaps extends EventEmitter {
       return;
     }
 
-    if (process.env.BREAKSWAP === 'TAKER_SWAPACCEPTED_QUIT') {
-      this.logger.info('BREAKSWAP: TAKER_SWAPACCEPTED_QUIT');
+    if (process.env.BREAKSWAP === 'TAKER_SWAPACCEPTED_SHUTDOWN') {
+      this.logger.info('BREAKSWAP: TAKER_SWAPACCEPTED_SHUTDOWN');
       process.exit();
     }
 
@@ -790,6 +790,11 @@ class Swaps extends EventEmitter {
       if (process.env.BREAKSWAP === 'TAKER_2ND_HTLC_STALL') {
         this.logger.info('BREAKSWAP: TAKER_2ND_HTLC_STALL');
         return '';
+      }
+
+      if (process.env.BREAKSWAP === 'TAKER_2ND_HTLC_SHUTDOWN') {
+        this.logger.info('BREAKSWAP: TAKER_2ND_HTLC_SHUTDOWN');
+        process.exit();
       }
 
       this.setDealPhase(deal, SwapPhase.AmountReceived);
