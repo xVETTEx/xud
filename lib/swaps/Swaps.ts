@@ -162,8 +162,10 @@ class Swaps extends EventEmitter {
       try {
         const rPreimage = await this.resolveHash(rHash, amount, currency);
         if (rPreimage === '') {
+          this.logger.info('NOT SETTLING INVOICE');
           return;
         }
+        this.logger.info('SETTLING INVOICE');
         await swapClient.settleInvoice(rHash, rPreimage);
       } catch (err) {
         this.logger.error('could not settle invoice', err);
