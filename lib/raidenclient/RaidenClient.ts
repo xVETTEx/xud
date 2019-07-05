@@ -293,7 +293,10 @@ class RaidenClient extends SwapClient {
   /**
    * Creates a payment channel.
    */
-  public openChannel = async (peerAddress: string, amount: number, currency: string): Promise<void> => {
+  public openChannel = async (
+    { peerIdentifier: peerAddress, amount, currency }:
+    { peerIdentifier: string, amount: number, currency: string },
+  ): Promise<void> => {
     const tokenAddress = this.tokenAddresses.get(currency);
     if (!tokenAddress) {
       throw(errors.TOKEN_ADDRESS_NOT_FOUND);
@@ -311,7 +314,7 @@ class RaidenClient extends SwapClient {
    * Creates a payment channel request.
    * @returns The channel_address for the newly created channel.
    */
-  public openChannelRequest = async (payload: OpenChannelPayload): Promise<string> => {
+  private openChannelRequest = async (payload: OpenChannelPayload): Promise<string> => {
     const endpoint = 'channels';
     const res = await this.sendRequest(endpoint, 'PUT', payload);
 

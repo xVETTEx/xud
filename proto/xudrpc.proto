@@ -83,7 +83,7 @@ service Xud {
     };
   }
 
-  /* Opens a payment channel given pub key, amount and currency. */
+  /* Opens a payment channel to a peer with the given node pub key for the specified amount and currency. */
   rpc OpenChannel(OpenChannelRequest) returns (OpenChannelResponse) {
     option (google.api.http) = {
       post: "/v1/openchannel"
@@ -321,11 +321,11 @@ message ChannelBalanceResponse {
 }
 
 message OpenChannelRequest {
-  // The node pub key of the peer which to open channel with.
+  // The node pub key of the peer with which to open channel with.
   string node_pub_key = 1 [json_name = "peer_pub_key"];
-  // The ticker symbol of the currency to open channel for.
+  // The ticker symbol of the currency to open the channel for.
   string currency = 2 [json_name = "currency"];
-  // The amount of the channel in the smallest base unit of the currency.
+  // The amount of the channel denominated in satoshis.
   int64 amount = 3 [json_name = "amount"];
 }
 

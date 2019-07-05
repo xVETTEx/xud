@@ -275,39 +275,30 @@ class SwapClientManager extends EventEmitter {
     if (!swapClient) {
       throw errors.SWAP_CLIENT_NOT_FOUND(currency);
     }
-    const peerSwapClientPubKey = peer.getIdentifier(swapClient.type, currency);
-    if (!peerSwapClientPubKey) {
+    const peerIdentifier = peer.getIdentifier(swapClient.type, currency);
+    if (!peerIdentifier) {
       throw new Error('unable to get swap client pubKey for peer');
     }
     if (isLndClient(swapClient)) {
-      const peerLndUris = peer.getLndUris(currency);
-      if (!peerLndUris) {
+      const lndUris = peer.getLndUris(currency);
+      if (!lndUris) {
         throw new Error('unable to get lnd listening uris');
       }
-      await swapClient.openChannel(
-        peerSwapClientPubKey,
-        amount,
-        currency,
-        peerLndUris,
-      );
+      await swapClient.openChannel({ peerIdentifier, amount, lndUris });
       return;
     }
     // fallback to raiden for all non-lnd currencies
-    await swapClient.openChannel(
-      peerSwapClientPubKey,
-      amount,
-      currency,
-    );
+    await swapClient.openChannel({ peerIdentifier, amount, currency });
   }
 
   private bind = () => {
     for (const [currency, swapClient] of this.swapClients.entries()) {
       if (isLndClient(swapClient)) {
-        swapClient.on('connectionVerified', ({ newIdentifier, uris }) => {
+        swapClient.on('connectionVerified', ({ newIdentifier, newUris }) => {
           if (newIdentifier) {
             this.emit('lndUpdate', {
-              uris,
               currency,
+              uris: newUris,
               pubKey: newIdentifier,
               chain: swapClient.chain,
             });
@@ -323,8 +314,8 @@ class SwapClientManager extends EventEmitter {
     // duplicate listeners in case raiden client is associated with
     // multiple currencies
     if (!this.raidenClient.isDisabled()) {
-      this.raidenClient.on('connectionVerified', (connectionVerified) => {
-        const { newIdentifier } = connectionVerified;
+      this.raidenClient.on('connectionVerified', (swapClientInfo) => {
+        const { newIdentifier } = swapClientInfo;
         if (newIdentifier) {
           this.emit('raidenUpdate', this.raidenClient.tokenAddresses, newIdentifier);
         }

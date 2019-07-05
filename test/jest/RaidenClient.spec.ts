@@ -109,11 +109,11 @@ describe('RaidenClient', () => {
       raiden = new RaidenClient(config, raidenLogger);
       await raiden.init();
       try {
-        await raiden.openChannel(
-          peerRaidenAddress,
+        await raiden.openChannel({
           amount,
           currency,
-        );
+          peerIdentifier: peerRaidenAddress,
+        });
       } catch (e) {
         expect(e).toMatchSnapshot();
       }
@@ -129,16 +129,16 @@ describe('RaidenClient', () => {
       const wethTokenAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
       mockTokenAddresses.set('WETH', wethTokenAddress);
       raiden.tokenAddresses = mockTokenAddresses;
-      raiden.openChannelRequest = jest.fn().mockImplementation(() => {
+      raiden['openChannelRequest'] = jest.fn().mockImplementation(() => {
         throw new Error('openChannelRequest error');
       });
       await raiden.init();
       try {
-        await raiden.openChannel(
-          peerRaidenAddress,
+        await raiden.openChannel({
           amount,
           currency,
-        );
+          peerIdentifier: peerRaidenAddress,
+        });
       } catch (e) {
         expect(e).toMatchSnapshot();
       }
@@ -154,15 +154,15 @@ describe('RaidenClient', () => {
       const wethTokenAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
       mockTokenAddresses.set('WETH', wethTokenAddress);
       raiden.tokenAddresses = mockTokenAddresses;
-      raiden.openChannelRequest = jest.fn().mockReturnValue(Promise.resolve());
+      raiden['openChannelRequest'] = jest.fn().mockReturnValue(Promise.resolve());
       await raiden.init();
-      await raiden.openChannel(
-        peerRaidenAddress,
+      await raiden.openChannel({
         amount,
         currency,
-      );
-      expect(raiden.openChannelRequest).toHaveBeenCalledTimes(1);
-      expect(raiden.openChannelRequest).toHaveBeenCalledWith({
+        peerIdentifier: peerRaidenAddress,
+      });
+      expect(raiden['openChannelRequest']).toHaveBeenCalledTimes(1);
+      expect(raiden['openChannelRequest']).toHaveBeenCalledWith({
         partner_address: peerRaidenAddress,
         token_address: wethTokenAddress,
         total_deposit: amount,

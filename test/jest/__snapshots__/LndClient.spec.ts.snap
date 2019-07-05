@@ -8,6 +8,4 @@ Object {
 
 exports[`LndClient openChannel it throws when connectPeer fails 1`] = `[Error: connectPeer failed]`;
 
-exports[`LndClient openChannel it throws when currency does not match 1`] = `[Error: currency does not match]`;
-
 exports[`LndClient openChannel it throws when openchannel fails 1`] = `[Error: openChannelSync error]`;

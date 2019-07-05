@@ -42,21 +42,6 @@ describe('LndClient', () => {
       `${peerPubKey}@${externalIp2}`,
     ];
 
-    test('it throws when currency does not match', async () => {
-      expect.assertions(1);
-      lnd = new LndClient(config, currency, logger);
-      try {
-        await lnd.openChannel(
-          peerPubKey,
-          amount,
-          'LTC',
-          lndListeningUris,
-        );
-      } catch (e) {
-        expect(e).toMatchSnapshot();
-      }
-    });
-
     test('it throws when connectPeer fails', async () => {
       expect.assertions(3);
       lnd = new LndClient(config, currency, logger);
@@ -64,12 +49,11 @@ describe('LndClient', () => {
         throw new Error('connectPeer failed');
       });
       try {
-        await lnd.openChannel(
-          peerPubKey,
+        await lnd.openChannel({
           amount,
-          currency,
-          [lndListeningUris[0]],
-        );
+          peerIdentifier: peerPubKey,
+          lndUris: [lndListeningUris[0]],
+        });
       } catch (e) {
         expect(e).toMatchSnapshot();
       }
@@ -90,12 +74,11 @@ describe('LndClient', () => {
         .mockImplementationOnce(() => {
           return Promise.resolve();
         });
-      await lnd.openChannel(
-        peerPubKey,
+      await lnd.openChannel({
         amount,
-        currency,
-        lndListeningUris,
-      );
+        peerIdentifier: peerPubKey,
+        lndUris: lndListeningUris,
+      });
       expect(lnd['connectPeer']).toHaveBeenCalledTimes(2);
       expect(lnd['connectPeer'])
         .toHaveBeenCalledWith(peerPubKey, externalIp1);
@@ -112,12 +95,11 @@ describe('LndClient', () => {
       };
       lnd['connectPeer'] = jest.fn()
         .mockImplementation(alreadyConnected);
-      await lnd.openChannel(
-        peerPubKey,
+      await lnd.openChannel({
         amount,
-        currency,
-        lndListeningUris,
-      );
+        peerIdentifier: peerPubKey,
+        lndUris: lndListeningUris,
+      });
       expect(lnd['connectPeer']).toHaveBeenCalledTimes(1);
       expect(lnd['connectPeer'])
         .toHaveBeenCalledWith(peerPubKey, externalIp1);
@@ -135,12 +117,11 @@ describe('LndClient', () => {
       lnd['connectPeer'] = jest.fn()
         .mockImplementation(timeOut);
       try {
-        await lnd.openChannel(
-          peerPubKey,
+        await lnd.openChannel({
           amount,
-          currency,
-          lndListeningUris,
-        );
+          peerIdentifier: peerPubKey,
+          lndUris: lndListeningUris,
+        });
       } catch (e) {
         expect(e).toMatchSnapshot();
       }
@@ -156,12 +137,11 @@ describe('LndClient', () => {
         .mockImplementationOnce(() => {
           return Promise.resolve();
         });
-      await lnd.openChannel(
-        peerPubKey,
+      await lnd.openChannel({
         amount,
-        currency,
-        lndListeningUris,
-      );
+        peerIdentifier: peerPubKey,
+        lndUris: lndListeningUris,
+      });
       expect(lnd['connectPeer']).toHaveBeenCalledTimes(1);
       expect(lnd['connectPeer'])
         .toHaveBeenCalledWith(peerPubKey, externalIp1);
@@ -177,12 +157,11 @@ describe('LndClient', () => {
         throw new Error('openChannelSync error');
       });
       try {
-        await lnd.openChannel(
-          peerPubKey,
+        await lnd.openChannel({
           amount,
-          currency,
-          lndListeningUris,
-        );
+          peerIdentifier: peerPubKey,
+          lndUris: lndListeningUris,
+        });
       } catch (e) {
         expect(e).toMatchSnapshot();
       }

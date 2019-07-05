@@ -1,6 +1,6 @@
 import grpc, { ChannelCredentials, ClientReadableStream } from 'grpc';
 import Logger from '../Logger';
-import SwapClient, { ClientStatus, ConnectionVerified } from '../swaps/SwapClient';
+import SwapClient, { ClientStatus, SwapClientInfo } from '../swaps/SwapClient';
 import errors from './errors';
 import { LightningClient, WalletUnlockerClient } from '../proto/lndrpc_grpc_pb';
 import { InvoicesClient } from '../proto/lndinvoices_grpc_pb';
@@ -26,9 +26,9 @@ interface InvoicesMethodIndex extends InvoicesClient {
 }
 
 interface LndClient {
-  on(event: 'connectionVerified', listener: (connectionVerified: ConnectionVerified) => void): this;
+  on(event: 'connectionVerified', listener: (swapClientInfo: SwapClientInfo) => void): this;
   on(event: 'htlcAccepted', listener: (rHash: string, amount: number) => void): this;
-  emit(event: 'connectionVerified', connectionVerified: ConnectionVerified): boolean;
+  emit(event: 'connectionVerified', swapClientInfo: SwapClientInfo): boolean;
   emit(event: 'htlcAccepted', rHash: string, amount: number): boolean;
 }
 
@@ -215,7 +215,7 @@ class LndClient extends SwapClient {
 
           /** The new lnd pub key value if different from the one we had previously. */
           let newPubKey: string | undefined;
-          let newUris: string[] | undefined;
+          let newUris: string[] = [];
           if (this.identityPubKey !== getInfoResponse.getIdentityPubkey()) {
             newPubKey = getInfoResponse.getIdentityPubkey();
             this.logger.debug(`pubkey is ${newPubKey}`);
@@ -235,8 +235,8 @@ class LndClient extends SwapClient {
             await this.setStatus(ClientStatus.Disabled);
           }
           this.emit('connectionVerified', {
+            newUris,
             newIdentifier: newPubKey,
-            uris: newUris,
           });
 
           this.invoices = new InvoicesClient(this.uri, this.credentials);
@@ -395,12 +395,12 @@ class LndClient extends SwapClient {
   /**
    * Connects to another lnd node.
    */
-  public connectPeer = (pubkey: string, host: string): Promise<lndrpc.ConnectPeerResponse> => {
+  public connectPeer = (pubkey: string, address: string): Promise<lndrpc.ConnectPeerResponse> => {
     const request = new lndrpc.ConnectPeerRequest();
-    const address = new lndrpc.LightningAddress();
-    address.setHost(host);
-    address.setPubkey(pubkey);
-    request.setAddr(address);
+    const lightningAddress = new lndrpc.LightningAddress();
+    lightningAddress.setHost(address);
+    lightningAddress.setPubkey(pubkey);
+    request.setAddr(lightningAddress);
     return this.unaryCall<lndrpc.ConnectPeerRequest, lndrpc.ConnectPeerResponse>('connectPeer', request);
   }
 
@@ -408,15 +408,10 @@ class LndClient extends SwapClient {
    * Opens a channel given peerPubKey and amount.
    */
   public openChannel = async (
-    peerPubKey: string,
-    amount: number,
-    currency: string,
-    peerListeningUris: string[],
+    { peerIdentifier: peerPubKey, amount, lndUris }:
+    { peerIdentifier: string, amount: number, lndUris: string[] },
   ): Promise<void> => {
-    if (currency !== this.currency) {
-      throw new Error('currency does not match');
-    }
-    await this.tryConnectPeerAddresses(peerPubKey, peerListeningUris);
+    await this.tryConnectPeerAddresses(peerPubKey, lndUris);
     await this.openChannelSync(peerPubKey, amount);
   }
 

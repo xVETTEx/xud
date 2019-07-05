@@ -254,13 +254,13 @@ describe('Swaps.SwapClientManager', () => {
       expect(getClientSpy).toHaveBeenCalledWith(currency);
       expect(peer.getIdentifier).toHaveBeenCalledWith(SwapClientType.Lnd, currency);
       expect(mockLndOpenChannel).toHaveBeenCalledTimes(1);
-      expect(mockLndOpenChannel)
-        .toHaveBeenCalledWith(
-          peerLndPubKey,
+      expect(mockLndOpenChannel).toHaveBeenCalledWith(
+        expect.objectContaining({
           amount,
-          currency,
-          lndListeningUris,
-        );
+          lndUris: lndListeningUris,
+          peerIdentifier: peerLndPubKey,
+        }),
+      );
     });
 
     test('it opens channel using raiden', async () => {
@@ -277,12 +277,13 @@ describe('Swaps.SwapClientManager', () => {
       expect(peer.getIdentifier).toHaveBeenCalledWith(SwapClientType.Raiden, currency);
       expect(peer.getLndUris).toHaveBeenCalledTimes(0);
       expect(mockRaidenOpenChannel).toHaveBeenCalledTimes(1);
-      expect(mockRaidenOpenChannel)
-        .toHaveBeenCalledWith(
-          peerRaidenAddress,
+      expect(mockRaidenOpenChannel).toHaveBeenCalledWith(
+        expect.objectContaining({
           amount,
           currency,
-        );
+          peerIdentifier: peerRaidenAddress,
+        }),
+      );
     });
 
   });
