@@ -14,14 +14,26 @@ export const validateNodeState = (nodeState?: pb.NodeState.AsObject) => {
 };
 
 export const convertNodeState = (nodeState: pb.NodeState.AsObject) => {
-  return removeUndefinedProps({
+  const convertedNodeState = removeUndefinedProps({
     pairs: nodeState.pairsList,
     addresses: nodeState.addressesList,
     raidenAddress: nodeState.raidenAddress,
     lndPubKeys: convertKvpArrayToKvps(nodeState.lndPubKeysMap),
-    lndUris: convertKvpArrayToKvps(nodeState.lndUrisMap),
+    lndUris: convertLndUris(nodeState.lndUrisMap),
     tokenIdentifiers: convertKvpArrayToKvps(nodeState.tokenIdentifiersMap),
   });
+  console.log('convertedNodeState', convertedNodeState);
+  return convertNodeState;
+};
+
+const convertLndUris = <T>(kvpArray: [string, T][]): { [key: string]: T } => {
+  const kvps: { [key: string]: T } = {};
+  kvpArray.forEach((kvp) => {
+    // @ts-ignore
+    kvps[kvp[0]] = kvp[1].lndUriList;
+  });
+
+  return kvps;
 };
 
 const setLndUrisMap = (obj: any, map: { set: (key: string, value: any) => any }) => {
@@ -53,5 +65,6 @@ export const serializeNodeState = (nodeState: NodeState): pb.NodeState => {
   if (nodeState.tokenIdentifiers) {
     setObjectToMap(nodeState.tokenIdentifiers, pbNodeState.getTokenIdentifiersMap());
   }
+  console.log('serializedNodeState', pbNodeState);
   return pbNodeState;
 };
