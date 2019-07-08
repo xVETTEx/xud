@@ -229,7 +229,8 @@ class Pool extends EventEmitter {
   ) => {
     this.nodeState.lndPubKeys[currency] = pubKey;
     if (uris) {
-      this.nodeState.lndUris[currency] = uris.join(',');
+      // this.nodeState.lndUris[currency] = uris.join(',');
+      this.nodeState.lndUris[currency] = uris;
     }
     this.nodeState.tokenIdentifiers[currency] = chain;
     this.sendNodeStateUpdate();

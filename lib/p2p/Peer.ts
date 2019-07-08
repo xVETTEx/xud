@@ -427,9 +427,13 @@ class Peer extends EventEmitter {
   public getLndUris(currency: string): string[] | undefined {
     if (this.nodeState && this.nodeState.lndUris) {
       const urisForCurrency = this.nodeState.lndUris[currency];
+      debugger
+      return urisForCurrency;
+      /*
       if (urisForCurrency) {
         return urisForCurrency.split(',');
       }
+      */
     }
     return;
   }

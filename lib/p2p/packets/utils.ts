@@ -24,6 +24,16 @@ export const convertNodeState = (nodeState: pb.NodeState.AsObject) => {
   });
 };
 
+const setLndUrisMap = (obj: any, map: { set: (key: string, value: any) => any }) => {
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      const lndUris = new pb.LndUris();
+      lndUris.setLndUriList(obj[key]);
+      map.set(key, lndUris);
+    }
+  }
+};
+
 export const serializeNodeState = (nodeState: NodeState): pb.NodeState => {
   const pbNodeState = new pb.NodeState();
   pbNodeState.setPairsList(nodeState.pairs);
@@ -38,7 +48,7 @@ export const serializeNodeState = (nodeState: NodeState): pb.NodeState => {
     setObjectToMap(nodeState.lndPubKeys, pbNodeState.getLndPubKeysMap());
   }
   if (nodeState.lndUris) {
-    setObjectToMap(nodeState.lndUris, pbNodeState.getLndUrisMap());
+    setLndUrisMap(nodeState.lndUris, pbNodeState.getLndUrisMap());
   }
   if (nodeState.tokenIdentifiers) {
     setObjectToMap(nodeState.tokenIdentifiers, pbNodeState.getTokenIdentifiersMap());
