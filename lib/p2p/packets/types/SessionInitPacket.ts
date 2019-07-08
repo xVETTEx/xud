@@ -36,7 +36,7 @@ class SessionInitPacket extends Packet<SessionInitPacketBody> {
   }
 
   private static validate = (obj: pb.SessionInitPacket.AsObject): boolean => {
-    return !!(obj.id
+    const validateResult = !!(obj.id
       && obj.sign
       && obj.ephemeralPubKey
       && obj.peerPubKey
@@ -44,6 +44,8 @@ class SessionInitPacket extends Packet<SessionInitPacketBody> {
       && obj.nodePubKey
       && validateNodeState(obj.nodeState)
     );
+    console.log('validateResult is', validateResult);
+    return validateResult;
   }
 
   private static convert = (obj: pb.SessionInitPacket.AsObject): SessionInitPacket => {
