@@ -87,7 +87,7 @@ describe('LndClient', () => {
     });
 
     test('it does succeed when connecting to already connected peer', async () => {
-      expect.assertions(2);
+      expect.assertions(4);
       lnd = new LndClient(config, currency, logger);
       lnd['openChannelSync'] = jest.fn().mockReturnValue(Promise.resolve());
       const alreadyConnected = () => {
@@ -103,10 +103,13 @@ describe('LndClient', () => {
       expect(lnd['connectPeer']).toHaveBeenCalledTimes(1);
       expect(lnd['connectPeer'])
         .toHaveBeenCalledWith(peerPubKey, externalIp1);
+      expect(lnd['openChannelSync']).toHaveBeenCalledTimes(1);
+      expect(lnd['openChannelSync'])
+        .toHaveBeenCalledWith(peerPubKey, amount);
     });
 
-    test('it rejects when timeout reached', async () => {
-      expect.assertions(2);
+    test('it throws when timeout reached', async () => {
+      expect.assertions(3);
       jest.useFakeTimers();
       lnd = new LndClient(config, currency, logger);
       lnd['openChannelSync'] = jest.fn().mockReturnValue(Promise.resolve());
@@ -125,7 +128,8 @@ describe('LndClient', () => {
       } catch (e) {
         expect(e).toMatchSnapshot();
       }
-      expect(lnd['connectPeer']).toHaveBeenCalledTimes(1);
+      expect(lnd['connectPeer']).toHaveBeenCalledTimes(2);
+      expect(lnd['openChannelSync']).not.toHaveBeenCalled();
       jest.clearAllTimers();
     });
 

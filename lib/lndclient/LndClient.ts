@@ -411,49 +411,50 @@ class LndClient extends SwapClient {
     { peerIdentifier: peerPubKey, amount, lndUris }:
     { peerIdentifier: string, amount: number, lndUris: string[] },
   ): Promise<void> => {
-    await this.tryConnectPeerAddresses(peerPubKey, lndUris);
-    await this.openChannelSync(peerPubKey, amount);
+    const connectionEstablished = await this.connectPeerAddreses(lndUris);
+    if (connectionEstablished) {
+      await this.openChannelSync(peerPubKey, amount);
+    } else {
+      throw new Error('connectPeerAddreses failed');
+    }
   }
 
   /**
    * Tries to connect to a given list of peer's node addresses
-   * in a sequential order. Resolves upon the first successful
-   * connectPeer attempt, rejects otherwise.
+   * in a sequential order.
+   * Returns true when successful, otherwise false.
    */
-  private tryConnectPeerAddresses = async (
-    peerPubKey: string,
+  private connectPeerAddreses = async (
     peerListeningUris: string[],
-  ): Promise<void> => {
-    return new Promise(async (resolve, reject) => {
-      const CONNECT_TIMEOUT = 10000;
-      setTimeout(() => {
-        return reject({ message: 'tryConnectPeerAddresses has timed out' });
-      }, CONNECT_TIMEOUT);
-      const peerAddresses = peerListeningUris
-        .map((listeningUri) => {
-          return listeningUri.split('@')[1];
-        });
-      let tryAnotherAddress = true;
-      while (tryAnotherAddress) {
-        try {
-          const address = peerAddresses.shift();
-          if (!address) {
-            return reject();
-          }
-          await this.connectPeer(peerPubKey, address);
-          tryAnotherAddress = false;
-          return resolve();
-        } catch (e) {
-          if (e.message && e.message.includes('already connected')) {
-            return resolve();
-          }
-          if (peerAddresses.length === 0) {
-            // No more addresses left to try, reject
-            return reject(e);
-          }
+  ): Promise<boolean> => {
+    const splitListeningUris = peerListeningUris
+      .map((uri) => {
+        const splitUri = uri.split('@');
+        return {
+          peerPubKey: splitUri[0],
+          address: splitUri[1],
+        };
+      });
+    const CONNECT_TIMEOUT = 4000;
+    for (const uri of splitListeningUris) {
+      const { peerPubKey, address } = uri;
+      let timeout;
+      try {
+        timeout = setTimeout(() => {
+          throw new Error('connectPeer has timed out');
+        }, CONNECT_TIMEOUT);
+        await this.connectPeer(peerPubKey, address);
+        return true;
+      } catch (e) {
+        if (e.message && e.message.includes('already connected')) {
+          return true;
         }
+        this.logger.trace(`connectPeer failed: ${e}`);
+      } finally {
+        timeout && clearTimeout(timeout);
       }
-    });
+    }
+    return false;
   }
 
   /**
