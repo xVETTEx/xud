@@ -49,13 +49,23 @@ class LndClient extends SwapClient {
   private channelSubscription?: ClientReadableStream<lndrpc.ChannelEventUpdate>;
   private invoiceSubscriptions = new Map<string, ClientReadableStream<lndrpc.Invoice>>();
 
+  private static MINUTES_PER_BLOCK_BY_CURRENCY: { [key: string]: number } = {
+    BTC: 10,
+    LTC: 2.5,
+  };
+
   /**
    * Creates an lnd client.
    * @param config the lnd configuration
    */
   constructor(private config: LndClientConfig, public currency: string, logger: Logger) {
     super(logger);
-    this.cltvDelta = config.cltvdelta || 0;
+    assert(config.cltvdelta > 0, 'cltv delta must be greater than 0');
+    this.cltvDelta = config.cltvdelta;
+  }
+
+  public get minutesPerBlock() {
+    return LndClient.MINUTES_PER_BLOCK_BY_CURRENCY[this.currency];
   }
 
   /** Initializes the client for calls to lnd and verifies that we can connect to it.  */

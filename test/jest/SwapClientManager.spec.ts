@@ -102,6 +102,7 @@ describe('Swaps.SwapClientManager', () => {
       disable: false,
       host: 'localhost',
       port: 1234,
+      cltvdelta: 5760,
     };
     db = new DB(loggers.db, config.dbpath);
   });
