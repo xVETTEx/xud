@@ -873,8 +873,6 @@ class Swaps extends EventEmitter {
         process.exit();
       }
 
-      this.setDealPhase(deal, SwapPhase.AmountReceived);
-
       this.setDealPhase(deal, SwapPhase.PaymentReceived);
       return deal.rPreimage!;
     }
