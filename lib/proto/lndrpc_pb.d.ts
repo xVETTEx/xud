@@ -1127,8 +1127,8 @@ export class Channel extends jspb.Message {
     getChannelPoint(): string;
     setChannelPoint(value: string): void;
 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
     getCapacity(): number;
     setCapacity(value: number): void;
@@ -1193,7 +1193,7 @@ export namespace Channel {
         active: boolean,
         remotePubkey: string,
         channelPoint: string,
-        chanId: number,
+        chanId: string,
         capacity: number,
         localBalance: number,
         remoteBalance: number,
@@ -1272,8 +1272,8 @@ export class ChannelCloseSummary extends jspb.Message {
     getChannelPoint(): string;
     setChannelPoint(value: string): void;
 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
     getChainHash(): string;
     setChainHash(value: string): void;
@@ -1313,7 +1313,7 @@ export class ChannelCloseSummary extends jspb.Message {
 export namespace ChannelCloseSummary {
     export type AsObject = {
         channelPoint: string,
-        chanId: number,
+        chanId: string,
         chainHash: string,
         closingTxHash: string,
         remotePubkey: string,
@@ -2016,20 +2016,20 @@ export namespace PendingChannelsResponse {
 
 
     export class PendingChannel extends jspb.Message { 
-    getRemoteNodePub(): string;
-    setRemoteNodePub(value: string): void;
+        getRemoteNodePub(): string;
+        setRemoteNodePub(value: string): void;
 
-    getChannelPoint(): string;
-    setChannelPoint(value: string): void;
+        getChannelPoint(): string;
+        setChannelPoint(value: string): void;
 
-    getCapacity(): number;
-    setCapacity(value: number): void;
+        getCapacity(): number;
+        setCapacity(value: number): void;
 
-    getLocalBalance(): number;
-    setLocalBalance(value: number): void;
+        getLocalBalance(): number;
+        setLocalBalance(value: number): void;
 
-    getRemoteBalance(): number;
-    setRemoteBalance(value: number): void;
+        getRemoteBalance(): number;
+        setRemoteBalance(value: number): void;
 
 
         serializeBinary(): Uint8Array;
@@ -2044,32 +2044,32 @@ export namespace PendingChannelsResponse {
 
     export namespace PendingChannel {
         export type AsObject = {
-        remoteNodePub: string,
-        channelPoint: string,
-        capacity: number,
-        localBalance: number,
-        remoteBalance: number,
+            remoteNodePub: string,
+            channelPoint: string,
+            capacity: number,
+            localBalance: number,
+            remoteBalance: number,
         }
     }
 
     export class PendingOpenChannel extends jspb.Message { 
 
-    hasChannel(): boolean;
-    clearChannel(): void;
-    getChannel(): PendingChannelsResponse.PendingChannel | undefined;
-    setChannel(value?: PendingChannelsResponse.PendingChannel): void;
+        hasChannel(): boolean;
+        clearChannel(): void;
+        getChannel(): PendingChannelsResponse.PendingChannel | undefined;
+        setChannel(value?: PendingChannelsResponse.PendingChannel): void;
 
-    getConfirmationHeight(): number;
-    setConfirmationHeight(value: number): void;
+        getConfirmationHeight(): number;
+        setConfirmationHeight(value: number): void;
 
-    getCommitFee(): number;
-    setCommitFee(value: number): void;
+        getCommitFee(): number;
+        setCommitFee(value: number): void;
 
-    getCommitWeight(): number;
-    setCommitWeight(value: number): void;
+        getCommitWeight(): number;
+        setCommitWeight(value: number): void;
 
-    getFeePerKw(): number;
-    setFeePerKw(value: number): void;
+        getFeePerKw(): number;
+        setFeePerKw(value: number): void;
 
 
         serializeBinary(): Uint8Array;
@@ -2084,23 +2084,23 @@ export namespace PendingChannelsResponse {
 
     export namespace PendingOpenChannel {
         export type AsObject = {
-        channel?: PendingChannelsResponse.PendingChannel.AsObject,
-        confirmationHeight: number,
-        commitFee: number,
-        commitWeight: number,
-        feePerKw: number,
+            channel?: PendingChannelsResponse.PendingChannel.AsObject,
+            confirmationHeight: number,
+            commitFee: number,
+            commitWeight: number,
+            feePerKw: number,
         }
     }
 
     export class WaitingCloseChannel extends jspb.Message { 
 
-    hasChannel(): boolean;
-    clearChannel(): void;
-    getChannel(): PendingChannelsResponse.PendingChannel | undefined;
-    setChannel(value?: PendingChannelsResponse.PendingChannel): void;
+        hasChannel(): boolean;
+        clearChannel(): void;
+        getChannel(): PendingChannelsResponse.PendingChannel | undefined;
+        setChannel(value?: PendingChannelsResponse.PendingChannel): void;
 
-    getLimboBalance(): number;
-    setLimboBalance(value: number): void;
+        getLimboBalance(): number;
+        setLimboBalance(value: number): void;
 
 
         serializeBinary(): Uint8Array;
@@ -2115,20 +2115,20 @@ export namespace PendingChannelsResponse {
 
     export namespace WaitingCloseChannel {
         export type AsObject = {
-        channel?: PendingChannelsResponse.PendingChannel.AsObject,
-        limboBalance: number,
+            channel?: PendingChannelsResponse.PendingChannel.AsObject,
+            limboBalance: number,
         }
     }
 
     export class ClosedChannel extends jspb.Message { 
 
-    hasChannel(): boolean;
-    clearChannel(): void;
-    getChannel(): PendingChannelsResponse.PendingChannel | undefined;
-    setChannel(value?: PendingChannelsResponse.PendingChannel): void;
+        hasChannel(): boolean;
+        clearChannel(): void;
+        getChannel(): PendingChannelsResponse.PendingChannel | undefined;
+        setChannel(value?: PendingChannelsResponse.PendingChannel): void;
 
-    getClosingTxid(): string;
-    setClosingTxid(value: string): void;
+        getClosingTxid(): string;
+        setClosingTxid(value: string): void;
 
 
         serializeBinary(): Uint8Array;
@@ -2143,37 +2143,37 @@ export namespace PendingChannelsResponse {
 
     export namespace ClosedChannel {
         export type AsObject = {
-        channel?: PendingChannelsResponse.PendingChannel.AsObject,
-        closingTxid: string,
+            channel?: PendingChannelsResponse.PendingChannel.AsObject,
+            closingTxid: string,
         }
     }
 
     export class ForceClosedChannel extends jspb.Message { 
 
-    hasChannel(): boolean;
-    clearChannel(): void;
-    getChannel(): PendingChannelsResponse.PendingChannel | undefined;
-    setChannel(value?: PendingChannelsResponse.PendingChannel): void;
+        hasChannel(): boolean;
+        clearChannel(): void;
+        getChannel(): PendingChannelsResponse.PendingChannel | undefined;
+        setChannel(value?: PendingChannelsResponse.PendingChannel): void;
 
-    getClosingTxid(): string;
-    setClosingTxid(value: string): void;
+        getClosingTxid(): string;
+        setClosingTxid(value: string): void;
 
-    getLimboBalance(): number;
-    setLimboBalance(value: number): void;
+        getLimboBalance(): number;
+        setLimboBalance(value: number): void;
 
-    getMaturityHeight(): number;
-    setMaturityHeight(value: number): void;
+        getMaturityHeight(): number;
+        setMaturityHeight(value: number): void;
 
-    getBlocksTilMaturity(): number;
-    setBlocksTilMaturity(value: number): void;
+        getBlocksTilMaturity(): number;
+        setBlocksTilMaturity(value: number): void;
 
-    getRecoveredBalance(): number;
-    setRecoveredBalance(value: number): void;
+        getRecoveredBalance(): number;
+        setRecoveredBalance(value: number): void;
 
-    clearPendingHtlcsList(): void;
-    getPendingHtlcsList(): Array<PendingHTLC>;
-    setPendingHtlcsList(value: Array<PendingHTLC>): void;
-    addPendingHtlcs(value?: PendingHTLC, index?: number): PendingHTLC;
+        clearPendingHtlcsList(): void;
+        getPendingHtlcsList(): Array<PendingHTLC>;
+        setPendingHtlcsList(value: Array<PendingHTLC>): void;
+        addPendingHtlcs(value?: PendingHTLC, index?: number): PendingHTLC;
 
 
         serializeBinary(): Uint8Array;
@@ -2188,13 +2188,13 @@ export namespace PendingChannelsResponse {
 
     export namespace ForceClosedChannel {
         export type AsObject = {
-        channel?: PendingChannelsResponse.PendingChannel.AsObject,
-        closingTxid: string,
-        limboBalance: number,
-        maturityHeight: number,
-        blocksTilMaturity: number,
-        recoveredBalance: number,
-        pendingHtlcsList: Array<PendingHTLC.AsObject>,
+            channel?: PendingChannelsResponse.PendingChannel.AsObject,
+            closingTxid: string,
+            limboBalance: number,
+            maturityHeight: number,
+            blocksTilMaturity: number,
+            recoveredBalance: number,
+            pendingHtlcsList: Array<PendingHTLC.AsObject>,
         }
     }
 
@@ -2485,8 +2485,8 @@ export namespace QueryRoutesResponse {
 }
 
 export class Hop extends jspb.Message { 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
     getChanCapacity(): number;
     setChanCapacity(value: number): void;
@@ -2522,7 +2522,7 @@ export class Hop extends jspb.Message {
 
 export namespace Hop {
     export type AsObject = {
-        chanId: number,
+        chanId: string,
         chanCapacity: number,
         amtToForward: number,
         fee: number,
@@ -2840,8 +2840,8 @@ export namespace ChannelGraph {
 }
 
 export class ChanInfoRequest extends jspb.Message { 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
 
     serializeBinary(): Uint8Array;
@@ -2856,7 +2856,7 @@ export class ChanInfoRequest extends jspb.Message {
 
 export namespace ChanInfoRequest {
     export type AsObject = {
-        chanId: number,
+        chanId: string,
     }
 }
 
@@ -3058,8 +3058,8 @@ export namespace NodeUpdate {
 }
 
 export class ChannelEdgeUpdate extends jspb.Message { 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
 
     hasChanPoint(): boolean;
@@ -3095,7 +3095,7 @@ export class ChannelEdgeUpdate extends jspb.Message {
 
 export namespace ChannelEdgeUpdate {
     export type AsObject = {
-        chanId: number,
+        chanId: string,
         chanPoint?: ChannelPoint.AsObject,
         capacity: number,
         routingPolicy?: RoutingPolicy.AsObject,
@@ -3105,8 +3105,8 @@ export namespace ChannelEdgeUpdate {
 }
 
 export class ClosedChannelUpdate extends jspb.Message { 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
     getCapacity(): number;
     setCapacity(value: number): void;
@@ -3133,7 +3133,7 @@ export class ClosedChannelUpdate extends jspb.Message {
 
 export namespace ClosedChannelUpdate {
     export type AsObject = {
-        chanId: number,
+        chanId: string,
         capacity: number,
         closedHeight: number,
         chanPoint?: ChannelPoint.AsObject,
@@ -3144,8 +3144,8 @@ export class HopHint extends jspb.Message {
     getNodeId(): string;
     setNodeId(value: string): void;
 
-    getChanId(): number;
-    setChanId(value: number): void;
+    getChanId(): string;
+    setChanId(value: string): void;
 
     getFeeBaseMsat(): number;
     setFeeBaseMsat(value: number): void;
@@ -3170,7 +3170,7 @@ export class HopHint extends jspb.Message {
 export namespace HopHint {
     export type AsObject = {
         nodeId: string,
-        chanId: number,
+        chanId: string,
         feeBaseMsat: number,
         feeProportionalMillionths: number,
         cltvExpiryDelta: number,

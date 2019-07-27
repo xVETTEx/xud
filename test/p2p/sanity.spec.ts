@@ -60,8 +60,8 @@ describe('P2P Sanity Tests', () => {
 
     await Promise.all([nodeOne.start(nodeOneConfig), nodeTwo.start(nodeTwoConfig)]);
 
-    nodeOnePubKey = nodeOne['pool'].nodeState.nodePubKey;
-    nodeTwoPubKey = nodeTwo['pool'].nodeState.nodePubKey;
+    nodeOnePubKey = nodeOne['pool'].nodePubKey;
+    nodeTwoPubKey = nodeTwo['pool'].nodePubKey;
 
     nodeTwoPort = nodeTwo['pool']['listenPort']!;
     nodeOneUri = toUri({ nodePubKey: nodeOnePubKey, host: 'localhost', port: nodeOne['pool']['listenPort']! });
@@ -87,7 +87,7 @@ describe('P2P Sanity Tests', () => {
       done();
     });
 
-    nodeTwo['pool'].updateRaidenAddress(raidenAddress);
+    nodeTwo['pool'].updateRaidenState(new Map(), raidenAddress);
   });
 
   it('should fail connecting to the same node', async () => {
@@ -103,7 +103,7 @@ describe('P2P Sanity Tests', () => {
   });
 
   it('should fail when connecting to an unexpected node pub key', async () => {
-    const randomPubKey =  (await NodeKey['generate']()).nodePubKey;
+    const randomPubKey =  (await NodeKey['generate']()).pubKey;
     const host = 'localhost';
     const port = nodeTwoPort;
     const nodeUri = toUri({ host, port, nodePubKey: randomPubKey });

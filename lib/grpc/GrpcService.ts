@@ -132,6 +132,7 @@ class GrpcService {
       case serviceErrorCodes.INVALID_ARGUMENT:
       case p2pErrorCodes.ATTEMPTED_CONNECTION_TO_SELF:
       case p2pErrorCodes.UNEXPECTED_NODE_PUB_KEY:
+      case orderErrorCodes.MIN_QUANTITY_VIOLATED:
       case orderErrorCodes.QUANTITY_DOES_NOT_MATCH:
         code = status.INVALID_ARGUMENT;
         break;
@@ -251,6 +252,19 @@ class GrpcService {
         balance.setPendingOpenBalance(channelBalance.pendingOpenBalance);
         balancesMap.set(currency, balance);
       });
+      callback(null, response);
+    } catch (err) {
+      callback(this.getGrpcError(err), null);
+    }
+  }
+
+  /**
+   * See [[Service.openChannel]]
+   */
+  public openChannel: grpc.handleUnaryCall<xudrpc.OpenChannelRequest, xudrpc.OpenChannelResponse> = async (call, callback) => {
+    try {
+      await this.service.openChannel(call.request.toObject());
+      const response = new xudrpc.OpenChannelResponse();
       callback(null, response);
     } catch (err) {
       callback(this.getGrpcError(err), null);
@@ -382,9 +396,9 @@ class GrpcService {
         return lnd;
       });
       const lndMap = response.getLndMap();
-      for (const currency in getInfoResponse.lnd) {
-        lndMap.set(currency, getLndInfo(getInfoResponse.lnd[currency]!));
-      }
+      getInfoResponse.lnd.forEach((lndInfo, currency) => {
+        lndMap.set(currency, getLndInfo(lndInfo));
+      });
 
       if (getInfoResponse.raiden) {
         const raiden = new xudrpc.RaidenInfo();
