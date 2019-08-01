@@ -733,7 +733,7 @@ class Swaps extends EventEmitter {
         return false;
     }
 
-    if (tokenAddress !== expectedTokenAddress) {
+    if (tokenAddress && tokenAddress.toLowerCase() !== expectedTokenAddress!.toLowerCase()) {
       this.logger.error(`received token address ${tokenAddress}, expected ${expectedTokenAddress}`);
       this.failDeal(deal, SwapFailureReason.InvalidResolveRequest, `Token address ${tokenAddress} did not match ${expectedTokenAddress}`);
       return false;
