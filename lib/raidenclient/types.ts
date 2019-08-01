@@ -52,6 +52,7 @@ export type TokenPaymentRequest = {
   target_address: string,
   amount: number,
   secret_hash: string,
+  lock_timeout: number,
   identifier?: number,
 };
 
