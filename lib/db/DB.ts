@@ -6,7 +6,7 @@ import * as db from './types';
 import { XuNetwork } from '../constants/enums';
 import { promises as fs } from 'fs';
 import {
-  defaultNodes,
+  // defaultNodes,
   defaultCurrencies,
   defaultPairs,
 } from '../db/seeds';
@@ -75,10 +75,12 @@ class DB {
 
     if (shouldInitDb) {
       // initialize database with the seed nodes for the configured network
+      /*
       const nodes = defaultNodes(network);
       if (nodes) {
         await Node.bulkCreate(nodes);
       }
+      */
 
       // initialize database with the default currencies for the configured network
       const currencies = defaultCurrencies(network);
