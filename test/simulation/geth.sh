@@ -1,7 +1,6 @@
 #!/bin/bash
 set -xe
 declare -xp
-eval "$(GIMME_GO_VERSION=1.12 gimme)"
 export GOPATH="$PWD/go"
 export CI=false
 GETH_SOURCE="https://github.com/ExchangeUnion/go-ethereum"

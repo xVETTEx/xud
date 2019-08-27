@@ -12,8 +12,8 @@ cache:
     - "seedutil/go" # go modules used for xudseed
     - "test/simulation/go" # lnd, btcd, and dependencies
 
-# before_install:
-# - eval "$(GIMME_GO_VERSION=1.12 gimme)"
+before_install:
+  - eval "$(GIMME_GO_VERSION=1.12 gimme)"
 
 script:
   - cd test/simulation
