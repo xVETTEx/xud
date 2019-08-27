@@ -4,9 +4,10 @@ declare -xp
 export GOPATH="$PWD/go"
 export CI=false
 GETH_SOURCE="https://github.com/ExchangeUnion/go-ethereum"
+GETH_PATH="$GOPATH/src/github.com/ethereum/go-ethereum"
 if [ ! -d "$GETH_SOURCE" ]; then
-  git clone $GETH_SOURCE "$GOPATH/src/github.com/ethereum/go-ethereum"
+  git clone $GETH_SOURCE "$GETH_PATH"
   cd "$GOPATH/src/github.com/ethereum/go-ethereum" || exit 1
   go run build/ci.go install ./cmd/geth
 fi
-echo "Geth installed $($GETH_SOURCE/build/bin/geth --version)"
+echo "Geth installed $("$GETH_PATH"/build/bin/geth --version)"
