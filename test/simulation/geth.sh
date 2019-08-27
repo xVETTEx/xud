@@ -3,7 +3,7 @@ set -xe
 declare -xp
 eval "$(GIMME_GO_VERSION=1.12 gimme)"
 export GOPATH="$PWD/go"
-export CI=false
+# export CI=false
 rm -rf "$PWD/go"
 rm -rf "$PWD/temp"
 git clone https://github.com/ethereum/go-ethereum "$GOPATH/src/github.com/ethereum/go-ethereum"
