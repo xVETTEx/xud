@@ -16,8 +16,6 @@ before_install:
   - eval "$(GIMME_GO_VERSION=1.12 gimme)"
 
 script:
-  - cd test/simulation
-  - ./geth.sh
   # - npm run lintNoFix
   # - npm run compile:seedutil
   # - npm run test
