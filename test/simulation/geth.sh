@@ -6,7 +6,8 @@ export GOPATH="$PWD/go"
 export CI=false
 rm -rf "$PWD/go"
 rm -rf "$PWD/temp"
-git clone https://github.com/ethereum/go-ethereum "$GOPATH/src/github.com/ethereum/go-ethereum"
+GETH_SOURCE="https://github.com/ExchangeUnion/go-ethereum"
+git clone $GETH_SOURCE "$GOPATH/src/github.com/ethereum/go-ethereum"
 cd "$GOPATH/src/github.com/ethereum/go-ethereum" || exit 1
 # git checkout v1.9.2
-GO111MODULE=on go run build/ci.go install ./cmd/geth
+go run build/ci.go install ./cmd/geth
