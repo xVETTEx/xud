@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 CONTRACTS_REPOSITORY=$1
 CONTRACTS_BRANCH=$2
 CONTRACTS_PATH=$3
