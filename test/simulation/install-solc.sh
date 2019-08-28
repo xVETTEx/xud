@@ -9,7 +9,6 @@ install_solc () {
   cd "$SOLC_PATH"
   wget "$SOLC_SOURCE"
   unzip ./*.zip
-  export PATH="$SOLC_PATH:$PATH"
 }
 if [ ! -d "$SOLC_PATH" ]; then
   install_solc

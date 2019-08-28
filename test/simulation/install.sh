@@ -11,4 +11,5 @@ SOLC_SOURCE="https://github.com/ethereum/solidity/releases/download/v0.4.23/soli
 SOLC_PATH="$PWD/cache/solc"
 SOLC_SHA256SUM="1006dc09dc46f396641931b0494383b8d73b3fd2b447f5300f5d2dbe5fd23368"
 ./install-solc.sh "$SOLC_SOURCE" "$SOLC_PATH" "$SOLC_SHA256SUM"
+export PATH="$SOLC_PATH:$PATH"
 echo "solc version: $(solc --version)"
