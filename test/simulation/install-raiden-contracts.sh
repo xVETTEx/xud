@@ -8,7 +8,7 @@ install_contracts () {
   echo "installing raiden-contracts"
   git clone --depth 1 "$CONTRACTS_REPOSITORY" -b "$CONTRACTS_BRANCH" "$CONTRACTS_PATH"
   cd "$CONTRACTS_PATH"
-  virtualenv venv
+  python3.7 -m venv venv
   # shellcheck source=/dev/null
   source venv/bin/activate
   make install
