@@ -42,3 +42,6 @@ GETH_PORT=8545
 
 TREASURY_ACCOUNT_PATH="$GETH_DATA_DIR/keystore/treasury"
 ./create-ethereum-account.sh "$TREASURY_ACCOUNT_PATH" "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GETH_NETWORK_ID"
+
+# debug
+sleep 360
