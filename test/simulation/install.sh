@@ -13,3 +13,12 @@ SOLC_SHA256SUM="1006dc09dc46f396641931b0494383b8d73b3fd2b447f5300f5d2dbe5fd23368
 ./install-solc.sh "$SOLC_SOURCE" "$SOLC_PATH" "$SOLC_SHA256SUM"
 export PATH="$SOLC_PATH:$PATH"
 echo "solc version: $(solc --version)"
+RAIDEN_CONTRACTS_REPOSITORY="https://github.com/ExchangeUnion/raiden-contracts.git"
+RAIDEN_CONTRACTS_BRANCH="simnet-contracts"
+RAIDEN_CONTRACTS_PATH="$PWD/cache/raiden-contracts"
+RAIDEN_CONTRACTS_COMMIT_HASH="8a705ba98da0b6ab1a53282a9ac330930850201a"
+./install-raiden-contracts.sh \
+  "$RAIDEN_CONTRACTS_REPOSITORY" \
+  "$RAIDEN_CONTRACTS_BRANCH" \
+  "$RAIDEN_CONTRACTS_PATH" \
+  "$RAIDEN_CONTRACTS_COMMIT_HASH"
