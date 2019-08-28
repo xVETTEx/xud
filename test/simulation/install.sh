@@ -28,3 +28,8 @@ RAIDEN_CONTRACTS_COMMIT_HASH="8a705ba98da0b6ab1a53282a9ac330930850201a"
 AUTOMINER_VENV_DIR="autominer-venv"
 AUTOMINER_SOURCE="$PWD/utils/autominer"
 ./install-autominer.sh "$CACHE_PATH" "$AUTOMINER_VENV_DIR" "$AUTOMINER_SOURCE"
+
+GETH_DATA_DIR="$CACHE_PATH/geth"
+GETH_BINARY_PATH="$GETH_PATH/build/bin/geth"
+GENESIS_JSON="$PWD/utils/genesis.json"
+./create-geth-genesis.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GENESIS_JSON"
