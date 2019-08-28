@@ -1,6 +1,5 @@
 #!/bin/bash
-set -ex
-# SOLC_SOURCE=$1
+set -e
 SOLC_SOURCE=$1
 SOLC_PATH=$2
 EXPECTED_SHA256SUM=$3
