@@ -1,4 +1,4 @@
-# dist: xenial
+dist: disco
 
 language: node_js
 
@@ -14,7 +14,7 @@ cache:
     - "test/simulation/cache" # cache for non-go dependencies
 
 before_install:
-  - sudo apt-get install -y libz3-dev python3.7 python3.7-venv
+  - sudo apt-get install -y libz3-dev python3.7 python3.7-dev python3.7-venv
   - eval "$(GIMME_GO_VERSION=1.12 gimme)"
 
 addons:

@@ -11,6 +11,7 @@ install_contracts () {
   python3.7 -m venv venv
   # shellcheck source=/dev/null
   source venv/bin/activate
+  pip install wheel
   make install
   make verify_contracts
   make compile_contracts
