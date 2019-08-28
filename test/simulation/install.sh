@@ -15,6 +15,7 @@ SOLC_SHA256SUM="1006dc09dc46f396641931b0494383b8d73b3fd2b447f5300f5d2dbe5fd23368
 ./install-solc.sh "$SOLC_SOURCE" "$SOLC_PATH" "$SOLC_SHA256SUM"
 export PATH="$SOLC_PATH:$PATH"
 echo "solc version: $(solc --version)"
+
 RAIDEN_CONTRACTS_REPOSITORY="https://github.com/ExchangeUnion/raiden-contracts.git"
 RAIDEN_CONTRACTS_BRANCH="simnet-contracts"
 RAIDEN_CONTRACTS_PATH="$CACHE_PATH/raiden-contracts"
@@ -33,3 +34,11 @@ GETH_DATA_DIR="$CACHE_PATH/geth"
 GETH_BINARY_PATH="$GETH_PATH/build/bin/geth"
 GENESIS_JSON="$PWD/utils/genesis.json"
 ./create-geth-genesis.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GENESIS_JSON"
+
+GETH_NETWORK_ID=4321
+GETH_RPCADDR="localhost"
+GETH_PORT=8545
+./start-geth.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GETH_NETWORK_ID" "$GETH_RPCADDR" "$GETH_PORT"
+
+TREASURY_ACCOUNT_PATH="$GETH_DATA_DIR/keystore/treasury"
+./create-ethereum-account.sh "$TREASURY_ACCOUNT_PATH" "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GETH_NETWORK_ID"
