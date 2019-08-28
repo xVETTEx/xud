@@ -14,7 +14,12 @@ cache:
     - "test/simulation/cache" # cache for non-go dependencies
 
 before_install:
+  - sudo apt-get install -y libz3-dev
   - eval "$(GIMME_GO_VERSION=1.12 gimme)"
+
+addons:
+  apt:
+    update: true
 
 script:
   # - npm run lintNoFix
