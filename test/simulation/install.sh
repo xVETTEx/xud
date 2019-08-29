@@ -3,6 +3,7 @@ set -xe
 
 export GO_PATH=$PWD/go
 CACHE_PATH="$PWD/cache"
+TEMP_PATH="$PWD/temp"
 
 GETH_SOURCE="https://github.com/ExchangeUnion/go-ethereum"
 GETH_PATH="$GO_PATH/src/github.com/ethereum/go-ethereum"
@@ -30,7 +31,7 @@ AUTOMINER_VENV_DIR="autominer-venv"
 AUTOMINER_SOURCE="$PWD/utils/autominer"
 ./install-autominer.sh "$CACHE_PATH" "$AUTOMINER_VENV_DIR" "$AUTOMINER_SOURCE"
 
-GETH_DATA_DIR="$CACHE_PATH/geth"
+GETH_DATA_DIR="$TEMP_PATH/geth"
 GETH_BINARY_PATH="$GETH_PATH/build/bin/geth"
 GENESIS_JSON="$PWD/utils/genesis.json"
 ./create-geth-genesis.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GENESIS_JSON"
