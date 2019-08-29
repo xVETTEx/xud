@@ -16,6 +16,6 @@ sleep 5
 if [ $WAIT_FOR_DAG ]; then
   $GETH_BINARY_PATH --datadir "$GETH_DATA_DIR" --networkid "$GETH_NETWORK_ID" --exec "var acc = personal.newAccount(''); miner.start(500)" attach
   echo "waiting for DAG"
-  EXPECTED_CI_DAG_GENERATION_TIME=720
+  EXPECTED_CI_DAG_GENERATION_TIME=540
   sleep $EXPECTED_CI_DAG_GENERATION_TIME
 fi
