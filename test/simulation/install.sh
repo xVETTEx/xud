@@ -50,3 +50,6 @@ GETH_IPC="$GETH_DATA_DIR/geth.ipc"
 
 GETH_PROVIDER="http://$GETH_RPCADDR:$GETH_PORT"
 ./deploy-contracts.sh "$RAIDEN_CONTRACTS_PATH" "$GETH_PROVIDER" "$TREASURY_ACCOUNT_PATH" "$GETH_DATA_DIR" "$TEMP_PATH"
+
+pgrep python | xargs kill -15
+pgrep geth | xargs kill -15
