@@ -32,16 +32,17 @@ AUTOMINER_SOURCE="$PWD/utils/autominer"
 
 GETH_DATA_DIR="$CACHE_PATH/geth"
 GETH_BINARY_PATH="$GETH_PATH/build/bin/geth"
-# GENESIS_JSON="$PWD/utils/genesis.json"
-# ./create-geth-genesis.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GENESIS_JSON"
+GENESIS_JSON="$PWD/utils/genesis.json"
+./create-geth-genesis.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GENESIS_JSON"
 
 GETH_NETWORK_ID=4321
 GETH_RPCADDR="localhost"
 GETH_PORT=8545
-./start-geth.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GETH_NETWORK_ID" "$GETH_RPCADDR" "$GETH_PORT"
+DAG_DIR="$CACHE_PATH/.ethash"
+./start-geth.sh "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GETH_NETWORK_ID" "$GETH_RPCADDR" "$GETH_PORT" "$DAG_DIR"
 
 TREASURY_ACCOUNT_PATH="$GETH_DATA_DIR/keystore/treasury"
 ./create-ethereum-account.sh "$TREASURY_ACCOUNT_PATH" "$GETH_BINARY_PATH" "$GETH_DATA_DIR" "$GETH_NETWORK_ID"
 
 # debug
-# sleep 600
+sleep 2700
