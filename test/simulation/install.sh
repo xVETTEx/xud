@@ -19,7 +19,7 @@ echo "solc version: $(solc --version)"
 
 RAIDEN_CONTRACTS_REPOSITORY="https://github.com/ExchangeUnion/raiden-contracts.git"
 RAIDEN_CONTRACTS_BRANCH="simnet-contracts"
-RAIDEN_CONTRACTS_PATH="$CACHE_PATH/raiden-contracts"
+RAIDEN_CONTRACTS_PATH="$TEMP_PATH/raiden-contracts"
 RAIDEN_CONTRACTS_COMMIT_HASH="8a705ba98da0b6ab1a53282a9ac330930850201a"
 ./install-raiden-contracts.sh \
   "$RAIDEN_CONTRACTS_REPOSITORY" \
