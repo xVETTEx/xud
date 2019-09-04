@@ -13,33 +13,39 @@ var integrationTestCases = []*testCase{
 		test: testNetworkInit,
 	},
 	{
-		name: "p2p discovery",
-		test: testP2PDiscovery,
+		name: "raiden swap",
+		test: testRaidenSwap,
 	},
-	{
-		name: "p2p incorrect public key",
-		test: testP2PIncorrectPubKey,
-	},
-	{
-		name: "p2p ban unban",
-		test: testP2PBanUnban,
-	},
-	{
-		name: "p2p already connected",
-		test: testP2PAlreadyConnected,
-	},
-	{
-		name: "order broadcast and invalidation",
-		test: testOrderBroadcastAndInvalidation,
-	},
-	{
-		name: "order matching and swap",
-		test: testOrderMatchingAndSwap,
-	},
-	{
-		name: "multiple hop swap",
-		test: testMultiHopSwap,
-	},
+	/*
+		{
+			name: "order matching and swap",
+			test: testOrderMatchingAndSwap,
+		},
+			{
+				name: "p2p discovery",
+				test: testP2PDiscovery,
+			},
+				{
+					name: "p2p incorrect public key",
+					test: testP2PIncorrectPubKey,
+				},
+				{
+					name: "p2p ban unban",
+					test: testP2PBanUnban,
+				},
+				{
+					name: "p2p already connected",
+					test: testP2PAlreadyConnected,
+				},
+				{
+					name: "order broadcast and invalidation",
+					test: testOrderBroadcastAndInvalidation,
+				},
+				{
+					name: "multiple hop swap",
+					test: testMultiHopSwap,
+				},
+	*/
 }
 
 // testNetworkInit implements:
@@ -107,7 +113,7 @@ func testP2PIncorrectPubKey(net *xudtest.NetworkHarness, ht *harnessTest) {
 	ht.assert.Error(err)
 	ht.assert.Contains(err.Error(), fmt.Sprintf(
 		"Peer %v disconnected from us due to AuthFailureInvalidTarget",
-		incorrectPubKey + "@" + net.Bob.Cfg.P2PAddr()))
+		incorrectPubKey+"@"+net.Bob.Cfg.P2PAddr()))
 }
 
 // testP2PBanUnban implements:
@@ -130,7 +136,7 @@ func testP2PBanUnban(net *xudtest.NetworkHarness, ht *harnessTest) {
 	ht.assert.Error(err)
 	ht.assert.Contains(err.Error(), fmt.Sprintf(
 		" Peer %v disconnected from us due to Banned",
-		net.Alice.PubKey() + "@" + net.Alice.Cfg.P2PAddr()))
+		net.Alice.PubKey()+"@"+net.Alice.Cfg.P2PAddr()))
 
 	// After Alice unban Bob, connection attempts from both directions should succeed.
 	ht.act.unban(net.Alice, net.Bob)
@@ -190,10 +196,113 @@ func testOrderBroadcastAndInvalidation(net *xudtest.NetworkHarness, ht *harnessT
 	ht.act.disconnect(net.Alice, net.Bob)
 }
 
+func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
+	// Connect Alice to Bob.
+	ht.act.connect(net.Alice, net.Bob)
+	ht.act.verifyConnectivity(net.Alice, net.Bob)
+
+	// Getinfo
+	fmt.Printf("\nwaiting for raidens to boot...\n")
+	time.Sleep(45 * time.Second)
+	infoReq := &xudrpc.GetInfoRequest{}
+	res, err := net.Bob.Client.GetInfo(ht.ctx, infoReq)
+	fmt.Printf("\nres is %v\n", res)
+	fmt.Printf("\nerror is %v\n", err)
+
+	listPairsReq := &xudrpc.ListPairsRequest{}
+	listPairsRes, err := net.Bob.Client.ListPairs(ht.ctx, listPairsReq)
+	fmt.Printf("\nbob listpairs %v\n", listPairsRes)
+	fmt.Printf("\nerror is %v\n", err)
+
+	// ht.act.openChannel(net.Bob, net.Alice, "BTC", 16000000)
+	ht.act.openChannel(net.Bob, net.Alice, "WETH", 7500000)
+	// wait for blocks to be mined
+	time.Sleep(10 * time.Second)
+
+	bobBalance, err := getBalance(ht.ctx, net.Bob)
+	ht.assert.NoError(err)
+	fmt.Printf("\nBob balance %v\n", bobBalance.btc.channel)
+
+	aliceBalance, err := getBalance(ht.ctx, net.Alice)
+	ht.assert.NoError(err)
+	fmt.Printf("\nAlice balance %v\n", aliceBalance.btc.channel)
+
+	aliceWethBalanceReq := &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
+	aliceWethBalanceRes, err := net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
+	ht.assert.NoError(err)
+	fmt.Printf("\nAlice WETH balance %v\n", aliceWethBalanceRes)
+
+	bobWethBalanceReq := &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
+	bobWethBalanceRes, err := net.Bob.Client.ChannelBalance(ht.ctx, bobWethBalanceReq)
+	ht.assert.NoError(err)
+	fmt.Printf("\nBob WETH balance %v\n", bobWethBalanceRes)
+
+	// Place an order on Alice.
+	req := &xudrpc.PlaceOrderRequest{
+		OrderId:  "maker_order_id",
+		Price:    0.02,
+		Quantity: 10000,
+		PairId:   "WETH/BTC",
+		Side:     xudrpc.OrderSide_BUY,
+	}
+	ht.act.placeOrderAndBroadcast(net.Alice, net.Bob, req)
+
+	// Place a matching order on Bob.
+	req = &xudrpc.PlaceOrderRequest{
+		OrderId:  "taker_order_id",
+		Price:    req.Price,
+		Quantity: req.Quantity,
+		PairId:   req.PairId,
+		Side:     xudrpc.OrderSide_SELL,
+	}
+	ht.act.placeOrderAndSwap(net.Bob, net.Alice, req)
+
+	time.Sleep(5 * time.Second)
+	aliceWethBalanceReq = &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
+	aliceWethBalanceRes, err = net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
+	ht.assert.NoError(err)
+	fmt.Printf("\nAlice WETH balance %v\n", aliceWethBalanceRes)
+
+	bobWethBalanceReq = &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
+	bobWethBalanceRes, err = net.Bob.Client.ChannelBalance(ht.ctx, bobWethBalanceReq)
+	ht.assert.NoError(err)
+	fmt.Printf("\nBob WETH balance %v\n", bobWethBalanceRes)
+
+	// Place an order on Alice.
+	req = &xudrpc.PlaceOrderRequest{
+		OrderId:  "maker_order_id",
+		Price:    0.02,
+		Quantity: 1000,
+		PairId:   "WETH/BTC",
+		Side:     xudrpc.OrderSide_SELL,
+	}
+	ht.act.placeOrderAndBroadcast(net.Alice, net.Bob, req)
+
+	// Place a matching order on Bob.
+	req = &xudrpc.PlaceOrderRequest{
+		OrderId:  "taker_order_id",
+		Price:    req.Price,
+		Quantity: req.Quantity,
+		PairId:   req.PairId,
+		Side:     xudrpc.OrderSide_BUY,
+	}
+	ht.act.placeOrderAndSwap(net.Bob, net.Alice, req)
+
+	// Cleanup.
+	ht.act.disconnect(net.Alice, net.Bob)
+}
+
 func testOrderMatchingAndSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 	// Connect Alice to Bob.
 	ht.act.connect(net.Alice, net.Bob)
 	ht.act.verifyConnectivity(net.Alice, net.Bob)
+
+	// Getinfo
+	time.Sleep(10 * time.Second)
+	infoReq := &xudrpc.GetInfoRequest{}
+	res, err := net.Bob.Client.GetInfo(ht.ctx, infoReq)
+	fmt.Printf("res is %v", res)
+	fmt.Printf("error is %v", err)
 
 	// Place an order on Alice.
 	req := &xudrpc.PlaceOrderRequest{

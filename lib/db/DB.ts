@@ -77,7 +77,7 @@ class DB {
       // initialize database with the seed nodes for the configured network
       const nodes = defaultNodes(network);
       if (nodes) {
-        await Node.bulkCreate(nodes);
+        // await Node.bulkCreate(nodes);
       }
 
       // initialize database with the default currencies for the configured network

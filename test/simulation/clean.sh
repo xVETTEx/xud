@@ -10,3 +10,5 @@ delete_dir() {
 
 delete_dir "./go"
 delete_dir "./xud"
+delete_dir "./temp"
+delete_dir "./cache"

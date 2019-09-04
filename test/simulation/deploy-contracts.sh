@@ -1,21 +1,26 @@
 #!/bin/bash
-set -e
-RAIDEN_CONTRACTS_PATH=$1
-GETH_PROVIDER=$2
-TREASURY_ACCOUNT_PATH=$3
-GETH_DATA_DIR=$4
-TEMP_PATH=$5
-PASSWORD_FILE="$GETH_DATA_DIR/passwd"
-CONTRACTS_DEPLOYMENT_LOG_JSON="$RAIDEN_CONTRACTS_PATH/raiden_contracts/data/deployment_private_net.json"
-CONTRACTS_WETH_LOG_JSON="$TEMP_PATH/weth.log"
+set -ex
+source .env
+ETH_ERC20="WETH"
+WETH_SUPPLY=1000000000
+MAX_UINT256=115792089237316195423570985008687907853269984665640564039457584007913129639935
+(( "SECONDS_PER_DAY=60*60*24" ))
+(( "DECAY=200*$SECONDS_PER_DAY" ))
+(( "DURATION=200*$SECONDS_PER_DAY" ))
+DEPOSIT=2000000000000000000000
 touch "$PASSWORD_FILE"
 chmod 600 "$PASSWORD_FILE"
 cd "$RAIDEN_CONTRACTS_PATH"
 # shellcheck source=/dev/null
 source "venv/bin/activate"
-python -m raiden_contracts.deploy raiden --rpc-provider "$GETH_PROVIDER" --private-key "$TREASURY_ACCOUNT_PATH" --password-file "$PASSWORD_FILE" --gas-price 10 --gas-limit 6000000
+python -m raiden_contracts.deploy raiden --rpc-provider "$GETH_PROVIDER" --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --gas-limit 6000000 --max-token-networks 10 --password "$PASSWORD_FILE"
 TokenNetworkRegistry=$(< "$CONTRACTS_DEPLOYMENT_LOG_JSON" jq -r .contracts.TokenNetworkRegistry.address)
-python -m raiden_contracts.deploy token --rpc-provider "$GETH_PROVIDER" --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --token-supply 100000000000000000 --token-name WETH --token-decimals 18 --token-symbol WETH --password-file "$PASSWORD_FILE" > "$CONTRACTS_WETH_LOG_JSON"
+echo "Token from file $TokenNetworkRegistry"
+python -m raiden_contracts.deploy token --rpc-provider $GETH_PROVIDER --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --token-supply 20000000 --token-name ServiceToken --token-decimals 18 --token-symbol SVT --password "$PASSWORD_FILE" > "$CONTRACTS_SERVICETOKEN_LOG_JSON"
+ServiceToken=$(< "$CONTRACTS_SERVICETOKEN_LOG_JSON" tail -3 | jq -r .CustomToken)
+python -m raiden_contracts.deploy services --rpc-provider $GETH_PROVIDER --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --gas-limit 6000000 --token-address "$ServiceToken" --user-deposit-whole-limit $MAX_UINT256 --service-deposit-bump-numerator 6 --service-deposit-bump-denominator 5 --service-deposit-decay-constant "$DECAY" --initial-service-deposit-price $DEPOSIT --service-deposit-min-price 1000 --service-registration-duration "$DURATION" --token-network-registry-address "$TokenNetworkRegistry" --password "$PASSWORD_FILE"
+python -m raiden_contracts.deploy token --rpc-provider $GETH_PROVIDER --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --token-supply $WETH_SUPPLY --token-name $ETH_ERC20 --token-decimals 18 --token-symbol $ETH_ERC20 --password "$PASSWORD_FILE" > "$CONTRACTS_WETH_LOG_JSON"
 WethToken=$(< "$CONTRACTS_WETH_LOG_JSON" tail -3 | jq -r .CustomToken)
-# shellcheck disable=SC2086
-python -m raiden_contracts.deploy register --rpc-provider "$GETH_PROVIDER" --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 100 --gas-limit 6000000 --token-address $WethToken --registry-address $TokenNetworkRegistry --password-file "$PASSWORD_FILE"
+rm -f "$WETH_ADDRESS_FILE"
+echo "$WethToken" >> "$WETH_ADDRESS_FILE"
+python -m raiden_contracts.deploy register --rpc-provider $GETH_PROVIDER --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --token-address "$WethToken" --token-network-registry-address "$TokenNetworkRegistry" --channel-participant-deposit-limit 115792089237316195423570985008687907853269984665640564039457584007913129639935 --token-network-deposit-limit 115792089237316195423570985008687907853269984665640564039457584007913129639935 --password "$PASSWORD_FILE"

@@ -39,6 +39,10 @@ type nodeConfig struct {
 	LndLtcCertPath string
 	LndLtcMacPath  string
 
+	RaidenDisable bool
+	RaidenHost    string
+	RaidenPort    int
+
 	P2PPort  int
 	RPCPort  int
 	HTTPPort int
@@ -52,7 +56,7 @@ func (cfg nodeConfig) genArgs() []string {
 	var args []string
 
 	args = append(args, "--initdb=false")
-	args = append(args, "--loglevel=debug")
+	args = append(args, "--loglevel=trace")
 
 	if cfg.NoBalanceChecks {
 		args = append(args, "--nobalancechecks=true")
@@ -78,7 +82,12 @@ func (cfg nodeConfig) genArgs() []string {
 	args = append(args, fmt.Sprintf("--lnd.LTC.certpath=%v", cfg.LndLtcCertPath))
 	args = append(args, fmt.Sprintf("--lnd.LTC.macaroonpath=%v", cfg.LndLtcMacPath))
 
-	args = append(args, "--raiden.disable")
+	if !cfg.RaidenDisable {
+		args = append(args, fmt.Sprintf("--raiden.host=%v", cfg.RaidenHost))
+		args = append(args, fmt.Sprintf("--raiden.port=%v", cfg.RaidenPort))
+	} else {
+		args = append(args, "--raiden.disable")
+	}
 
 	return args
 }
@@ -116,6 +125,27 @@ func (cfg nodeConfig) P2PAddr() string {
 	return net.JoinHostPort("127.0.0.1", strconv.Itoa(cfg.P2PPort))
 }
 
+/*
+func removeContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+*/
+
 func newNode(name string, xudPath string, noBalanceChecks bool) (*HarnessNode, error) {
 	nodeNum := int(atomic.AddInt32(&numActiveNodes, 1))
 
@@ -124,6 +154,12 @@ func newNode(name string, xudPath string, noBalanceChecks bool) (*HarnessNode, e
 	if err != nil {
 		return nil, err
 	}
+	/*
+		err = removeContents(dataDir)
+		if err != nil {
+			return nil, err
+		}
+	*/
 
 	cfg := nodeConfig{
 		DataDir:         dataDir,
@@ -170,6 +206,12 @@ func (hn *HarnessNode) SetLnd(lndNode *lntest.HarnessNode, chain string) {
 		hn.Cfg.LndLtcMacPath = lndNode.Cfg.AdminMacPath
 		hn.LndLtcNode = lndNode
 	}
+}
+
+// SetRaiden sets the raiden configuration.
+func (hn *HarnessNode) SetRaiden(port int) {
+	hn.Cfg.RaidenHost = "127.0.0.1"
+	hn.Cfg.RaidenPort = port
 }
 
 func (hn *HarnessNode) SetEnvVars(envVars []string) {

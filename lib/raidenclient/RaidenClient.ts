@@ -392,8 +392,7 @@ class RaidenClient extends SwapClient {
       partner_address: peerAddress,
       token_address: tokenAddress,
       total_deposit: units,
-      // TODO: The amount of blocks that the settle timeout should have
-      settle_timeout: 500,
+      settle_timeout: 20660,
     });
   }
 

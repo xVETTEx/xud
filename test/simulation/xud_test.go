@@ -1,6 +1,7 @@
 package main
 
 import (
+	// "bytes"
 	"fmt"
 	"github.com/ExchangeUnion/xud-simulation/xudrpc"
 	"log"
@@ -23,6 +24,7 @@ import (
 	btcclient "github.com/roasbeef/btcd/rpcclient"
 	"github.com/roasbeef/btcutil"
 	"golang.org/x/net/context"
+	"strconv"
 )
 
 var (
@@ -32,6 +34,22 @@ var (
 func TestMain(m *testing.M) {
 	log.Println("installing dependencies...")
 	output, err := installDeps()
+	if err != nil {
+		log.Fatalf("installation failure: %v", err)
+	}
+	log.Printf("installation output: %v", output)
+
+	log.Println("setting up ethereum chain...")
+	output, err = startGeth()
+	if err != nil {
+		log.Fatalf("installation failure: %v", err)
+	}
+	log.Printf("installation output: %v", output)
+	// wait for geth to boot
+	time.Sleep(5 * time.Second)
+
+	log.Println("deploying contracts...")
+	output, err = installEthereum()
 	if err != nil {
 		log.Fatalf("installation failure: %v", err)
 	}
@@ -59,15 +77,17 @@ func TestIntegration(t *testing.T) {
 	aliceBobLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, xudNetwork.Bob.LndLtcNode)
 	ht.assert.NoError(err)
 
-	bobCarolBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, xudNetwork.Carol.LndBtcNode)
-	ht.assert.NoError(err)
-	bobCarolLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, xudNetwork.Carol.LndLtcNode)
-	ht.assert.NoError(err)
+	/*
+		bobCarolBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, xudNetwork.Carol.LndBtcNode)
+		ht.assert.NoError(err)
+		bobCarolLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, xudNetwork.Carol.LndLtcNode)
+		ht.assert.NoError(err)
 
-	carolDavidBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, xudNetwork.Dave.LndBtcNode)
-	ht.assert.NoError(err)
-	carolDavidLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, xudNetwork.Dave.LndLtcNode)
-	ht.assert.NoError(err)
+		carolDavidBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, xudNetwork.Dave.LndBtcNode)
+		ht.assert.NoError(err)
+		carolDavidLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, xudNetwork.Dave.LndLtcNode)
+		ht.assert.NoError(err)
+	*/
 
 	initialStates := make(map[int]*xudrpc.GetInfoResponse)
 	for i, testCase := range integrationTestCases {
@@ -117,14 +137,16 @@ func TestIntegration(t *testing.T) {
 	ht.assert.NoError(err)
 	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, aliceBobLtcChanPoint, false)
 	ht.assert.NoError(err)
-	err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, bobCarolBtcChanPoint, false)
-	ht.assert.NoError(err)
-	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, bobCarolLtcChanPoint, false)
-	ht.assert.NoError(err)
-	err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, carolDavidBtcChanPoint, false)
-	ht.assert.NoError(err)
-	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, carolDavidLtcChanPoint, false)
-	ht.assert.NoError(err)
+	/*
+		err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, bobCarolBtcChanPoint, false)
+		ht.assert.NoError(err)
+		err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, bobCarolLtcChanPoint, false)
+		ht.assert.NoError(err)
+		err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, carolDavidBtcChanPoint, false)
+		ht.assert.NoError(err)
+		err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, carolDavidLtcChanPoint, false)
+		ht.assert.NoError(err)
+	*/
 }
 
 func TestSecurity(t *testing.T) {
@@ -341,41 +363,93 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 		log.Fatalf("lnd-btc: unable to set up test network: %v", err)
 	}
 
+	// Launch Ethereum network
+	log.Printf("ethereum: launching network...")
+	gethCmd := exec.Command("./start-geth.sh")
+	startGethErr := gethCmd.Start()
+	if startGethErr != nil {
+		log.Fatal(startGethErr)
+	}
+
+	time.Sleep(5 * time.Second)
+
+	autominerCmd := exec.Command("./start-autominer.sh")
+	startAutominerErr := autominerCmd.Start()
+	if startAutominerErr != nil {
+		log.Fatal(startAutominerErr)
+	}
+	/*
+		log.Printf("ethereum: generating 500 blocks...")
+		mineBlocksCmd := exec.Command("./generate-ethereum-blocks.sh", strconv.Itoa(500))
+		data, err := mineBlocksCmd.Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("output from mineBlocksCmd: %v", string(data))
+	*/
+
+	fmt.Printf("Bob HTTP port is %v", xudHarness.Bob.Cfg.HTTPPort)
+	raidenBobCmd := exec.Command("./start-raiden-bob.sh", strconv.Itoa(xudHarness.Bob.Cfg.HTTPPort))
+	startRaidenBobErr := raidenBobCmd.Start()
+	if startRaidenBobErr != nil {
+		log.Fatal(startRaidenBobErr)
+	}
+
+	fmt.Printf("Alice HTTP port is %v", xudHarness.Alice.Cfg.HTTPPort)
+	raidenAliceCmd := exec.Command("./start-raiden-alice.sh", strconv.Itoa(xudHarness.Alice.Cfg.HTTPPort))
+	startRaidenAliceErr := raidenAliceCmd.Start()
+	if startRaidenAliceErr != nil {
+		log.Fatal(startRaidenAliceErr)
+	}
+
 	// Launch XUD network.
 	xudHarness.SetLnd(lndBtcNetworkHarness, "BTC")
 	xudHarness.SetLnd(lndLtcNetworkHarness, "LTC")
+	xudHarness.Bob.SetRaiden(5001)
+	xudHarness.Alice.SetRaiden(6001)
 	log.Printf("xud: launching network...")
 	if err := xudHarness.Start(); err != nil {
 		log.Fatalf("cannot start xud network: %v", err)
 	}
 
 	teardown := func() {
-		if err := lndBtcNetworkHarness.TearDownAll(); err != nil {
-			log.Fatalf("lnd-btc: cannot tear down network harness: %v", err)
-		}
-		log.Printf("lnd-btc: network harness teared down")
+		fmt.Printf("skipping teardown")
+		/*
+			if err := lndBtcNetworkHarness.TearDownAll(); err != nil {
+				log.Fatalf("lnd-btc: cannot tear down network harness: %v", err)
+			}
+			log.Printf("lnd-btc: network harness teared down")
 
-		if err := btcdHarness.TearDown(); err != nil {
-			log.Fatalf("btcd: cannot tear down harness: %v", err)
-		} else {
-			log.Printf("btcd: harness teared down")
-		}
+			if err := btcdHarness.TearDown(); err != nil {
+				log.Fatalf("btcd: cannot tear down harness: %v", err)
+			} else {
+				log.Printf("btcd: harness teared down")
+			}
 
-		if err := lndLtcNetworkHarness.TearDownAll(); err != nil {
-			log.Printf("lnd-ltc: cannot tear down network harness: %v", err)
-		}
-		log.Printf("lnd-ltc: network harness teared down")
+			if err := lndLtcNetworkHarness.TearDownAll(); err != nil {
+				log.Printf("lnd-ltc: cannot tear down network harness: %v", err)
+			}
+			log.Printf("lnd-ltc: network harness teared down")
 
-		if err := ltcdHarness.TearDown(); err != nil {
-			log.Fatalf("ltcd: cannot tear down harness: %v", err)
-		}
-		log.Printf("ltcd: harness teared down")
+			if err := ltcdHarness.TearDown(); err != nil {
+				log.Fatalf("ltcd: cannot tear down harness: %v", err)
+			}
+			log.Printf("ltcd: harness teared down")
 
-		if err := xudHarness.TearDownAll(cfg.XudKill, cfg.XudCleanup); err != nil {
-			log.Fatalf("cannot tear down xud network harness: %v", err)
-		} else {
-			log.Printf("xud network harness teared down")
-		}
+			if err := xudHarness.TearDownAll(cfg.XudKill, cfg.XudCleanup); err != nil {
+				log.Fatalf("cannot tear down xud network harness: %v", err)
+			} else {
+				log.Printf("xud network harness teared down")
+			}
+			log.Printf("cleaning up processes...")
+			/*
+				cleanupCmd := exec.Command("./cleanup-processes.sh")
+				err := cleanupCmd.Run()
+				if err != nil {
+					fmt.Printf("cleanup failure: %v", err)
+				}
+				log.Printf("cleanup complete")
+		*/
 	}
 
 	return xudHarness, teardown
@@ -392,3 +466,44 @@ func installDeps() (string, error) {
 
 	return string(data), nil
 }
+
+func installEthereum() (string, error) {
+	cmd := exec.Command("./install-ethereum.sh")
+
+	data, err := cmd.Output()
+	if err != nil {
+		// The program has exited with an exit code != 0
+		return "", fmt.Errorf("installation error: %v", string(data))
+	}
+
+	return string(data), nil
+}
+
+func startGeth() (string, error) {
+	cmd := exec.Command("./start-geth.sh")
+
+	data, err := cmd.Output()
+	if err != nil {
+		// The program has exited with an exit code != 0
+		return "", fmt.Errorf("installation error: %v", string(data))
+	}
+
+	return string(data), nil
+}
+
+/*
+func execScript(command string) (string, error) {
+	fmt.Printf("command to exec is %v", command)
+	cmd := exec.Command(command)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	data, err := cmd.Output()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		// The program has exited with an exit code != 0
+		return "", fmt.Errorf("failed to execute script: %v", string(data))
+	}
+
+	return string(data), nil
+}
+*/

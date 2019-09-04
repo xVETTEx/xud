@@ -9,6 +9,9 @@ import (
 	"github.com/ExchangeUnion/xud-simulation/xudtest"
 	"github.com/lightningnetwork/lnd/lnrpc"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -27,7 +30,7 @@ func (a *actions) init(node *xudtest.HarnessNode) {
 	timeout := time.Now().Add(10 * time.Second)
 	for {
 		req := &xudrpc.GetInfoRequest{}
-		res, err := node.Client.GetInfo(a.ctx, req)
+		res, err := node.Client.GetInfo(context.Background(), req)
 		a.assert.NoError(err)
 		a.assert.NotNil(res.Lnd["BTC"])
 		a.assert.NotNil(res.Lnd["LTC"])
@@ -40,8 +43,23 @@ func (a *actions) init(node *xudtest.HarnessNode) {
 			// Set the node public key.
 			node.SetPubKey(res.NodePubKey)
 
-			// Add pair to the node.
-			a.addPair(node, "LTC", "BTC", xudrpc.AddCurrencyRequest_LND)
+			// Get WETH contract address
+			file, err := os.Open("temp/weth-address.txt")
+			if err != nil {
+				fmt.Print("failed to get WETH address")
+			}
+			defer file.Close()
+
+			b, err := ioutil.ReadAll(file)
+			wethAddress := strings.TrimSpace(string(b))
+
+			// Add currencies
+			a.addCurrency(node, "BTC", xudrpc.AddCurrencyRequest_LND, "")
+			a.addCurrency(node, "LTC", xudrpc.AddCurrencyRequest_LND, "")
+			a.addCurrency(node, "WETH", xudrpc.AddCurrencyRequest_RAIDEN, wethAddress)
+			// Add pairs to the node.
+			a.addPair(node, "LTC", "BTC")
+			a.addPair(node, "WETH", "BTC")
 			break
 		}
 		a.assert.False(time.Now().After(timeout), "waiting for synced chains timeout")
@@ -50,30 +68,30 @@ func (a *actions) init(node *xudtest.HarnessNode) {
 	}
 }
 
-func (a *actions) addPair(node *xudtest.HarnessNode, baseCurrency string, quoteCurrency string,
-	swapClient xudrpc.AddCurrencyRequest_SwapClient) {
+func (a *actions) addCurrency(node *xudtest.HarnessNode, currency string, swapClient xudrpc.AddCurrencyRequest_SwapClient, tokenAddress string) {
+	if len(tokenAddress) > 0 {
+		reqAddCurr := &xudrpc.AddCurrencyRequest{Currency: currency, SwapClient: swapClient, TokenAddress: tokenAddress}
+		node.Client.AddCurrency(context.Background(), reqAddCurr)
+	} else {
+		reqAddCurr := &xudrpc.AddCurrencyRequest{Currency: currency, SwapClient: swapClient}
+		node.Client.AddCurrency(context.Background(), reqAddCurr)
+	}
+}
+
+func (a *actions) addPair(node *xudtest.HarnessNode, baseCurrency string, quoteCurrency string) {
 	// Check the current number of pairs.
-	resInfo, err := node.Client.GetInfo(a.ctx, &xudrpc.GetInfoRequest{})
+	resInfo, err := node.Client.GetInfo(context.Background(), &xudrpc.GetInfoRequest{})
 	a.assert.NoError(err)
 
 	prevNumPairs := resInfo.NumPairs
 
-	// Add currencies.
-	reqAddCurr := &xudrpc.AddCurrencyRequest{Currency: baseCurrency, SwapClient: swapClient}
-	_, err = node.Client.AddCurrency(a.ctx, reqAddCurr)
-	a.assert.NoError(err)
-
-	reqAddCurr = &xudrpc.AddCurrencyRequest{Currency: quoteCurrency, SwapClient: swapClient}
-	_, err = node.Client.AddCurrency(a.ctx, reqAddCurr)
-	a.assert.NoError(err)
-
 	// Add pair.
 	reqAddPair := &xudrpc.AddPairRequest{BaseCurrency: baseCurrency, QuoteCurrency: quoteCurrency}
-	_, err = node.Client.AddPair(a.ctx, reqAddPair)
+	_, err = node.Client.AddPair(context.Background(), reqAddPair)
 	a.assert.NoError(err)
 
 	// Verify that pair was added.
-	resGetInfo, err := node.Client.GetInfo(a.ctx, &xudrpc.GetInfoRequest{})
+	resGetInfo, err := node.Client.GetInfo(context.Background(), &xudrpc.GetInfoRequest{})
 	a.assert.NoError(err)
 	a.assert.Equal(resGetInfo.NumPairs, prevNumPairs+1)
 }
@@ -86,7 +104,19 @@ func (a *actions) connect(srcNode, destNode *xudtest.HarnessNode) {
 
 	// connect srcNode to destNode.
 	reqConn := &xudrpc.ConnectRequest{NodeUri: destNodeURI}
-	_, err := srcNode.Client.Connect(a.ctx, reqConn)
+	_, err := srcNode.Client.Connect(context.Background(), reqConn)
+	a.assert.NoError(err)
+}
+
+func (a *actions) openChannel(srcNode, destNode *xudtest.HarnessNode, currency string, amount int64) {
+	// connect srcNode to destNode.
+	reqConn := &xudrpc.OpenChannelRequest{NodePubKey: destNode.PubKey(), Currency: currency, Amount: amount}
+	deadlineMs := 300000
+	clientDeadline := time.Now().Add(time.Duration(deadlineMs) * time.Millisecond)
+	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
+	// ctx, cancel := context.WithTimeout(a.ctx, 300000*time.Millisecond)
+	fmt.Printf("cancel is %v", cancel)
+	_, err := srcNode.Client.OpenChannel(ctx, reqConn)
 	a.assert.NoError(err)
 }
 
@@ -97,27 +127,27 @@ func (a *actions) disconnect(srcNode, destNode *xudtest.HarnessNode) {
 
 func (a *actions) ban(srcNode, destNode *xudtest.HarnessNode) {
 	reqBan := &xudrpc.BanRequest{NodePubKey: destNode.PubKey()}
-	_, err := srcNode.Client.Ban(a.ctx, reqBan)
+	_, err := srcNode.Client.Ban(context.Background(), reqBan)
 	a.assert.NoError(err)
 }
 
 func (a *actions) unban(srcNode, destNode *xudtest.HarnessNode) {
 	reqUnban := &xudrpc.UnbanRequest{NodePubKey: destNode.PubKey(), Reconnect: false}
-	_, err := srcNode.Client.Unban(a.ctx, reqUnban)
+	_, err := srcNode.Client.Unban(context.Background(), reqUnban)
 	a.assert.NoError(err)
 }
 
 func (a *actions) placeOrderAndBroadcast(srcNode, destNode *xudtest.HarnessNode,
 	req *xudrpc.PlaceOrderRequest) *xudrpc.Order {
 	// Subscribe to added orders on destNode
-	destNodeOrderChan := subscribeOrders(a.ctx, destNode)
+	destNodeOrderChan := subscribeOrders(context.Background(), destNode)
 
 	// Fetch nodes current order book state.
-	prevSrcNodeCount, prevDestNodeCount, err := getOrdersCount(a.ctx, srcNode, destNode)
+	prevSrcNodeCount, prevDestNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 
 	// Place the order on srcNode and verify the result.
-	res, err := srcNode.Client.PlaceOrderSync(a.ctx, req)
+	res, err := srcNode.Client.PlaceOrderSync(context.Background(), req)
 	a.assert.NoError(err)
 
 	// Verify the response.
@@ -147,7 +177,7 @@ func (a *actions) placeOrderAndBroadcast(srcNode, destNode *xudtest.HarnessNode,
 	a.assert.Equal(peerOrder.OwnOrPeer.(*xudrpc.Order_PeerPubKey).PeerPubKey, srcNode.PubKey())
 
 	// Verify that a new order was added to the order books.
-	srcNodeCount, destNodeCount, err := getOrdersCount(a.ctx, srcNode, destNode)
+	srcNodeCount, destNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 	a.assert.Equal(srcNodeCount.Own, prevSrcNodeCount.Own+1)
 	a.assert.Equal(srcNodeCount.Peer, prevSrcNodeCount.Peer)
@@ -159,10 +189,10 @@ func (a *actions) placeOrderAndBroadcast(srcNode, destNode *xudtest.HarnessNode,
 
 func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNode, order *xudrpc.Order) {
 	// Subscribe to removed orders on destNode.
-	destNodeOrdersChan := subscribeOrders(a.ctx, destNode)
+	destNodeOrdersChan := subscribeOrders(context.Background(), destNode)
 
 	// Fetch nodes current order book state.
-	prevSrcNodeCount, prevDestNodeCount, err := getOrdersCount(a.ctx, srcNode, destNode)
+	prevSrcNodeCount, prevDestNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 	a.assert.NotZero(prevSrcNodeCount)
 	a.assert.NotZero(prevDestNodeCount)
@@ -172,7 +202,7 @@ func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNod
 
 	// Remove the order on srcNode.
 	req := &xudrpc.RemoveOrderRequest{OrderId: order.OwnOrPeer.(*xudrpc.Order_LocalId).LocalId}
-	res, err := srcNode.Client.RemoveOrder(a.ctx, req)
+	res, err := srcNode.Client.RemoveOrder(context.Background(), req)
 	a.assert.NoError(err)
 
 	// Verify no quantity on hold.
@@ -191,7 +221,7 @@ func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNod
 	a.assert.False(orderRemoval.IsOwnOrder)
 
 	// Verify that the order was removed from the order books.
-	srcNodeCount, destNodeCount, err := getOrdersCount(a.ctx, srcNode, destNode)
+	srcNodeCount, destNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 	a.assert.Equal(srcNodeCount.Own, prevSrcNodeCount.Own-1)
 	a.assert.Equal(srcNodeCount.Peer, prevSrcNodeCount.Peer)
@@ -201,7 +231,7 @@ func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNod
 
 func (a *actions) placeOrderAndSwap(srcNode, destNode *xudtest.HarnessNode,
 	req *xudrpc.PlaceOrderRequest) {
-	ctx, cancel := context.WithCancel(a.ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	destNodeSwapChan := subscribeSwaps(ctx, destNode, false)
@@ -247,7 +277,7 @@ func (a *actions) verifyConnectivity(n1, n2 *xudtest.HarnessNode) {
 }
 
 func (a *actions) verifyPeer(srcNode, destNode *xudtest.HarnessNode) {
-	resListPeers, err := srcNode.Client.ListPeers(a.ctx, &xudrpc.ListPeersRequest{})
+	resListPeers, err := srcNode.Client.ListPeers(context.Background(), &xudrpc.ListPeersRequest{})
 	a.assert.NoError(err)
 
 	peerIndex := -1
@@ -473,22 +503,26 @@ func getBalance(ctx context.Context, node *xudtest.HarnessNode) (*balances, erro
 	var b balances
 	var err error
 
-	b.ltc.channel, err = node.LndLtcNode.ChannelBalance(ctx, &lnrpc.ChannelBalanceRequest{})
+	clientDeadline := time.Now().Add(time.Second * 30)
+	ctxWithDeadline, cancel := context.WithDeadline(ctx, clientDeadline)
+	fmt.Printf("\n cancel is %v", cancel)
+
+	b.ltc.channel, err = node.LndLtcNode.ChannelBalance(ctxWithDeadline, &lnrpc.ChannelBalanceRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	b.ltc.wallet, err = node.LndLtcNode.WalletBalance(ctx, &lnrpc.WalletBalanceRequest{})
+	b.ltc.wallet, err = node.LndLtcNode.WalletBalance(ctxWithDeadline, &lnrpc.WalletBalanceRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	b.btc.channel, err = node.LndBtcNode.ChannelBalance(ctx, &lnrpc.ChannelBalanceRequest{})
+	b.btc.channel, err = node.LndBtcNode.ChannelBalance(ctxWithDeadline, &lnrpc.ChannelBalanceRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	b.btc.wallet, err = node.LndBtcNode.WalletBalance(ctx, &lnrpc.WalletBalanceRequest{})
+	b.btc.wallet, err = node.LndBtcNode.WalletBalance(ctxWithDeadline, &lnrpc.WalletBalanceRequest{})
 	if err != nil {
 		return nil, err
 	}
