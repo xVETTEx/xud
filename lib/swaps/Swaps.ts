@@ -182,9 +182,15 @@ class Swaps extends EventEmitter {
     this.swapClientManager.on('htlcAccepted', async (swapClient, rHash, amount, currency) => {
       try {
         const rPreimage = await this.resolveHash(rHash, amount, currency);
+        const deal = this.getDeal(rHash);
+
+        if (deal && deal.role === SwapRole.Taker && process.env.BREAKSWAP === 'TAKER_DELAY_BEFORE_SETTLE') {
+          this.logger.info('BREAKSWAP: TAKER_DELAY_BEFORE_SETTLE');
+          await setTimeoutPromise(3000);
+        }
+
         await swapClient.settleInvoice(rHash, rPreimage);
 
-        const deal = this.getDeal(rHash);
         if (deal) {
           await this.setDealPhase(deal, SwapPhase.PaymentReceived);
         }
@@ -862,7 +868,15 @@ class Swaps extends EventEmitter {
       await this.setDealPhase(deal, SwapPhase.SendingPayment);
 
       try {
+        if (process.env.BREAKSWAP === 'MAKER_CRASH_AFTER_SEND') {
+          void swapClient.sendPayment(deal);
+          await setTimeoutPromise(1);
+          this.logger.info('BREAKSWAP: MAKER_CRASH_AFTER_SEND');
+          process.exit();
+        }
+
         deal.rPreimage = await swapClient.sendPayment(deal);
+
         return deal.rPreimage;
       } catch (err) {
         this.failDeal(deal, SwapFailureReason.SendPaymentFailure, err.message);

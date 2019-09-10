@@ -13,7 +13,7 @@ class SwapRecovery {
   public pendingSwaps: Set<SwapDealInstance> = new Set();
   private pendingSwapsTimer?: NodeJS.Timeout;
   /** The time in milliseconds between checks on the status of pending swaps. */
-  private static readonly PENDING_SWAP_RECHECK_INTERVAL = 300000;
+  private static readonly PENDING_SWAP_RECHECK_INTERVAL = 1000;
 
   constructor(private swapClientManager: SwapClientManager, private logger: Logger) { }
 
