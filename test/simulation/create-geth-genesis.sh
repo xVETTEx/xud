@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
-GETH_BINARY_PATH=$1
-GETH_DATA_DIR=$2
-GENESIS_JSON=$3
+source .env
+
 if [ -d "$GETH_DATA_DIR" ]; then
   rm -Rf "$GETH_DATA_DIR"
   echo "Deleting geth data"
