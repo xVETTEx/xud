@@ -14,9 +14,8 @@ if not connected:
 
 def handle_event(event):
     if len(w3.eth.getBlock("pending").transactions) > 0:
-        print("Pending transactions exist. Mining 100 blocks.")
-        # TODO: a way to detect from outside when mining is in process.
-        w3.geth.miner.start(100)
+        print("Pending transactions exist. Mining 20 blocks.")
+        w3.geth.miner.start(20)
 
 async def log_loop(event_filter, poll_interval):
     while True:
@@ -36,11 +35,5 @@ def watch_for_unconfirmed():
     finally:
         loop.close()
 
-# Remove generate blocks functionality from here.
-if len(sys.argv) > 2:
-    blocks_to_generate = int(sys.argv[2])
-    print("Generating", blocks_to_generate, "blocks.")
-    w3.geth.miner.start(blocks_to_generate)
-else:
-    print("Automatically mining unconfirmed transactions.")
-    watch_for_unconfirmed()
+print("Automatically mining unconfirmed transactions.")
+watch_for_unconfirmed()
