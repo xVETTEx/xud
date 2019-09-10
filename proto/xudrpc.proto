@@ -25,18 +25,27 @@ import "annotations.proto";
 package xudrpc;
 
 service XudInit {
+  /* Creates an xud identity node key and underlying wallets. The node key and
+   * wallets are derived from a single seed and encrypted using a single
+   * password provided as a parameter to the call. */
   rpc CreateNode(CreateNodeRequest) returns (CreateNodeResponse) { }
 
+  /* Unlocks and decrypts the xud node key and any underlying wallets. */
   rpc UnlockNode(UnlockNodeRequest) returns (UnlockNodeResponse) { }
 }
 
 message CreateNodeRequest {
   // The password in utf-8 with which to encrypt the new xud node key as well
-  // as underlying client wallets such as lnd.
+  // as any uninitialized underlying wallets.
   string password = 1;
 }
 message CreateNodeResponse {
+  // The 24 word mnemonic to recover the xud identity key and underlying wallets
   repeated string seed_mnemonic = 1;
+  // The list of lnd clients that were initialized.
+  repeated string initialized_lnds = 2;
+  // Whether raiden was initialized.
+  bool initialized_raiden = 3;
 }
 
 message UnlockNodeRequest {
@@ -44,7 +53,12 @@ message UnlockNodeRequest {
   // well as underlying client wallets such as lnd.
   string password = 1;
 }
-message UnlockNodeResponse { }
+message UnlockNodeResponse {
+  // The list of lnd clients that were unlocked.
+  repeated string unlocked_lnds = 1;
+  // Whether raiden was unlocked.
+  bool unlocked_raiden = 2;
+}
 
 service Xud {
   /* Adds a currency to the list of supported currencies. Once added, the currency may be used for
@@ -76,10 +90,10 @@ service Xud {
     };
   }
 
-  /* Gets the total balance available across all payment channels for one or all currencies. */
-  rpc ChannelBalance(ChannelBalanceRequest) returns (ChannelBalanceResponse) {
+  /* Gets the total balance available across all payment channels and wallets for one or all currencies. */
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {
     option (google.api.http) = {
-      get: "/v1/channelbalance"
+      get: "/v1/balance"
     };
   }
 
@@ -160,6 +174,13 @@ service Xud {
   rpc ListPeers(ListPeersRequest) returns (ListPeersResponse) {
     option (google.api.http) = {
       get: "/v1/peers"
+    };
+  }
+
+  rpc ListTrades(ListTradesRequest) returns (ListTradesResponse) {
+    option (google.api.http) = {
+      post: "/v1/listtrades"
+      body: "*"
     };
   }
 
@@ -303,21 +324,21 @@ message Chain {
   string network = 2 [json_name = "network"];
 }
 
-message ChannelBalance {
-  // Sum of channel balances denominated in satoshis.
+message Balance {
+  // Total balance denominated in satoshis.
   uint64 balance = 1 [json_name = "balance"];
   // Sum of pending channel balances denominated in satoshis.
   uint64 pending_open_balance = 2 [json_name = "pending_open_balance"];
 }
 
-message ChannelBalanceRequest {
+message GetBalanceRequest {
   // The ticker symbol of the currency to query for, if unspecified then balances for all supported
   // currencies are queried.
   string currency = 1 [json_name = "currency"];
 }
-message ChannelBalanceResponse {
-  // A map between currency ticker symbols and their channel balances.
-  map<string, ChannelBalance> balances = 1 [json_name = "orders"];
+message GetBalanceResponse {
+  // A map between currency ticker symbols and their balances.
+  map<string, Balance> balances = 1 [json_name = "orders"];
 }
 
 message OpenChannelRequest {
@@ -423,6 +444,15 @@ message ListPeersResponse {
   repeated Peer peers = 1 [json_name = "peers"];
 }
 
+message ListTradesRequest {
+  // The maximum number of trades to return
+  int32 limit = 1 [json_name = "limit"];
+} 
+
+message ListTradesResponse {
+  repeated Trade trades = 1 [json_name = "trades"];
+}
+
 message LndChannels {
   // The number of active/online channels for this lnd instance that can be used for swaps.
   uint32 active = 1 [json_name = "active"];
@@ -465,6 +495,19 @@ message Order {
   bool is_own_order = 9 [json_name = "is_own_order"];
   // The quantity on hold pending swap execution.
   uint64 hold = 10 [json_name = "hold"];
+}
+
+message Trade {
+  // The maker order involved in this trade.
+  Order maker_order = 1 [json_name = "maker_order"];
+  // The taker order involved in this trade.
+  Order taker_order = 2 [json_name = "taker_order_id"];
+  // The payment hash involved in this trade.
+  string r_hash = 3 [json_name = "r_hash"];
+  // The quantity transacted in this trade.
+  int64 quantity = 4 [json_name = "quantity"];
+  // The trading pair for this trade.
+  string pair_id = 5 [json_name = "pair_id"];
 }
 
 message OrderUpdate {

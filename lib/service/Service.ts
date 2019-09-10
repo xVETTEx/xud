@@ -12,6 +12,7 @@ import SwapClientManager from '../swaps/SwapClientManager';
 import { OrderSidesArrays } from '../orderbook/TradingPair';
 import { SwapSuccess, SwapFailure, ResolveRequest } from '../swaps/types';
 import { errors as swapsErrors } from '../swaps/errors';
+import commitHash from '../Version';
 
 /**
  * The components required by the API service layer.
@@ -115,8 +116,8 @@ class Service {
     return this.orderBook.removeOwnOrderByLocalId(orderId, quantity);
   }
 
-  /** Gets the total lightning network channel balance for a given currency. */
-  public channelBalance = async (args: { currency: string }) => {
+  /** Gets the total lightning network balance for a given currency. */
+  public getBalance = async (args: { currency: string }) => {
     const { currency } = args;
     const balances = new Map<string, { balance: number, pendingOpenBalance: number }>();
 
@@ -269,7 +270,7 @@ class Service {
       nodePubKey,
       uris,
       numPairs,
-      version: this.version,
+      version: `${this.version}${commitHash}`,
       numPeers: this.pool.peerCount,
       orders: {
         peer: peerOrdersCount,
@@ -347,6 +348,18 @@ class Service {
    */
   public listPeers = () => {
     return this.pool.listPeers();
+  }
+
+  /**
+   * Gets the list of trades.
+   */
+  public listTrades = (args: {limit: number}) => {
+    const { limit } = args;
+    if (limit === 0) {
+      return this.orderBook.getTrades();
+    } else {
+      return this.orderBook.getTrades(limit);
+    }
   }
 
   /**

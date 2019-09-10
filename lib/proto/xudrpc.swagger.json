@@ -69,6 +69,32 @@
         ]
       }
     },
+    "/v1/balance": {
+      "get": {
+        "summary": "Gets the total balance available across all payment channels and wallets for one or all currencies.",
+        "operationId": "GetBalance",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/xudrpcGetBalanceResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "currency",
+            "description": "The ticker symbol of the currency to query for, if unspecified then balances for all supported\ncurrencies are queried.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Xud"
+        ]
+      }
+    },
     "/v1/ban": {
       "post": {
         "summary": "Bans a node and immediately disconnects from it. This can be used to prevent any connections\nto a specific node.",
@@ -89,32 +115,6 @@
             "schema": {
               "$ref": "#/definitions/xudrpcBanRequest"
             }
-          }
-        ],
-        "tags": [
-          "Xud"
-        ]
-      }
-    },
-    "/v1/channelbalance": {
-      "get": {
-        "summary": "Gets the total balance available across all payment channels for one or all currencies.",
-        "operationId": "ChannelBalance",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/xudrpcChannelBalanceResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "currency",
-            "description": "The ticker symbol of the currency to query for, if unspecified then balances for all supported\ncurrencies are queried.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -232,6 +232,32 @@
             }
           }
         },
+        "tags": [
+          "Xud"
+        ]
+      }
+    },
+    "/v1/listtrades": {
+      "post": {
+        "operationId": "ListTrades",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/xudrpcListTradesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/xudrpcListTradesRequest"
+            }
+          }
+        ],
         "tags": [
           "Xud"
         ]
@@ -685,6 +711,21 @@
     "xudrpcAddPairResponse": {
       "type": "object"
     },
+    "xudrpcBalance": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total balance denominated in satoshis."
+        },
+        "pending_open_balance": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Sum of pending channel balances denominated in satoshis."
+        }
+      }
+    },
     "xudrpcBanRequest": {
       "type": "object",
       "properties": {
@@ -710,33 +751,6 @@
         }
       }
     },
-    "xudrpcChannelBalance": {
-      "type": "object",
-      "properties": {
-        "balance": {
-          "type": "string",
-          "format": "uint64",
-          "description": "Sum of channel balances denominated in satoshis."
-        },
-        "pending_open_balance": {
-          "type": "string",
-          "format": "uint64",
-          "description": "Sum of pending channel balances denominated in satoshis."
-        }
-      }
-    },
-    "xudrpcChannelBalanceResponse": {
-      "type": "object",
-      "properties": {
-        "balances": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/xudrpcChannelBalance"
-          },
-          "description": "A map between currency ticker symbols and their channel balances."
-        }
-      }
-    },
     "xudrpcConnectRequest": {
       "type": "object",
       "properties": {
@@ -756,7 +770,20 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "The 24 word mnemonic to recover the xud identity key and underlying wallets"
+        },
+        "initialized_lnds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The list of lnd clients that were initialized."
+        },
+        "initialized_raiden": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Whether raiden was initialized."
         }
       }
     },
@@ -797,6 +824,18 @@
           "type": "string",
           "format": "uint64",
           "description": "The quantity to swap denominated in satoshis. The whole order will be swapped if unspecified."
+        }
+      }
+    },
+    "xudrpcGetBalanceResponse": {
+      "type": "object",
+      "properties": {
+        "balances": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/xudrpcBalance"
+          },
+          "description": "A map between currency ticker symbols and their balances."
         }
       }
     },
@@ -903,6 +942,27 @@
             "$ref": "#/definitions/xudrpcPeer"
           },
           "description": "The list of connected peers."
+        }
+      }
+    },
+    "xudrpcListTradesRequest": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "title": "The maximum number of trades to return"
+        }
+      }
+    },
+    "xudrpcListTradesResponse": {
+      "type": "object",
+      "properties": {
+        "trades": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/xudrpcTrade"
+          }
         }
       }
     },
@@ -1376,6 +1436,32 @@
         }
       }
     },
+    "xudrpcTrade": {
+      "type": "object",
+      "properties": {
+        "maker_order": {
+          "$ref": "#/definitions/xudrpcOrder",
+          "description": "The maker order involved in this trade."
+        },
+        "taker_order": {
+          "$ref": "#/definitions/xudrpcOrder",
+          "description": "The taker order involved in this trade."
+        },
+        "r_hash": {
+          "type": "string",
+          "description": "The payment hash involved in this trade."
+        },
+        "quantity": {
+          "type": "string",
+          "format": "int64",
+          "description": "The quantity transacted in this trade."
+        },
+        "pair_id": {
+          "type": "string",
+          "description": "The trading pair for this trade."
+        }
+      }
+    },
     "xudrpcUnbanRequest": {
       "type": "object",
       "properties": {
@@ -1394,7 +1480,21 @@
       "type": "object"
     },
     "xudrpcUnlockNodeResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "unlocked_lnds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The list of lnd clients that were unlocked."
+        },
+        "unlocked_raiden": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Whether raiden was unlocked."
+        }
+      }
     }
   }
 }

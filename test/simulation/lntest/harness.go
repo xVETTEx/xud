@@ -190,7 +190,7 @@ func (n *NetworkHarness) SetUp(lndArgs []string) error {
 	addrReq := &lnrpc.NewAddressRequest{
 		Type: lnrpc.AddressType_WITNESS_PUBKEY_HASH,
 	}
-	clients := []lnrpc.LightningClient{n.Alice, n.Bob}
+	clients := []lnrpc.LightningClient{n.Alice, n.Bob, n.Carol}
 	for _, client := range clients {
 		for i := 0; i < 10; i++ {
 			resp, err := client.NewAddress(ctxb, addrReq)
@@ -253,8 +253,14 @@ func (n *NetworkHarness) SetUp(lndArgs []string) error {
 		}
 	}
 
-	// Finally, make a connection between both of the nodes.
+	// Finally, make connections between the nodes.
 	if err := n.ConnectNodes(ctxb, n.Alice, n.Bob); err != nil {
+		return err
+	}
+	if err := n.ConnectNodes(ctxb, n.Bob, n.Carol); err != nil {
+		return err
+	}
+	if err := n.ConnectNodes(ctxb, n.Carol, n.Dave); err != nil {
 		return err
 	}
 
@@ -284,43 +290,6 @@ out:
 			return fmt.Errorf("balances not synced after deadline")
 		}
 	}
-
-	// Open a channel
-	// TODO: code refactoring/cleanup
-	_, err := n.OpenChannel(ctxb, n.Alice, n.Bob, 15000000, 7500000, false)
-	if err != nil {
-		fmt.Printf("err: %v", err)
-		return err
-	}
-
-	if n.BtcMiner != nil {
-		if _, err := n.BtcMiner.Node.Generate(6); err != nil {
-			return err
-		}
-	}
-	if n.LtcMiner != nil {
-		if _, err := n.LtcMiner.Node.Generate(6); err != nil {
-			return err
-		}
-	}
-
-	// Wait until srcNode and destNode have blockchain synced
-	if err := n.Alice.WaitForBlockchainSync(ctxb); err != nil {
-		return fmt.Errorf("Unable to sync Alice chain: %v", err)
-	}
-	if err := n.Bob.WaitForBlockchainSync(ctxb); err != nil {
-		return fmt.Errorf("Unable to sync Bob chain: %v", err)
-	}
-
-	//_, err = n.Alice.ListChannels(context.Background(), &lnrpc.ListChannelsRequest{})
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//_, err = n.Bob.ListChannels(context.Background(), &lnrpc.ListChannelsRequest{})
-	//if err != nil {
-	//	return err
-	//}
 
 	return nil
 }

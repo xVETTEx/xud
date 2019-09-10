@@ -123,7 +123,10 @@ class Peer extends EventEmitter {
   }
 
   public get label(): string {
-    return this.nodePubKey || addressUtils.toString(this.address);
+    return this.nodePubKey ||
+      (this.expectedNodePubKey
+      ? `${this.expectedNodePubKey}@${addressUtils.toString(this.address)}`
+      : addressUtils.toString(this.address));
   }
 
   public get addresses(): Address[] | undefined {
@@ -219,8 +222,8 @@ class Peer extends EventEmitter {
     let status: string;
     if (this.connected) {
       status = this.nodePubKey ?
-        `Connected to peer ${this.nodePubKey}` :
-        `Connected pre-handshake to peer ${addressUtils.toString(this.address)}`;
+        `Connected to ${this.label}` :
+        `Connected pre-handshake to ${this.label}`;
     } else {
       status = 'Not connected';
     }
@@ -336,11 +339,11 @@ class Peer extends EventEmitter {
 
     let rejectionMsg;
     if (reason) {
-      rejectionMsg = `Peer (${this.label}) closed due to ${DisconnectionReason[reason]} ${reasonPayload || ''}`;
+      rejectionMsg = `Peer ${this.label} closed due to ${DisconnectionReason[reason]} ${reasonPayload || ''}`;
     } else if (this.recvDisconnectionReason) {
-      rejectionMsg = `Peer (${this.label}) disconnected from us due to ${DisconnectionReason[this.recvDisconnectionReason]}`;
+      rejectionMsg = `Peer ${this.label} disconnected from us due to ${DisconnectionReason[this.recvDisconnectionReason]}`;
     } else {
-      rejectionMsg = `Peer (${this.label}) was destroyed`;
+      rejectionMsg = `Peer ${this.label} was destroyed`;
     }
 
     for (const [packetType, entry] of this.responseMap) {
@@ -440,7 +443,7 @@ class Peer extends EventEmitter {
       try {
         this.socket.write(data);
       } catch (err) {
-        this.logger.error('failed sending data to peer', err);
+        this.logger.error(`failed sending data to ${this.label}`, err);
       }
     }
   }
@@ -512,7 +515,7 @@ class Peer extends EventEmitter {
         }
 
         this.logger.debug(
-          `Connection attempt #${retries + 1} to peer (${addressUtils.toString(this.address)}) ` +
+          `Connection attempt #${retries + 1} to ${this.label}` +
           `failed: ${err.message}. retrying in ${retryDelay / 1000} sec...`,
         );
 
@@ -578,7 +581,7 @@ class Peer extends EventEmitter {
         const request = PacketType[parseInt(packetId, 10)] || packetId;
         const err = errors.RESPONSE_TIMEOUT(request);
         this.emitError(err.message);
-        entry.reject(err.message);
+        entry.reject(err);
         await this.close(DisconnectionReason.ResponseStalling, packetId);
       }
     }
@@ -660,7 +663,7 @@ class Peer extends EventEmitter {
     this.socket!.once('close', async (hadError) => {
       // emitted once the socket is fully closed
       if (this.nodePubKey === undefined) {
-        this.logger.info(`Socket closed prior to handshake (${addressUtils.toString(this.address)})`);
+        this.logger.info(`Socket closed prior to handshake with ${this.label}`);
       } else if (hadError) {
         this.logger.warn(`Peer ${this.nodePubKey} socket closed due to error`);
       } else {
@@ -694,6 +697,7 @@ class Peer extends EventEmitter {
           this.logger.warn(`Peer (${this.label}): ${err.message}`);
           this.emit('reputation', ReputationEvent.WireProtocolErr);
           await this.close(DisconnectionReason.WireProtocolErr, err.message);
+          break;
       }
     });
   }
@@ -715,8 +719,7 @@ class Peer extends EventEmitter {
   }
 
   private handlePacket = async (packet: Packet): Promise<void> => {
-    const sender = this.nodePubKey !== undefined ? this.nodePubKey : addressUtils.toString(this.address);
-    this.logger.trace(`Received ${PacketType[packet.type]} packet from ${sender}${JSON.stringify(packet)}`);
+    this.logger.trace(`Received ${PacketType[packet.type]} packet from ${this.label}: ${JSON.stringify(packet)}`);
 
     if (await this.isPacketSolicited(packet)) {
       switch (packet.type) {

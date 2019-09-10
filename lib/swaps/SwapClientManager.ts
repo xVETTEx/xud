@@ -51,6 +51,7 @@ class SwapClientManager extends EventEmitter {
     this.raidenClient = new RaidenClient({
       unitConverter,
       config: config.raiden,
+      lockBufferHours: config.lockbuffer,
       logger: loggers.raiden,
       directChannelChecks: config.debug.raidenDirectChannelChecks,
     });
@@ -61,19 +62,20 @@ class SwapClientManager extends EventEmitter {
    * and waits for the swap clients to initialize.
    * @returns A promise that resolves upon successful initialization, rejects otherwise.
    */
-  public init = async (models: Models): Promise<void> => {
+  public init = async (models: Models, awaitingCreate = false): Promise<void> => {
     const initPromises = [];
     // setup configured LND clients and initialize them
     for (const currency in this.config.lnd) {
       const lndConfig = this.config.lnd[currency]!;
       if (!lndConfig.disable) {
-        const lndClient = new LndClient(
-          lndConfig,
+        const lndClient = new LndClient({
           currency,
-          this.loggers.lnd.createSubLogger(currency),
-        );
+          config: lndConfig,
+          lockBufferHours: this.config.lockbuffer,
+          logger: this.loggers.lnd.createSubLogger(currency),
+        });
         this.swapClients.set(currency, lndClient);
-        initPromises.push(lndClient.init());
+        initPromises.push(lndClient.init(awaitingCreate));
       }
     }
     // setup Raiden
@@ -107,9 +109,9 @@ class SwapClientManager extends EventEmitter {
    * Generates a cryptographically random 24 word seed mnemonic from an lnd client.
    */
   public genSeed = async () => {
-    // loop through swap clients until we find a connected lnd client
+    // loop through swap clients until we find an lnd client awaiting unlock
     for (const swapClient of this.swapClients.values()) {
-      if (isLndClient(swapClient) && swapClient.isConnected()) {
+      if (isLndClient(swapClient) && swapClient.isWaitingUnlock()) {
         try {
           return swapClient.genSeed();
         } catch (err) {
@@ -128,36 +130,50 @@ class SwapClientManager extends EventEmitter {
   public initWallets = async (walletPassword: string, seedMnemonic: string[]) => {
     // loop through swap clients to find locked lnd clients
     const initWalletPromises: Promise<any>[] = [];
+    const createdLndWallets: string[] = [];
     for (const swapClient of this.swapClients.values()) {
       if (isLndClient(swapClient) && swapClient.isWaitingUnlock()) {
-        initWalletPromises.push(swapClient.initWallet(walletPassword, seedMnemonic));
+        const initWalletPromise = swapClient.initWallet(walletPassword, seedMnemonic).then(() => {
+          createdLndWallets.push(swapClient.currency);
+        }).catch((err) => {
+          this.loggers.lnd.debug(`could not initialize ${swapClient.currency} client: ${err.message}`);
+        });
+        initWalletPromises.push(initWalletPromise);
       }
     }
 
-    await Promise.all(initWalletPromises).catch((err) => {
-      this.loggers.lnd.debug(`could not initialize one or more wallets: ${JSON.stringify(err)}`);
-    });
+    await Promise.all(initWalletPromises);
 
     // TODO: create raiden address
+
+    return createdLndWallets;
   }
 
   /**
-   * Initializes wallets with seed and password.
+   * Unlocks wallets with a password.
+   * @returns an array of currencies for each lnd client that was unlocked
    */
   public unlockWallets = async (walletPassword: string) => {
     // loop through swap clients to find locked lnd clients
     const unlockWalletPromises: Promise<any>[] = [];
+    const unlockedLndClients: string[] = [];
+
     for (const swapClient of this.swapClients.values()) {
       if (isLndClient(swapClient) && swapClient.isWaitingUnlock()) {
-        unlockWalletPromises.push(swapClient.unlockWallet(walletPassword));
+        const unlockWalletPromise = swapClient.unlockWallet(walletPassword).then(() => {
+          unlockedLndClients.push(swapClient.currency);
+        }).catch((err) => {
+          this.loggers.lnd.debug(`could not unlock ${swapClient.currency} client: ${err.message}`);
+        });
+        unlockWalletPromises.push(unlockWalletPromise);
       }
     }
 
-    await Promise.all(unlockWalletPromises).catch((err) => {
-      this.loggers.lnd.debug(`could not unlock one or more wallets: ${JSON.stringify(err)}`);
-    });
+    await Promise.all(unlockWalletPromises);
 
     // TODO: unlock raiden
+
+    return unlockedLndClients;
   }
 
   /**
@@ -284,7 +300,7 @@ class SwapClientManager extends EventEmitter {
     }
     const peerIdentifier = peer.getIdentifier(swapClient.type, currency);
     if (!peerIdentifier) {
-      throw new Error('unable to get swap client pubKey for peer');
+      throw new Error('peer not connected to swap client');
     }
     const units = this.unitConverter.amountToUnits({
       amount,
