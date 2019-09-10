@@ -77,6 +77,7 @@ class DB {
       // initialize database with the seed nodes for the configured network
       const nodes = defaultNodes(network);
       if (nodes) {
+        // TODO: comment back in for final PR
         // await Node.bulkCreate(nodes);
       }
 

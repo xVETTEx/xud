@@ -2,11 +2,10 @@
 set -ex
 source .env
 BLOCKS_TO_GENERATE=$1
+echo "Generating $BLOCKS_TO_GENERATE blocks..."
 $GETH_BINARY_PATH --datadir "$GETH_DATA_DIR" --networkid "$GETH_NETWORK_ID" --exec "miner.stop()" attach
 CURRENT_HEIGHT=$($GETH_BINARY_PATH --datadir "$GETH_DATA_DIR" --networkid "$GETH_NETWORK_ID" --exec "eth.blockNumber" attach)
-echo "$CURRENT_HEIGHT"
 TARGET_HEIGHT=$((CURRENT_HEIGHT + BLOCKS_TO_GENERATE))
-echo "$TARGET_HEIGHT"
 CURRENT_HEIGHT=$($GETH_BINARY_PATH --datadir "$GETH_DATA_DIR" --networkid "$GETH_NETWORK_ID" --exec "miner.start($BLOCKS_TO_GENERATE)" attach)
 HEIGHT=$($GETH_BINARY_PATH --datadir "$GETH_DATA_DIR" --networkid "$GETH_NETWORK_ID" --exec "eth.blockNumber" attach)
 until [ "$HEIGHT" -ge "$TARGET_HEIGHT" ]; do
@@ -14,4 +13,4 @@ until [ "$HEIGHT" -ge "$TARGET_HEIGHT" ]; do
   sleep 1s;
   HEIGHT=$($GETH_BINARY_PATH --datadir "$GETH_DATA_DIR" --networkid "$GETH_NETWORK_ID" --exec "eth.blockNumber" attach)
 done
-echo "Finished because HEIGHT is now $HEIGHT"
+echo "Target height $TARGET_HEIGHT reached. Generated $BLOCKS_TO_GENERATE blocks."

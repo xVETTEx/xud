@@ -30,6 +30,7 @@ func (a *actions) init(node *xudtest.HarnessNode) {
 	timeout := time.Now().Add(10 * time.Second)
 	for {
 		req := &xudrpc.GetInfoRequest{}
+		// TODO: lose the Background
 		res, err := node.Client.GetInfo(context.Background(), req)
 		a.assert.NoError(err)
 		a.assert.NotNil(res.Lnd["BTC"])
@@ -45,6 +46,7 @@ func (a *actions) init(node *xudtest.HarnessNode) {
 
 			// Get WETH contract address
 			file, err := os.Open("temp/weth-address.txt")
+			// TODO: assert noError
 			if err != nil {
 				fmt.Print("failed to get WETH address")
 			}
@@ -71,15 +73,18 @@ func (a *actions) init(node *xudtest.HarnessNode) {
 func (a *actions) addCurrency(node *xudtest.HarnessNode, currency string, swapClient xudrpc.AddCurrencyRequest_SwapClient, tokenAddress string) {
 	if len(tokenAddress) > 0 {
 		reqAddCurr := &xudrpc.AddCurrencyRequest{Currency: currency, SwapClient: swapClient, TokenAddress: tokenAddress}
+		// TODO: lose the Background
 		node.Client.AddCurrency(context.Background(), reqAddCurr)
 	} else {
 		reqAddCurr := &xudrpc.AddCurrencyRequest{Currency: currency, SwapClient: swapClient}
+		// TODO: lose the Background
 		node.Client.AddCurrency(context.Background(), reqAddCurr)
 	}
 }
 
 func (a *actions) addPair(node *xudtest.HarnessNode, baseCurrency string, quoteCurrency string) {
 	// Check the current number of pairs.
+	// TODO: lose the Background
 	resInfo, err := node.Client.GetInfo(context.Background(), &xudrpc.GetInfoRequest{})
 	a.assert.NoError(err)
 
@@ -87,10 +92,12 @@ func (a *actions) addPair(node *xudtest.HarnessNode, baseCurrency string, quoteC
 
 	// Add pair.
 	reqAddPair := &xudrpc.AddPairRequest{BaseCurrency: baseCurrency, QuoteCurrency: quoteCurrency}
+	// TODO: lose the Background
 	_, err = node.Client.AddPair(context.Background(), reqAddPair)
 	a.assert.NoError(err)
 
 	// Verify that pair was added.
+	// TODO: lose the Background
 	resGetInfo, err := node.Client.GetInfo(context.Background(), &xudrpc.GetInfoRequest{})
 	a.assert.NoError(err)
 	a.assert.Equal(resGetInfo.NumPairs, prevNumPairs+1)
@@ -111,6 +118,7 @@ func (a *actions) connect(srcNode, destNode *xudtest.HarnessNode) {
 func (a *actions) openChannel(srcNode, destNode *xudtest.HarnessNode, currency string, amount int64) {
 	// connect srcNode to destNode.
 	reqConn := &xudrpc.OpenChannelRequest{NodePubKey: destNode.PubKey(), Currency: currency, Amount: amount}
+	// TODO: lose the deadline
 	deadlineMs := 300000
 	clientDeadline := time.Now().Add(time.Duration(deadlineMs) * time.Millisecond)
 	ctx, cancel := context.WithDeadline(context.Background(), clientDeadline)
@@ -127,12 +135,14 @@ func (a *actions) disconnect(srcNode, destNode *xudtest.HarnessNode) {
 
 func (a *actions) ban(srcNode, destNode *xudtest.HarnessNode) {
 	reqBan := &xudrpc.BanRequest{NodePubKey: destNode.PubKey()}
+	// TODO: lose the background
 	_, err := srcNode.Client.Ban(context.Background(), reqBan)
 	a.assert.NoError(err)
 }
 
 func (a *actions) unban(srcNode, destNode *xudtest.HarnessNode) {
 	reqUnban := &xudrpc.UnbanRequest{NodePubKey: destNode.PubKey(), Reconnect: false}
+	// TODO: lose the background
 	_, err := srcNode.Client.Unban(context.Background(), reqUnban)
 	a.assert.NoError(err)
 }
@@ -140,13 +150,16 @@ func (a *actions) unban(srcNode, destNode *xudtest.HarnessNode) {
 func (a *actions) placeOrderAndBroadcast(srcNode, destNode *xudtest.HarnessNode,
 	req *xudrpc.PlaceOrderRequest) *xudrpc.Order {
 	// Subscribe to added orders on destNode
+	// TODO: lose the background
 	destNodeOrderChan := subscribeOrders(context.Background(), destNode)
 
 	// Fetch nodes current order book state.
+	// TODO: lose the background
 	prevSrcNodeCount, prevDestNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 
 	// Place the order on srcNode and verify the result.
+	// TODO: lose the background
 	res, err := srcNode.Client.PlaceOrderSync(context.Background(), req)
 	a.assert.NoError(err)
 
@@ -177,6 +190,7 @@ func (a *actions) placeOrderAndBroadcast(srcNode, destNode *xudtest.HarnessNode,
 	a.assert.Equal(peerOrder.OwnOrPeer.(*xudrpc.Order_PeerPubKey).PeerPubKey, srcNode.PubKey())
 
 	// Verify that a new order was added to the order books.
+	// TODO: lose the background
 	srcNodeCount, destNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 	a.assert.Equal(srcNodeCount.Own, prevSrcNodeCount.Own+1)
@@ -189,9 +203,11 @@ func (a *actions) placeOrderAndBroadcast(srcNode, destNode *xudtest.HarnessNode,
 
 func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNode, order *xudrpc.Order) {
 	// Subscribe to removed orders on destNode.
+	// TODO: lose the background
 	destNodeOrdersChan := subscribeOrders(context.Background(), destNode)
 
 	// Fetch nodes current order book state.
+	// TODO: lose the background
 	prevSrcNodeCount, prevDestNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 	a.assert.NotZero(prevSrcNodeCount)
@@ -202,6 +218,7 @@ func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNod
 
 	// Remove the order on srcNode.
 	req := &xudrpc.RemoveOrderRequest{OrderId: order.OwnOrPeer.(*xudrpc.Order_LocalId).LocalId}
+	// TODO: lose the background
 	res, err := srcNode.Client.RemoveOrder(context.Background(), req)
 	a.assert.NoError(err)
 
@@ -221,6 +238,7 @@ func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNod
 	a.assert.False(orderRemoval.IsOwnOrder)
 
 	// Verify that the order was removed from the order books.
+	// TODO: lose the background
 	srcNodeCount, destNodeCount, err := getOrdersCount(context.Background(), srcNode, destNode)
 	a.assert.NoError(err)
 	a.assert.Equal(srcNodeCount.Own, prevSrcNodeCount.Own-1)
@@ -231,6 +249,7 @@ func (a *actions) removeOrderAndInvalidate(srcNode, destNode *xudtest.HarnessNod
 
 func (a *actions) placeOrderAndSwap(srcNode, destNode *xudtest.HarnessNode,
 	req *xudrpc.PlaceOrderRequest) {
+	// TODO: lose the background
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -277,6 +296,7 @@ func (a *actions) verifyConnectivity(n1, n2 *xudtest.HarnessNode) {
 }
 
 func (a *actions) verifyPeer(srcNode, destNode *xudtest.HarnessNode) {
+	// TODO: lose the background
 	resListPeers, err := srcNode.Client.ListPeers(context.Background(), &xudrpc.ListPeersRequest{})
 	a.assert.NoError(err)
 
@@ -503,6 +523,7 @@ func getBalance(ctx context.Context, node *xudtest.HarnessNode) (*balances, erro
 	var b balances
 	var err error
 
+	// TODO: lose the background
 	clientDeadline := time.Now().Add(time.Second * 30)
 	ctxWithDeadline, cancel := context.WithDeadline(ctx, clientDeadline)
 	fmt.Printf("\n cancel is %v", cancel)

@@ -17,6 +17,7 @@ var integrationTestCases = []*testCase{
 		test: testRaidenSwap,
 	},
 	/*
+		TODO: comment in all other tests
 		{
 			name: "order matching and swap",
 			test: testOrderMatchingAndSwap,
@@ -203,6 +204,7 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 
 	// Getinfo
 	fmt.Printf("\nwaiting for raidens to boot...\n")
+	// TODO: query getinfo until raiden address
 	time.Sleep(45 * time.Second)
 	infoReq := &xudrpc.GetInfoRequest{}
 	res, err := net.Bob.Client.GetInfo(ht.ctx, infoReq)
@@ -217,6 +219,7 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 	// ht.act.openChannel(net.Bob, net.Alice, "BTC", 16000000)
 	ht.act.openChannel(net.Bob, net.Alice, "WETH", 7500000)
 	// wait for blocks to be mined
+	// TODO: better way of detecting when autominer is finished
 	time.Sleep(10 * time.Second)
 
 	bobBalance, err := getBalance(ht.ctx, net.Bob)
@@ -257,6 +260,7 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 	}
 	ht.act.placeOrderAndSwap(net.Bob, net.Alice, req)
 
+	// TODO: why is sleep 5 required here?
 	time.Sleep(5 * time.Second)
 	aliceWethBalanceReq = &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
 	aliceWethBalanceRes, err = net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
@@ -296,13 +300,6 @@ func testOrderMatchingAndSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 	// Connect Alice to Bob.
 	ht.act.connect(net.Alice, net.Bob)
 	ht.act.verifyConnectivity(net.Alice, net.Bob)
-
-	// Getinfo
-	time.Sleep(10 * time.Second)
-	infoReq := &xudrpc.GetInfoRequest{}
-	res, err := net.Bob.Client.GetInfo(ht.ctx, infoReq)
-	fmt.Printf("res is %v", res)
-	fmt.Printf("error is %v", err)
 
 	// Place an order on Alice.
 	req := &xudrpc.PlaceOrderRequest{

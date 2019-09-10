@@ -4,7 +4,7 @@ CACHE_PATH=$1
 VENV_DIR=$2
 SOURCE=$3
 install_ethereum_utils () {
-  echo "creating virtualenv for ethereum utils"
+  echo "installing ethereum utils"
   cd "$CACHE_PATH"
   python3.7 -m venv "$VENV_DIR"
   # shellcheck source=/dev/null

@@ -125,27 +125,6 @@ func (cfg nodeConfig) P2PAddr() string {
 	return net.JoinHostPort("127.0.0.1", strconv.Itoa(cfg.P2PPort))
 }
 
-/*
-func removeContents(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-*/
-
 func newNode(name string, xudPath string, noBalanceChecks bool) (*HarnessNode, error) {
 	nodeNum := int(atomic.AddInt32(&numActiveNodes, 1))
 
@@ -154,12 +133,6 @@ func newNode(name string, xudPath string, noBalanceChecks bool) (*HarnessNode, e
 	if err != nil {
 		return nil, err
 	}
-	/*
-		err = removeContents(dataDir)
-		if err != nil {
-			return nil, err
-		}
-	*/
 
 	cfg := nodeConfig{
 		DataDir:         dataDir,

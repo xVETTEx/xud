@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "bytes"
 	"fmt"
 	"github.com/ExchangeUnion/xud-simulation/xudrpc"
 	"log"
@@ -46,6 +45,7 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("installation output: %v", output)
 	// wait for geth to boot
+	// TODO: more reliable way to check when geth is up and running
 	time.Sleep(5 * time.Second)
 
 	log.Println("deploying contracts...")
@@ -77,6 +77,7 @@ func TestIntegration(t *testing.T) {
 	aliceBobLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, xudNetwork.Bob.LndLtcNode)
 	ht.assert.NoError(err)
 
+	// TODO: comment back in
 	/*
 		bobCarolBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, xudNetwork.Carol.LndBtcNode)
 		ht.assert.NoError(err)
@@ -137,6 +138,7 @@ func TestIntegration(t *testing.T) {
 	ht.assert.NoError(err)
 	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, aliceBobLtcChanPoint, false)
 	ht.assert.NoError(err)
+	// TODO: comment back in
 	/*
 		err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, bobCarolBtcChanPoint, false)
 		ht.assert.NoError(err)
@@ -261,6 +263,7 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	var lndLtcNetworkHarness *lntest.NetworkHarness
 
 	// Create and initialize LTCD instance.
+	// TODO: context timeout increase
 	ltcHandlers := &ltcclient.NotificationHandlers{
 		OnTxAccepted: func(hash *ltcchainhash.Hash, amt ltcutil.Amount) {
 			newHash := new(lntest.Hash)
@@ -313,6 +316,7 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	var lndBtcNetworkHarness *lntest.NetworkHarness
 
 	// Create and initialize BTCD instance.
+	// TODO: context timeout increase
 	args := []string{"--rejectnonstd", "--txindex"}
 	handlers := &btcclient.NotificationHandlers{
 		OnTxAccepted: func(hash *btcchainhash.Hash, amt btcutil.Amount) {
@@ -378,16 +382,8 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	if startAutominerErr != nil {
 		log.Fatal(startAutominerErr)
 	}
-	/*
-		log.Printf("ethereum: generating 500 blocks...")
-		mineBlocksCmd := exec.Command("./generate-ethereum-blocks.sh", strconv.Itoa(500))
-		data, err := mineBlocksCmd.Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("output from mineBlocksCmd: %v", string(data))
-	*/
 
+	// TODO: dynamic port for raiden
 	fmt.Printf("Bob HTTP port is %v", xudHarness.Bob.Cfg.HTTPPort)
 	raidenBobCmd := exec.Command("./start-raiden-bob.sh", strconv.Itoa(xudHarness.Bob.Cfg.HTTPPort))
 	startRaidenBobErr := raidenBobCmd.Start()
@@ -395,6 +391,7 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 		log.Fatal(startRaidenBobErr)
 	}
 
+	// TODO: dynamic port for raiden
 	fmt.Printf("Alice HTTP port is %v", xudHarness.Alice.Cfg.HTTPPort)
 	raidenAliceCmd := exec.Command("./start-raiden-alice.sh", strconv.Itoa(xudHarness.Alice.Cfg.HTTPPort))
 	startRaidenAliceErr := raidenAliceCmd.Start()
@@ -405,7 +402,9 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	// Launch XUD network.
 	xudHarness.SetLnd(lndBtcNetworkHarness, "BTC")
 	xudHarness.SetLnd(lndLtcNetworkHarness, "LTC")
+	// TODO: dynamic port for raiden
 	xudHarness.Bob.SetRaiden(5001)
+	// TODO: dynamic port for raiden
 	xudHarness.Alice.SetRaiden(6001)
 	log.Printf("xud: launching network...")
 	if err := xudHarness.Start(); err != nil {
@@ -414,6 +413,7 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 
 	teardown := func() {
 		fmt.Printf("skipping teardown")
+		// TODO: re-enable cleanup
 		/*
 			if err := lndBtcNetworkHarness.TearDownAll(); err != nil {
 				log.Fatalf("lnd-btc: cannot tear down network harness: %v", err)
@@ -455,6 +455,7 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	return xudHarness, teardown
 }
 
+// TODO: merge installDeps, installEthereum, startGeth
 func installDeps() (string, error) {
 	cmd := exec.Command("./install.sh")
 
