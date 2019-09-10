@@ -15,7 +15,6 @@ cd "$RAIDEN_CONTRACTS_PATH"
 source "venv/bin/activate"
 python -m raiden_contracts.deploy raiden --rpc-provider "$GETH_PROVIDER" --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --gas-limit 6000000 --max-token-networks 10 --password "$PASSWORD_FILE"
 TokenNetworkRegistry=$(< "$CONTRACTS_DEPLOYMENT_LOG_JSON" jq -r .contracts.TokenNetworkRegistry.address)
-echo "Token from file $TokenNetworkRegistry"
 python -m raiden_contracts.deploy token --rpc-provider $GETH_PROVIDER --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --token-supply 20000000 --token-name ServiceToken --token-decimals 18 --token-symbol SVT --password "$PASSWORD_FILE" > "$CONTRACTS_SERVICETOKEN_LOG_JSON"
 ServiceToken=$(< "$CONTRACTS_SERVICETOKEN_LOG_JSON" tail -3 | jq -r .CustomToken)
 python -m raiden_contracts.deploy services --rpc-provider $GETH_PROVIDER --private-key "$TREASURY_ACCOUNT_PATH" --gas-price 10 --gas-limit 6000000 --token-address "$ServiceToken" --user-deposit-whole-limit $MAX_UINT256 --service-deposit-bump-numerator 6 --service-deposit-bump-denominator 5 --service-deposit-decay-constant "$DECAY" --initial-service-deposit-price $DEPOSIT --service-deposit-min-price 1000 --service-registration-duration "$DURATION" --token-network-registry-address "$TokenNetworkRegistry" --password "$PASSWORD_FILE"
