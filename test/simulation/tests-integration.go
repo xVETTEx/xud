@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/ExchangeUnion/xud-simulation/xudrpc"
 	"github.com/ExchangeUnion/xud-simulation/xudtest"
+	"os/exec"
+	// "strconv"
 	"time"
 )
 
@@ -202,43 +204,67 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 	ht.act.connect(net.Alice, net.Bob)
 	ht.act.verifyConnectivity(net.Alice, net.Bob)
 
-	// Getinfo
 	fmt.Printf("\nwaiting for raidens to boot...\n")
-	// TODO: query getinfo until raiden address
-	time.Sleep(45 * time.Second)
+	// Query GetInfo until we get a raiden address for Bob
 	infoReq := &xudrpc.GetInfoRequest{}
-	res, err := net.Bob.Client.GetInfo(ht.ctx, infoReq)
-	fmt.Printf("\nres is %v\n", res)
-	fmt.Printf("\nerror is %v\n", err)
+	for {
+		time.Sleep(1 * time.Second)
+		res, err := net.Bob.Client.GetInfo(ht.ctx, infoReq)
+		ht.assert.NoError(err)
+		if len(res.Raiden.Address) > 0 {
+			fmt.Printf("\nraiden address found for Bob: %v\n", res.Raiden.Address)
+			break
+		}
+	}
 
-	listPairsReq := &xudrpc.ListPairsRequest{}
-	listPairsRes, err := net.Bob.Client.ListPairs(ht.ctx, listPairsReq)
-	fmt.Printf("\nbob listpairs %v\n", listPairsRes)
-	fmt.Printf("\nerror is %v\n", err)
+	// Query GetInfo until we get a raiden address for Alice
+	for {
+		time.Sleep(1 * time.Second)
+		res, err := net.Alice.Client.GetInfo(ht.ctx, infoReq)
+		ht.assert.NoError(err)
+		if len(res.Raiden.Address) > 0 {
+			fmt.Printf("\nraiden address found for Alice: %v\n", res.Raiden.Address)
+			break
+		}
+	}
 
-	// ht.act.openChannel(net.Bob, net.Alice, "BTC", 16000000)
 	ht.act.openChannel(net.Bob, net.Alice, "WETH", 7500000)
-	// wait for blocks to be mined
-	// TODO: better way of detecting when autominer is finished
-	time.Sleep(10 * time.Second)
-
-	bobBalance, err := getBalance(ht.ctx, net.Bob)
-	ht.assert.NoError(err)
-	fmt.Printf("\nBob balance %v\n", bobBalance.btc.channel)
-
-	aliceBalance, err := getBalance(ht.ctx, net.Alice)
-	ht.assert.NoError(err)
-	fmt.Printf("\nAlice balance %v\n", aliceBalance.btc.channel)
+	// Verify that the channel is open
+	bobWethBalanceReq := &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
+	for {
+		time.Sleep(1 * time.Second)
+		bobWethBalanceRes, err := net.Bob.Client.ChannelBalance(ht.ctx, bobWethBalanceReq)
+		ht.assert.NoError(err)
+		fmt.Printf("\nBob WETH balance %v\n", bobWethBalanceRes.Balances["WETH"].Balance)
+		if bobWethBalanceRes.Balances["WETH"].Balance == 7500000 {
+			fmt.Printf("\nBob now has sufficient balance: %v\n", bobWethBalanceRes.Balances["WETH"].Balance)
+			cmd := exec.Command("./get-bob-channels.sh")
+			data, err := cmd.Output()
+			ht.assert.NoError(err)
+			fmt.Printf("output get-bob-channels: %v", string(data))
+			break
+		}
+	}
 
 	aliceWethBalanceReq := &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
-	aliceWethBalanceRes, err := net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
-	ht.assert.NoError(err)
-	fmt.Printf("\nAlice WETH balance %v\n", aliceWethBalanceRes)
+	for {
+		time.Sleep(1 * time.Second)
+		aliceWethBalanceRes, err := net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
+		ht.assert.NoError(err)
+		fmt.Printf("\nAlice WETH balance %v\n", aliceWethBalanceRes.Balances["WETH"].Balance)
+		if aliceWethBalanceRes.Balances["WETH"].Balance == 0 {
+			fmt.Printf("\nAlice now has sufficient balance: %v\n", aliceWethBalanceRes.Balances["WETH"].Balance)
+			cmd := exec.Command("./get-alice-channels.sh")
+			data, err := cmd.Output()
+			ht.assert.NoError(err)
+			fmt.Printf("output get-alice-channels: %v", string(data))
+			break
+		}
+	}
 
-	bobWethBalanceReq := &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
-	bobWethBalanceRes, err := net.Bob.Client.ChannelBalance(ht.ctx, bobWethBalanceReq)
-	ht.assert.NoError(err)
-	fmt.Printf("\nBob WETH balance %v\n", bobWethBalanceRes)
+	// Raiden reports the channel as opened, but it takes time for the
+	// peer to join the matrix server room.
+	time.Sleep(30 * time.Second)
 
 	// Place an order on Alice.
 	req := &xudrpc.PlaceOrderRequest{
@@ -257,38 +283,6 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 		Quantity: req.Quantity,
 		PairId:   req.PairId,
 		Side:     xudrpc.OrderSide_SELL,
-	}
-	ht.act.placeOrderAndSwap(net.Bob, net.Alice, req)
-
-	// TODO: why is sleep 5 required here?
-	time.Sleep(5 * time.Second)
-	aliceWethBalanceReq = &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
-	aliceWethBalanceRes, err = net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
-	ht.assert.NoError(err)
-	fmt.Printf("\nAlice WETH balance %v\n", aliceWethBalanceRes)
-
-	bobWethBalanceReq = &xudrpc.ChannelBalanceRequest{Currency: "WETH"}
-	bobWethBalanceRes, err = net.Bob.Client.ChannelBalance(ht.ctx, bobWethBalanceReq)
-	ht.assert.NoError(err)
-	fmt.Printf("\nBob WETH balance %v\n", bobWethBalanceRes)
-
-	// Place an order on Alice.
-	req = &xudrpc.PlaceOrderRequest{
-		OrderId:  "maker_order_id",
-		Price:    0.02,
-		Quantity: 1000,
-		PairId:   "WETH/BTC",
-		Side:     xudrpc.OrderSide_SELL,
-	}
-	ht.act.placeOrderAndBroadcast(net.Alice, net.Bob, req)
-
-	// Place a matching order on Bob.
-	req = &xudrpc.PlaceOrderRequest{
-		OrderId:  "taker_order_id",
-		Price:    req.Price,
-		Quantity: req.Quantity,
-		PairId:   req.PairId,
-		Side:     xudrpc.OrderSide_BUY,
 	}
 	ht.act.placeOrderAndSwap(net.Bob, net.Alice, req)
 

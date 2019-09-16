@@ -412,39 +412,42 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	}
 
 	teardown := func() {
-		if err := lndBtcNetworkHarness.TearDownAll(); err != nil {
-			log.Fatalf("lnd-btc: cannot tear down network harness: %v", err)
-		}
-		log.Printf("lnd-btc: network harness teared down")
+		log.Printf("skipping cleanup for debug")
+		/*
+			if err := lndBtcNetworkHarness.TearDownAll(); err != nil {
+				log.Fatalf("lnd-btc: cannot tear down network harness: %v", err)
+			}
+			log.Printf("lnd-btc: network harness teared down")
 
-		if err := btcdHarness.TearDown(); err != nil {
-			log.Fatalf("btcd: cannot tear down harness: %v", err)
-		} else {
-			log.Printf("btcd: harness teared down")
-		}
+			if err := btcdHarness.TearDown(); err != nil {
+				log.Fatalf("btcd: cannot tear down harness: %v", err)
+			} else {
+				log.Printf("btcd: harness teared down")
+			}
 
-		if err := lndLtcNetworkHarness.TearDownAll(); err != nil {
-			log.Printf("lnd-ltc: cannot tear down network harness: %v", err)
-		}
-		log.Printf("lnd-ltc: network harness teared down")
+			if err := lndLtcNetworkHarness.TearDownAll(); err != nil {
+				log.Printf("lnd-ltc: cannot tear down network harness: %v", err)
+			}
+			log.Printf("lnd-ltc: network harness teared down")
 
-		if err := ltcdHarness.TearDown(); err != nil {
-			log.Fatalf("ltcd: cannot tear down harness: %v", err)
-		}
-		log.Printf("ltcd: harness teared down")
+			if err := ltcdHarness.TearDown(); err != nil {
+				log.Fatalf("ltcd: cannot tear down harness: %v", err)
+			}
+			log.Printf("ltcd: harness teared down")
 
-		if err := xudHarness.TearDownAll(cfg.XudKill, cfg.XudCleanup); err != nil {
-			log.Fatalf("cannot tear down xud network harness: %v", err)
-		} else {
-			log.Printf("xud network harness teared down")
-		}
-		log.Printf("cleaning up processes...")
-		cleanupCmd := exec.Command("./cleanup-processes.sh")
-		err := cleanupCmd.Run()
-		if err != nil {
-			fmt.Printf("cleanup failure: %v", err)
-		}
-		log.Printf("cleanup complete")
+			if err := xudHarness.TearDownAll(cfg.XudKill, cfg.XudCleanup); err != nil {
+				log.Fatalf("cannot tear down xud network harness: %v", err)
+			} else {
+				log.Printf("xud network harness teared down")
+			}
+			log.Printf("cleaning up processes...")
+			cleanupCmd := exec.Command("./cleanup-processes.sh")
+			err := cleanupCmd.Run()
+			if err != nil {
+				fmt.Printf("cleanup failure: %v", err)
+			}
+			log.Printf("cleanup complete")
+		*/
 	}
 
 	return xudHarness, teardown
