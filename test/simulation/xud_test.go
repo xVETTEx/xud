@@ -17,6 +17,7 @@ import (
 	ltctest "github.com/ltcsuite/ltcd/integration/rpctest"
 	ltcclient "github.com/ltcsuite/ltcd/rpcclient"
 	"github.com/ltcsuite/ltcutil"
+	"github.com/phayes/freeport"
 	btcchaincfg "github.com/roasbeef/btcd/chaincfg"
 	btcchainhash "github.com/roasbeef/btcd/chaincfg/chainhash"
 	btctest "github.com/roasbeef/btcd/integration/rpctest"
@@ -357,8 +358,12 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 
 	// Launch Ethereum network
 	log.Printf("ethereum: launching network...")
-	// TODO: dynamic geth port?
-	gethCmd := exec.Command("./start-geth.sh")
+	gethPort, err := freeport.GetFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+	gethPortStr := strconv.Itoa(gethPort)
+	gethCmd := exec.Command("./start-geth.sh", gethPortStr)
 	startGethErr := gethCmd.Start()
 	if startGethErr != nil {
 		log.Fatal(startGethErr)
@@ -374,19 +379,13 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 		log.Fatal(startAutominerErr)
 	}
 
-	// TODO: dynamic port for raiden
-	// fmt.Printf("Bob HTTP port is %v", xudHarness.Bob.Cfg.HTTPPort)
-	// fmt.Printf("Bob Raiden API port is %v", xudHarness.Bob.Cfg.RaidenPort)
-	raidenBobCmd := exec.Command("./start-raiden-bob.sh", strconv.Itoa(xudHarness.Bob.Cfg.RaidenPort), strconv.Itoa(xudHarness.Bob.Cfg.HTTPPort))
+	raidenBobCmd := exec.Command("./start-raiden-bob.sh", strconv.Itoa(xudHarness.Bob.Cfg.RaidenPort), strconv.Itoa(xudHarness.Bob.Cfg.HTTPPort), gethPortStr)
 	startRaidenBobErr := raidenBobCmd.Start()
 	if startRaidenBobErr != nil {
 		log.Fatal(startRaidenBobErr)
 	}
 
-	// TODO: dynamic port for raiden
-	// fmt.Printf("Alice HTTP port is %v", xudHarness.Alice.Cfg.HTTPPort)
-	// fmt.Printf("Bob Raiden API port is %v", xudHarness.Alice.Cfg.RaidenPort)
-	raidenAliceCmd := exec.Command("./start-raiden-alice.sh", strconv.Itoa(xudHarness.Alice.Cfg.RaidenPort), strconv.Itoa(xudHarness.Alice.Cfg.HTTPPort))
+	raidenAliceCmd := exec.Command("./start-raiden-alice.sh", strconv.Itoa(xudHarness.Alice.Cfg.RaidenPort), strconv.Itoa(xudHarness.Alice.Cfg.HTTPPort), gethPortStr)
 	startRaidenAliceErr := raidenAliceCmd.Start()
 	if startRaidenAliceErr != nil {
 		log.Fatal(startRaidenAliceErr)

@@ -1,6 +1,12 @@
 #!/bin/bash
 set -ex
 source .env
+OVERRIDE_GETH_PORT=$1
+if [ -z "$OVERRIDE_GETH_PORT" ]; then
+  GETH_PORT=0
+else
+  GETH_PORT=$OVERRIDE_GETH_PORT
+fi
 if [ ! -d "$DAG_DIR" ]; then
   echo "DAG dir does not exist"
   WAIT_FOR_DAG=true

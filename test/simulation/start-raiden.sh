@@ -4,8 +4,10 @@ source .env
 RAIDEN_DATA_DIR=$1
 RAIDEN_PORT=$2
 RESOLVER_PORT=$3
+GETH_PORT=$4
 CONF_FILE="$RAIDEN_DATA_DIR/config.toml"
 OUTPUT_PATH="$RAIDEN_DATA_DIR/raiden.log"
+GETH_PROVIDER="http://$GETH_RPCADDR:$GETH_PORT"
 # shellcheck source=/dev/null
 source "$RAIDEN_PATH/venv/bin/activate"
 cd "$RAIDEN_PATH"
