@@ -5,7 +5,7 @@ source .env
 # cleanup existing data directories to prevent errors
 # during consecutive runs
 rm -Rf $TEMP_PATH/xuddatadir*
-# debug for dev
+# cleanup logs from previous runs
 rm -Rf $TEMP_PATH/logs
 
 ./install-lnd.sh

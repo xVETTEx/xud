@@ -16,37 +16,34 @@ var integrationTestCases = []*testCase{
 		name: "raiden swap",
 		test: testRaidenSwap,
 	},
-	/*
-		TODO: comment in all other tests
-		{
-			name: "order matching and swap",
-			test: testOrderMatchingAndSwap,
-		},
-			{
-				name: "p2p discovery",
-				test: testP2PDiscovery,
-			},
-				{
-					name: "p2p incorrect public key",
-					test: testP2PIncorrectPubKey,
-				},
-				{
-					name: "p2p ban unban",
-					test: testP2PBanUnban,
-				},
-				{
-					name: "p2p already connected",
-					test: testP2PAlreadyConnected,
-				},
-				{
-					name: "order broadcast and invalidation",
-					test: testOrderBroadcastAndInvalidation,
-				},
-				{
-					name: "multiple hop swap",
-					test: testMultiHopSwap,
-				},
-	*/
+	{
+		name: "order matching and swap",
+		test: testOrderMatchingAndSwap,
+	},
+	{
+		name: "p2p discovery",
+		test: testP2PDiscovery,
+	},
+	{
+		name: "p2p incorrect public key",
+		test: testP2PIncorrectPubKey,
+	},
+	{
+		name: "p2p ban unban",
+		test: testP2PBanUnban,
+	},
+	{
+		name: "p2p already connected",
+		test: testP2PAlreadyConnected,
+	},
+	{
+		name: "order broadcast and invalidation",
+		test: testOrderBroadcastAndInvalidation,
+	},
+	{
+		name: "multiple hop swap",
+		test: testMultiHopSwap,
+	},
 }
 
 // testNetworkInit implements:

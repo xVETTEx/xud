@@ -2,8 +2,7 @@ dist: bionic
 language: node_js
 
 node_js:
-  # TODO: enable node builds
-  # - "node"
+  - "node"
   - "lts/*"
 
 cache:
@@ -25,8 +24,7 @@ addons:
     update: true
 
 script:
-  # TODO: enable other tests
-  # - npm run lintNoFix
-  # - npm run compile:seedutil
-  # - npm run test
+  - npm run lintNoFix
+  - npm run compile:seedutil
+  - npm run test
   - npm run test:sim
