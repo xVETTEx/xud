@@ -32,24 +32,20 @@ var (
 
 func TestMain(m *testing.M) {
 	log.Println("installing dependencies...")
-	output, err := installDeps()
+	output, err := execScript("./install.sh")
 	if err != nil {
 		log.Fatalf("installation failure: %v", err)
 	}
 	log.Printf("installation output: %v", output)
 
 	log.Println("starting geth...")
-	_, err = startGeth()
+	_, err = execScript("./start-geth.sh")
 	if err != nil {
 		log.Fatalf("failed to start geth: %v", err)
 	}
 
-	// wait for geth to boot
-	// TODO: more reliable way to check when geth is up and running
-	time.Sleep(5 * time.Second)
-
 	log.Println("setting up ethereum chain...")
-	output, err = installEthereum()
+	output, err = execScript("./install-ethereum.sh")
 	if err != nil {
 		log.Fatalf("failed to setup ethereum chain: %v", err)
 	}
@@ -77,18 +73,15 @@ func TestIntegration(t *testing.T) {
 	aliceBobLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, xudNetwork.Bob.LndLtcNode)
 	ht.assert.NoError(err)
 
-	// TODO: comment back in
-	/*
-		bobCarolBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, xudNetwork.Carol.LndBtcNode)
-		ht.assert.NoError(err)
-		bobCarolLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, xudNetwork.Carol.LndLtcNode)
-		ht.assert.NoError(err)
+	bobCarolBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, xudNetwork.Carol.LndBtcNode)
+	ht.assert.NoError(err)
+	bobCarolLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, xudNetwork.Carol.LndLtcNode)
+	ht.assert.NoError(err)
 
-		carolDavidBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, xudNetwork.Dave.LndBtcNode)
-		ht.assert.NoError(err)
-		carolDavidLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, xudNetwork.Dave.LndLtcNode)
-		ht.assert.NoError(err)
-	*/
+	carolDavidBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, xudNetwork.Dave.LndBtcNode)
+	ht.assert.NoError(err)
+	carolDavidLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, xudNetwork.Dave.LndLtcNode)
+	ht.assert.NoError(err)
 
 	initialStates := make(map[int]*xudrpc.GetInfoResponse)
 	for i, testCase := range integrationTestCases {
@@ -138,17 +131,14 @@ func TestIntegration(t *testing.T) {
 	ht.assert.NoError(err)
 	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, aliceBobLtcChanPoint, false)
 	ht.assert.NoError(err)
-	// TODO: comment back in
-	/*
-		err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, bobCarolBtcChanPoint, false)
-		ht.assert.NoError(err)
-		err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, bobCarolLtcChanPoint, false)
-		ht.assert.NoError(err)
-		err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, carolDavidBtcChanPoint, false)
-		ht.assert.NoError(err)
-		err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, carolDavidLtcChanPoint, false)
-		ht.assert.NoError(err)
-	*/
+	err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, bobCarolBtcChanPoint, false)
+	ht.assert.NoError(err)
+	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, bobCarolLtcChanPoint, false)
+	ht.assert.NoError(err)
+	err = closeBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, carolDavidBtcChanPoint, false)
+	ht.assert.NoError(err)
+	err = closeLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, carolDavidLtcChanPoint, false)
+	ht.assert.NoError(err)
 }
 
 func TestSecurity(t *testing.T) {
@@ -367,12 +357,15 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 
 	// Launch Ethereum network
 	log.Printf("ethereum: launching network...")
+	// TODO: dynamic geth port?
 	gethCmd := exec.Command("./start-geth.sh")
 	startGethErr := gethCmd.Start()
 	if startGethErr != nil {
 		log.Fatal(startGethErr)
 	}
 
+	// wait for geth to boot
+	// TODO: more reliable way to check when geth is up and running
 	time.Sleep(5 * time.Second)
 
 	autominerCmd := exec.Command("./start-autominer.sh")
@@ -448,56 +441,14 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	return xudHarness, teardown
 }
 
-// TODO: merge installDeps, installEthereum, startGeth
-func installDeps() (string, error) {
-	cmd := exec.Command("./install.sh")
-
-	data, err := cmd.Output()
-	if err != nil {
-		// The program has exited with an exit code != 0
-		return "", fmt.Errorf("installation error: %v", string(data))
-	}
-
-	return string(data), nil
-}
-
-func installEthereum() (string, error) {
-	cmd := exec.Command("./install-ethereum.sh")
-
-	data, err := cmd.Output()
-	if err != nil {
-		// The program has exited with an exit code != 0
-		return "", fmt.Errorf("installation error: %v", string(data))
-	}
-
-	return string(data), nil
-}
-
-func startGeth() (string, error) {
-	cmd := exec.Command("./start-geth.sh")
-
-	data, err := cmd.Output()
-	if err != nil {
-		// The program has exited with an exit code != 0
-		return "", fmt.Errorf("installation error: %v", string(data))
-	}
-
-	return string(data), nil
-}
-
-/*
 func execScript(command string) (string, error) {
-	fmt.Printf("command to exec is %v", command)
 	cmd := exec.Command(command)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+
 	data, err := cmd.Output()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		// The program has exited with an exit code != 0
-		return "", fmt.Errorf("failed to execute script: %v", string(data))
+		return "", fmt.Errorf("execScript error: %v", string(data))
 	}
 
 	return string(data), nil
 }
-*/

@@ -15,5 +15,4 @@ RAIDEN_ADDRESS_ALICE="0x$(< "$ALICE_ACCOUNT_PATH" jq -r .address)"
 ./generate-ethereum-blocks.sh 500 $RAIDEN_ADDRESS_ALICE
 EIP55_RAIDEN_ADDRESS_ALICE=$(exec ./address-to-eip55.sh "$RAIDEN_ADDRESS_ALICE")
 ./create-raiden-config.sh "$EIP55_RAIDEN_ADDRESS_ALICE" "$RAIDEN_DATA_DIR_ALICE"
-sleep 1 # TODO: safe to remove? wait for pending blocks to be mined
 ./cleanup-processes.sh
