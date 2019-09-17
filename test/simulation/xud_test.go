@@ -38,22 +38,22 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("installation output: %v", output)
 
-	log.Println("setting up ethereum chain...")
-	output, err = startGeth()
+	log.Println("starting geth...")
+	_, err = startGeth()
 	if err != nil {
-		log.Fatalf("installation failure: %v", err)
+		log.Fatalf("failed to start geth: %v", err)
 	}
-	log.Printf("installation output: %v", output)
+
 	// wait for geth to boot
 	// TODO: more reliable way to check when geth is up and running
 	time.Sleep(5 * time.Second)
 
-	log.Println("deploying contracts...")
+	log.Println("setting up ethereum chain...")
 	output, err = installEthereum()
 	if err != nil {
-		log.Fatalf("installation failure: %v", err)
+		log.Fatalf("failed to setup ethereum chain: %v", err)
 	}
-	log.Printf("installation output: %v", output)
+	log.Printf("ethereum chain setup output: %v", output)
 
 	cfg = loadConfig()
 
@@ -263,7 +263,6 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	var lndLtcNetworkHarness *lntest.NetworkHarness
 
 	// Create and initialize LTCD instance.
-	// TODO: context timeout increase
 	ltcHandlers := &ltcclient.NotificationHandlers{
 		OnTxAccepted: func(hash *ltcchainhash.Hash, amt ltcutil.Amount) {
 			newHash := new(lntest.Hash)
@@ -316,7 +315,6 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	var lndBtcNetworkHarness *lntest.NetworkHarness
 
 	// Create and initialize BTCD instance.
-	// TODO: context timeout increase
 	args := []string{"--rejectnonstd", "--txindex"}
 	handlers := &btcclient.NotificationHandlers{
 		OnTxAccepted: func(hash *btcchainhash.Hash, amt btcutil.Amount) {
