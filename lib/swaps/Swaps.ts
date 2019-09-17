@@ -44,11 +44,9 @@ class Swaps extends EventEmitter {
     DAI: 10 ** 10,
   };
   /** The maximum time in milliseconds we will wait for a swap to be accepted before failing it. */
-  // TODO: adjust timeouts for CI
-  private static readonly SWAP_ACCEPT_TIMEOUT = 30000;
+  private static readonly SWAP_ACCEPT_TIMEOUT = 10000;
   /** The maximum time in milliseconds we will wait for a swap to be completed before failing it. */
-  // TODO: adjust timeouts for CI
-  private static readonly SWAP_COMPLETE_TIMEOUT = 90000;
+  private static readonly SWAP_COMPLETE_TIMEOUT = 30000;
   /** The maximum time in milliseconds we will wait to receive an expected sanity swap init packet. */
   private static readonly SANITY_SWAP_INIT_TIMEOUT = 3000;
   /** The maximum time in milliseconds we will wait for a swap to be completed before failing it. */
