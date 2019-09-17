@@ -156,6 +156,12 @@ func newNode(name string, xudPath string, noBalanceChecks bool) (*HarnessNode, e
 		return nil, err
 	}
 
+	cfg.RaidenHost = "127.0.0.1"
+	cfg.RaidenPort, err = freeport.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
+
 	return &HarnessNode{
 		Cfg:  &cfg,
 		Name: name,
@@ -179,12 +185,6 @@ func (hn *HarnessNode) SetLnd(lndNode *lntest.HarnessNode, chain string) {
 		hn.Cfg.LndLtcMacPath = lndNode.Cfg.AdminMacPath
 		hn.LndLtcNode = lndNode
 	}
-}
-
-// SetRaiden sets the raiden configuration.
-func (hn *HarnessNode) SetRaiden(port int) {
-	hn.Cfg.RaidenHost = "127.0.0.1"
-	hn.Cfg.RaidenPort = port
 }
 
 func (hn *HarnessNode) SetEnvVars(envVars []string) {

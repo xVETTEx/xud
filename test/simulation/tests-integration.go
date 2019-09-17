@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/ExchangeUnion/xud-simulation/xudrpc"
 	"github.com/ExchangeUnion/xud-simulation/xudtest"
-	"os/exec"
-	// "strconv"
 	"time"
 )
 
@@ -235,13 +233,7 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 		time.Sleep(1 * time.Second)
 		bobWethBalanceRes, err := net.Bob.Client.ChannelBalance(ht.ctx, bobWethBalanceReq)
 		ht.assert.NoError(err)
-		fmt.Printf("\nBob WETH balance %v\n", bobWethBalanceRes.Balances["WETH"].Balance)
 		if bobWethBalanceRes.Balances["WETH"].Balance == 7500000 {
-			fmt.Printf("\nBob now has sufficient balance: %v\n", bobWethBalanceRes.Balances["WETH"].Balance)
-			cmd := exec.Command("./get-bob-channels.sh")
-			data, err := cmd.Output()
-			ht.assert.NoError(err)
-			fmt.Printf("output get-bob-channels: %v", string(data))
 			break
 		}
 	}
@@ -251,19 +243,14 @@ func testRaidenSwap(net *xudtest.NetworkHarness, ht *harnessTest) {
 		time.Sleep(1 * time.Second)
 		aliceWethBalanceRes, err := net.Alice.Client.ChannelBalance(ht.ctx, aliceWethBalanceReq)
 		ht.assert.NoError(err)
-		fmt.Printf("\nAlice WETH balance %v\n", aliceWethBalanceRes.Balances["WETH"].Balance)
 		if aliceWethBalanceRes.Balances["WETH"].Balance == 0 {
-			fmt.Printf("\nAlice now has sufficient balance: %v\n", aliceWethBalanceRes.Balances["WETH"].Balance)
-			cmd := exec.Command("./get-alice-channels.sh")
-			data, err := cmd.Output()
-			ht.assert.NoError(err)
-			fmt.Printf("output get-alice-channels: %v", string(data))
 			break
 		}
 	}
 
 	// Raiden reports the channel as opened, but it takes time for the
 	// peer to join the matrix server room.
+	fmt.Printf("\nwaiting for raiden channel to become active...\n")
 	time.Sleep(30 * time.Second)
 
 	// Place an order on Alice.

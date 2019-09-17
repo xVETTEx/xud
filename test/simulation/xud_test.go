@@ -375,16 +375,18 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	}
 
 	// TODO: dynamic port for raiden
-	fmt.Printf("Bob HTTP port is %v", xudHarness.Bob.Cfg.HTTPPort)
-	raidenBobCmd := exec.Command("./start-raiden-bob.sh", strconv.Itoa(xudHarness.Bob.Cfg.HTTPPort))
+	// fmt.Printf("Bob HTTP port is %v", xudHarness.Bob.Cfg.HTTPPort)
+	// fmt.Printf("Bob Raiden API port is %v", xudHarness.Bob.Cfg.RaidenPort)
+	raidenBobCmd := exec.Command("./start-raiden-bob.sh", strconv.Itoa(xudHarness.Bob.Cfg.RaidenPort), strconv.Itoa(xudHarness.Bob.Cfg.HTTPPort))
 	startRaidenBobErr := raidenBobCmd.Start()
 	if startRaidenBobErr != nil {
 		log.Fatal(startRaidenBobErr)
 	}
 
 	// TODO: dynamic port for raiden
-	fmt.Printf("Alice HTTP port is %v", xudHarness.Alice.Cfg.HTTPPort)
-	raidenAliceCmd := exec.Command("./start-raiden-alice.sh", strconv.Itoa(xudHarness.Alice.Cfg.HTTPPort))
+	// fmt.Printf("Alice HTTP port is %v", xudHarness.Alice.Cfg.HTTPPort)
+	// fmt.Printf("Bob Raiden API port is %v", xudHarness.Alice.Cfg.RaidenPort)
+	raidenAliceCmd := exec.Command("./start-raiden-alice.sh", strconv.Itoa(xudHarness.Alice.Cfg.RaidenPort), strconv.Itoa(xudHarness.Alice.Cfg.HTTPPort))
 	startRaidenAliceErr := raidenAliceCmd.Start()
 	if startRaidenAliceErr != nil {
 		log.Fatal(startRaidenAliceErr)
@@ -393,10 +395,6 @@ func launchNetwork(noBalanceChecks bool) (*xudtest.NetworkHarness, func()) {
 	// Launch XUD network.
 	xudHarness.SetLnd(lndBtcNetworkHarness, "BTC")
 	xudHarness.SetLnd(lndLtcNetworkHarness, "LTC")
-	// TODO: dynamic port for raiden
-	xudHarness.Bob.SetRaiden(5001)
-	// TODO: dynamic port for raiden
-	xudHarness.Alice.SetRaiden(6001)
 	log.Printf("xud: launching network...")
 	if err := xudHarness.Start(); err != nil {
 		log.Fatalf("cannot start xud network: %v", err)
