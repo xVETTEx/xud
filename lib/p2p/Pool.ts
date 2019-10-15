@@ -454,6 +454,7 @@ class Pool extends EventEmitter {
   }
 
   private tryOpenPeer = async (peer: Peer, peerPubKey?: string, retryConnecting = false): Promise<void> => {
+    this.logger.info(`tryOpenPeer ${peerPubKey}`);
     try {
       await this.openPeer(peer, peerPubKey, retryConnecting);
     } catch (err) {}
