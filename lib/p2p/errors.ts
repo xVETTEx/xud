@@ -1,7 +1,7 @@
+import { XuNetwork } from '../constants/enums';
 import errorCodesPrefix from '../constants/errorCodesPrefix';
 import addressUtils from '../utils/addressUtils';
 import { Address } from './types';
-import { XuNetwork } from '../constants/enums';
 
 const codesPrefix = errorCodesPrefix.P2P;
 const errorCodes = {
@@ -31,6 +31,7 @@ const errorCodes = {
   FRAMER_INVALID_MSG_LENGTH: codesPrefix.concat('.23'),
   POOL_CLOSED: codesPrefix.concat('.24'),
   NODE_TOR_ADDRESS: codesPrefix.concat('.25'),
+  BANNED_BY_NODE: codesPrefix.concat('.26'),
 };
 
 const errors = {
@@ -146,6 +147,10 @@ const errors = {
     message: 'p2p pool is closed and not accepting new peers',
     code: errorCodes.POOL_CLOSED,
   },
+  BANNED_BY_NODE: (nodePubKey: string) => ({
+    message: `could not connect to node ${nodePubKey} because it has banned us`,
+    code: errorCodes.BANNED_BY_NODE,
+  }),
 };
 
 export { errorCodes };

@@ -299,8 +299,8 @@ class Pool extends EventEmitter {
   }
 
   /**
-   * Iterate over a collection of nodes and attempt to connect to them.
-   * If the node is banned, already connected, or has no listening addresses, then do nothing.
+   * Iterate over a collection of nodes and attempt to connect to them. If the node is banned,
+   * already connected, had previously banned us, or has no listening addresses, then do nothing.
    * Additionally, if we're already trying to connect to a given node also do nothing.
    * @param nodes a collection of nodes with a `forEach` iterator to attempt to connect to
    * @param allowKnown whether to allow connecting to nodes we are already aware of, defaults to true
@@ -319,11 +319,14 @@ class Pool extends EventEmitter {
       // if allowKnown is false, allow nodes that we don't aware of
       const isAllowed = allowKnown || !this.nodes.has(node.nodePubKey);
 
+      // Check if we have banned the node.
+      const notBanned = this.nodes.isBanned(node.nodePubKey);
+
       // Check if we are banned by the node.
       const notBannedBy = !this.nodes.isBannedBy(node.nodePubKey);
 
       // determine whether we should attempt to connect
-      if (isNotUs && hasAddresses && isAllowed && notBannedBy) {
+      if (isNotUs && hasAddresses && isAllowed && notBanned && notBannedBy) {
         connectionPromises.push(this.tryConnectNode(node, retryConnecting));
       }
     });
@@ -423,6 +426,11 @@ class Pool extends EventEmitter {
 
     if (this.peers.has(nodePubKey)) {
       throw errors.NODE_ALREADY_CONNECTED(nodePubKey, address);
+    }
+
+    if (this.nodes.isBannedBy(nodePubKey)) {
+      // for now we allow connection attempts to nodes that have banned us
+      this.logger.debug(`attempting connection to node that has banned us ${nodePubKey}`);
     }
 
     const pendingPeer = this.pendingOutboundPeers.get(nodePubKey);
@@ -593,10 +601,9 @@ class Pool extends EventEmitter {
     }
 
     // Check if peer has previously banned us, if so set `bannedBy` to false
-    const node = this.nodes.getNode(peerPubKey);
-    if (node && node.bannedBy) {
+    if (this.nodes.isBannedBy(peerPubKey)) {
       await this.nodes.setBannedBy(peerPubKey, false);
-      this.logger.info(`Peer: ${peerPubKey} has unbanned us`);
+      this.logger.info(`Peer ${peer.label} has unbanned us`);
     }
   }
 
@@ -908,7 +915,7 @@ class Pool extends EventEmitter {
 
     peer.on('bannedBy', async (nodePubKey: string) => {
       // set peer as banning us
-      await this.nodes.setBannedBy(nodePubKey);
+      await this.nodes.setBannedBy(nodePubKey, true);
       this.logger.info(`Peer: ${nodePubKey} has banned us`);
     });
 
