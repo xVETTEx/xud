@@ -278,7 +278,7 @@
         },
         "parameters": [
           {
-            "name": "node_pub_key",
+            "name": "node_identifier",
             "description": "The node pub key of the node for which to get information.",
             "in": "query",
             "required": false,
@@ -759,7 +759,7 @@
     "xudrpcBanRequest": {
       "type": "object",
       "properties": {
-        "node_pub_key": {
+        "node_identifier": {
           "type": "string",
           "description": "The node pub key of the node to ban."
         }
@@ -867,7 +867,7 @@
     "xudrpcDiscoverNodesRequest": {
       "type": "object",
       "properties": {
-        "peer_pub_key": {
+        "node_identifier": {
           "type": "string",
           "description": "The node pub key of the peer to discover nodes from."
         }
@@ -1591,7 +1591,7 @@
     "xudrpcUnbanRequest": {
       "type": "object",
       "properties": {
-        "node_pub_key": {
+        "node_identifier": {
           "type": "string",
           "description": "The node pub key of the peer to unban."
         },
