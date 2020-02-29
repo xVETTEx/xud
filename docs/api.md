@@ -163,7 +163,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| node_identifier | [string](#string) |  | The node pub key of the node to ban. |
+| node_identifier | [string](#string) |  | The node pub key or alias of the node to ban. |
 
 
 
@@ -297,7 +297,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| node_identifier | [string](#string) |  | The node pub key of the peer to discover nodes from. |
+| node_identifier | [string](#string) |  | The node pub key or alias of the peer to discover nodes from. |
 
 
 
@@ -442,7 +442,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| node_identifier | [string](#string) |  | The node pub key of the node for which to get information. |
+| node_identifier | [string](#string) |  | The node pub key or alias of the node for which to get information. |
 
 
 
@@ -647,7 +647,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| node_identifier | [string](#string) |  | The node pub key of the peer with which to open channel with. |
+| node_identifier | [string](#string) |  | The node pub key or alias of the peer with which to open channel with. |
 | currency | [string](#string) |  | The ticker symbol of the currency to open the channel for. |
 | amount | [int64](#int64) |  | The amount of the channel denominated in satoshis. |
 
@@ -1189,7 +1189,7 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| node_identifier | [string](#string) |  | The node pub key of the peer to unban. |
+| node_identifier | [string](#string) |  | The node pub key or alias of the peer to unban. |
 | reconnect | [bool](#bool) |  | Whether to attempt to connect to the peer after it is unbanned. |
 
 
