@@ -1146,6 +1146,9 @@ export class Peer extends jspb.Message {
     getRaidenAddress(): string;
     setRaidenAddress(value: string): void;
 
+    getAlias(): string;
+    setAlias(value: string): void;
+
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Peer.AsObject;
@@ -1168,6 +1171,7 @@ export namespace Peer {
         xudVersion: string,
         secondsConnected: number,
         raidenAddress: string,
+        alias: string,
     }
 }
 
