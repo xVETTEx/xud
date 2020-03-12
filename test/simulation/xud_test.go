@@ -46,7 +46,7 @@ func TestIntegration(t *testing.T) {
 		teardown()
 	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Timeout))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(1*time.Minute))
 	defer cancel()
 	ht := newHarnessTest(ctx, t)
 	log.Printf("Running %v integration tests", len(integrationTestCases))

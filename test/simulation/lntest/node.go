@@ -34,7 +34,7 @@ var (
 
 	// logOutput is a flag that can be set to append the output from the
 	// seed nodes to log files.
-	logOutput = flag.Bool("logoutput", false,
+	logOutput = flag.Bool("logoutput", true,
 		"log output from node n to file outputn.log")
 
 	// logPubKeyBytes is the number of bytes of the node's PubKey that
@@ -251,14 +251,14 @@ func (hn *HarnessNode) start(lndError chan<- error) error {
 	// If the logoutput flag is passed, redirect output from the nodes to
 	// log files.
 	if *logOutput {
-		fileName := fmt.Sprintf("output-%d-%s-%s.log", hn.NodeID,
+		fileName := fmt.Sprintf("./temp/logs/lnd-%d-%s-%s.log", hn.NodeID,
 			hn.Cfg.Name, hex.EncodeToString(hn.PubKey[:logPubKeyBytes]))
 
 		// If the node's PubKey is not yet initialized, create a temporary
 		// file name. Later, after the PubKey has been initialized, the
 		// file can be moved to its final name with the PubKey included.
 		if bytes.Equal(hn.PubKey[:4], []byte{0, 0, 0, 0}) {
-			fileName = fmt.Sprintf("output-%d-%s-tmp__.log", hn.NodeID,
+			fileName = fmt.Sprintf("lnd-%d-%s-tmp__.log", hn.NodeID,
 				hn.Cfg.Name)
 
 			// Once the node has done its work, the log file can be renamed.
@@ -266,7 +266,7 @@ func (hn *HarnessNode) start(lndError chan<- error) error {
 				if hn.logFile != nil {
 					hn.logFile.Close()
 
-					newFileName := fmt.Sprintf("output-%d-%s-%s.log",
+					newFileName := fmt.Sprintf("lnd-%d-%s-%s.log",
 						hn.NodeID, hn.Cfg.Name,
 						hex.EncodeToString(hn.PubKey[:logPubKeyBytes]))
 					err := os.Rename(fileName, newFileName)
