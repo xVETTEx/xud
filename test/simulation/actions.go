@@ -419,7 +419,7 @@ func openBtcChannel(ctx context.Context, ln *lntest.NetworkHarness, srcNode, des
 		return nil, err
 	}
 
-	if _, err := ln.BtcMiner.Node.Generate(6); err != nil {
+	if _, err := ln.BtcMiner.Node.Generate(9); err != nil {
 		return nil, err
 	}
 
