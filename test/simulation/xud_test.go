@@ -46,27 +46,36 @@ func TestIntegration(t *testing.T) {
 		teardown()
 	}()
 
-	ht := newHarnessTest(context.Background(), t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Timeout))
+	defer cancel()
+	ht := newHarnessTest(ctx, t)
 	log.Printf("Running %v integration tests", len(integrationTestCases))
 
 	// Open channels from both directions on each chain.
+	log.Printf("DEBUG: aliceBobBtcChanPoint")
 	aliceBobBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Alice.LndBtcNode, xudNetwork.Bob.LndBtcNode)
 	ht.assert.NoError(err)
+	log.Printf("DEBUG: aliceBobLtcChanPoint")
 	aliceBobLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Alice.LndLtcNode, xudNetwork.Bob.LndLtcNode)
 	ht.assert.NoError(err)
 
+	log.Printf("DEBUG: bobCarolBtcChanPoint")
 	bobCarolBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Bob.LndBtcNode, xudNetwork.Carol.LndBtcNode)
 	ht.assert.NoError(err)
+	log.Printf("DEBUG: bobCarolLtcChanPoint")
 	bobCarolLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Bob.LndLtcNode, xudNetwork.Carol.LndLtcNode)
 	ht.assert.NoError(err)
 
+	log.Printf("DEBUG: carolDavidBtcChanPoint")
 	carolDavidBtcChanPoint, err := openBtcChannel(ht.ctx, xudNetwork.LndBtcNetwork, xudNetwork.Carol.LndBtcNode, xudNetwork.Dave.LndBtcNode)
 	ht.assert.NoError(err)
+	log.Printf("DEBUG: carolDavidLtcChanPoint")
 	carolDavidLtcChanPoint, err := openLtcChannel(ht.ctx, xudNetwork.LndLtcNetwork, xudNetwork.Carol.LndLtcNode, xudNetwork.Dave.LndLtcNode)
 	ht.assert.NoError(err)
 
 	initialStates := make(map[int]*xudrpc.GetInfoResponse)
 	for i, testCase := range integrationTestCases {
+		log.Printf("DEBUG: %v", testCase.name)
 		success := t.Run(testCase.name, func(t1 *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Timeout))
 			defer cancel()
