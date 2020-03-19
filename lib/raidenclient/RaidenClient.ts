@@ -425,6 +425,7 @@ class RaidenClient extends SwapClient {
 
       req.on('error', (err: any) => {
         if (err.code === 'ECONNREFUSED') {
+          this.logger.error(`ECONNREFUSED error on ${endpoint} raiden call`, err);
           this.disconnect();
         }
         this.logger.error(err);
