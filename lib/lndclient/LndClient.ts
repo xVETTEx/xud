@@ -84,7 +84,11 @@ class LndClient extends SwapClient {
 
   private static waitForClientReady = (client: grpc.Client) => {
     return new Promise((resolve, reject) => {
+      const x = setInterval(() => {
+        console.log('waiting for lnd client');
+      }, 3000);
       client.waitForReady(Number.POSITIVE_INFINITY, (err) => {
+        clearInterval(x);
         if (err) {
           reject(err);
         } else {
