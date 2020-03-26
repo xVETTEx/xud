@@ -11,7 +11,7 @@ import * as lndrpc from '../proto/lndrpc_pb';
 import swapErrors from '../swaps/errors';
 import SwapClient, { ChannelBalance, ClientStatus, PaymentState, SwapClientInfo, TradingLimits } from '../swaps/SwapClient';
 import { SwapDeal } from '../swaps/types';
-import { base64ToHex, hexToUint8Array } from '../utils/utils';
+import { base64ToHex, hexToUint8Array, setTimeoutPromise } from '../utils/utils';
 import errors from './errors';
 import { Chain, ChannelCount, ClientMethods, LndClientConfig, LndInfo } from './types';
 
@@ -860,6 +860,7 @@ class LndClient extends SwapClient {
     await this.unaryWalletUnlockerCall<lndrpc.UnlockWalletRequest, lndrpc.UnlockWalletResponse>(
       'unlockWallet', request,
     );
+    await setTimeoutPromise(2000);
     this.setUnlocked();
     this.logger.info('wallet unlocked');
   }
