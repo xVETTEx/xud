@@ -30,10 +30,10 @@ type OrderSidesQueues = {
 class TradingPair {
   /** A pair of priority queues for the buy and sell sides of this trading pair */
   public queues?: OrderSidesQueues;
-  /** A pair of maps between active own orders ids and orders for the buy and sell sides of this trading pair. */
-  public ownOrders: OrderSidesMaps<OwnOrder>;
   /** A map between peerPubKey and a pair of maps between active peer orders ids and orders for the buy and sell sides of this trading pair. */
-  public peersOrders: Map<string, OrderSidesMaps<PeerOrder>>;
+  public orders: Map<string, OrderSidesMaps<PeerOrder>>;
+  /** Node's own address*/
+  public own_address : string; //onko string oikee?
 
   constructor(private logger: Logger, public pairId: string, private nomatching = false) {
     if (!nomatching) {
@@ -42,13 +42,8 @@ class TradingPair {
         sellQueue: TradingPair.createPriorityQueue(OrderingDirection.Asc),
       };
     }
-
-    this.ownOrders = {
-      buyMap: new Map<string, OwnOrder>(),
-      sellMap: new Map<string, OwnOrder>(),
-    };
-
-    this.peersOrders = new Map<string, OrderSidesMaps<PeerOrder>>();
+    this.orders = new Map<string, OrderSidesMaps<PeerOrder>>();
+    //tähän this.own_address = ;
   }
 
   private static createPriorityQueue = (orderingDirection: OrderingDirection): FastPriorityQueue<Order> => {
@@ -101,34 +96,29 @@ class TradingPair {
    * @returns `true` if the order was added, `false` if it could not be added because there
    * already exists an order with the same order id
    */
-  public addPeerOrder = (order: PeerOrder): boolean => {
-    let peerOrdersMaps = this.peersOrders.get(order.peerPubKey);
-    if (!peerOrdersMaps) {
-      peerOrdersMaps = {
+  private getOrCreateMap = (order: pubKey): boolean => {
+    let ordersMaps = this.orders.get(pubKey);
+    if (!ordersMaps) {
+      ordersMaps = {
         buyMap: new Map<string, PeerOrder>(),
         sellMap: new Map<string, PeerOrder>(),
       };
-      this.peersOrders.set(order.peerPubKey, peerOrdersMaps);
+      this.orders.set(pubKey, ordersMaps);
     }
 
-    return this.addOrder(order, peerOrdersMaps);
+    return orderMaps;
   }
-
-  /**
-   * Adds an own order for this trading pair.
-   * @returns `true` if the order was added, `false` if it could not be added because there
-   * already exists an order with the same order id
-   */
-  public addOwnOrder = (order: OwnOrder): boolean => {
-    return this.addOrder(order, this.ownOrders);
-  }
+  
 
   /**
    * Attempts to add an order for this trading pair.
    * @returns `true` if the order was added, `false` if it could not be added because there
    * already exists an order with the same order id
    */
-  private addOrder = (order: Order, maps: OrderSidesMaps<Order>): boolean => {
+  public addOrder = (order: Order): boolean => {
+    //pitäis varmaan tehä niin ettei mapseja tarvii kertoa, vaan tää löytää ne, joku funktio sille?
+    //verifyMapExists vois myös palauttaa mapin?
+    map = verifyMapExists(order.peerPubKey)
     const map = order.isBuy ? maps.buyMap : maps.sellMap;
     if (map.has(order.id)) {
       return false;
@@ -194,28 +184,19 @@ class TradingPair {
   }
 
   /**
-   * Removes all or part of an own order.
-   * @param quantityToRemove the quantity to remove, if undefined or if greater than or equal to the available
-   * quantity then the entire order is removed
-   * @returns the portion of the order that was removed, and a flag indicating whether the entire order was removed
-   */
-  public removeOwnOrder = (orderId: string, quantityToRemove?: number): { order: OwnOrder, fullyRemoved: boolean} => {
-    return this.removeOrder(orderId, this.ownOrders, quantityToRemove);
-  }
-
-  /**
    * Removes all or part of an order.
    * @param quantityToRemove the quantity to remove, if undefined or if greater than or equal to the available
    * quantity then the entire order is removed
    * @returns the portion of the order that was removed, and a flag indicating whether the entire order was removed
    */
-  private removeOrder = <T extends Order>(orderId: string, maps: OrderSidesMaps<Order>, quantityToRemove?: number):
+  private removeOrder = <T extends Order>(pubkey: string, orderId: string, quantityToRemove?: number): //string oikee pubkeylle?
     { order: T, fullyRemoved: boolean } => {
     assert(quantityToRemove === undefined || quantityToRemove > 0, 'quantityToRemove cannot be 0 or negative');
     const order = maps.buyMap.get(orderId) || maps.sellMap.get(orderId);
     if (!order) {
       throw errors.ORDER_NOT_FOUND(orderId);
     }
+    map = getOrderMap(); //pitää parametriks saada pubkey
 
     if (quantityToRemove && quantityToRemove < order.quantity) {
       // if quantityToRemove is below the order quantity, reduce the order quantity
@@ -284,22 +265,13 @@ class TradingPair {
     return order;
   }
 
-  public getPeerOrder = (orderId: string, peerPubKey: string): PeerOrder => {
-    const peerOrders = this.peersOrders.get(peerPubKey);
-    if (!peerOrders) {
-      throw errors.ORDER_NOT_FOUND(orderId, peerPubKey);
-    }
-
-    const order = this.getOrder(orderId, peerOrders);
+  public getOrder = <T extends Order>(orderId: string, pubKey: string): T | undefined => { //string oikee keylle?
+    maps = getOrderMap(pubKey);
+    order = maps.buyMap.get(orderId) || maps.sellMap.get(orderId);
     if (!order) {
       throw errors.ORDER_NOT_FOUND(orderId, peerPubKey);
     }
-
     return order;
-  }
-
-  private getOrder = <T extends Order>(orderId: string, maps: OrderSidesMaps<T>): T | undefined => {
-    return maps.buyMap.get(orderId) || maps.sellMap.get(orderId);
   }
 
   public addOrderHold = (orderId: string, holdAmount: number) => {
