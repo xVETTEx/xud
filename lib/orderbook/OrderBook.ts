@@ -64,6 +64,7 @@ class OrderBook extends EventEmitter {
   /** A map between active trading pair ids and trading pair instances. */
   public tradingPairs = new Map<string, TradingPair>();
   public nomatching: boolean;
+  public own_address: string;
 
   /** A map between own orders local id and their global id. */
   private localIdMap = new Map<string, OrderIdentifier>();
@@ -79,7 +80,7 @@ class OrderBook extends EventEmitter {
   private nobalancechecks: boolean;
   private maxlimits: boolean;
   private pool: Pool;
-  private swaps: Swaps;
+  private swaps: Swaps; 
 
   /** Max time for placeOrder iterations (due to swaps failures retries). */
   private static readonly MAX_PLACEORDER_ITERATIONS_TIME = 10000; // 10 sec
@@ -244,7 +245,7 @@ class OrderBook extends EventEmitter {
    */
   public getOwnOrder = (orderId: string, pairId: string): OwnOrder => {
     const tp = this.getTradingPair(pairId);
-    return tp.getOwnOrder(orderId);
+    return tp.getOrder(orderId, this.own_address);
   }
 
   private tryGetOwnOrder = (orderId: string, pairId: string): OwnOrder | undefined => {
@@ -257,7 +258,7 @@ class OrderBook extends EventEmitter {
 
   public getPeerOrder = (orderId: string, pairId: string, peerPubKey: string): PeerOrder => {
     const tp = this.getTradingPair(pairId);
-    return tp.getPeerOrder(orderId, peerPubKey);
+    return tp.getOrder(orderId, peerPubKey);
   }
 
   public addPair = async (pair: Pair) => {
@@ -274,7 +275,7 @@ class OrderBook extends EventEmitter {
 
     const pairInstance = await this.repository.addPair(pair);
     this.pairInstances.set(pairInstance.id, pairInstance);
-    this.tradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching));
+    this.tradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching)); //own_address pitäis kai kertoo?
 
     this.pool.updatePairs(this.pairIds);
     return pairInstance;
@@ -579,7 +580,7 @@ class OrderBook extends EventEmitter {
    */
   private addOwnOrder = (order: OwnOrder): boolean => {
     const tp = this.getTradingPair(order.pairId);
-    const result = tp.addOwnOrder(order);
+    const result = tp.addOrder(order, this.own_address);
     assert(result, 'own order id is duplicated');
 
     this.localIdMap.set(order.localId, { id: order.id, pairId: order.pairId });
@@ -627,7 +628,7 @@ class OrderBook extends EventEmitter {
 
     const stampedOrder: PeerOrder = { ...order, createdAt: ms(), initialQuantity: order.quantity };
 
-    if (!tp.addPeerOrder(stampedOrder)) {
+    if (!tp.addOrder(stampedOrder)) { //pitäiskö lisätä pubKey, toisaalta orderistahan sen saa?
       this.logger.debug(`incoming peer order is duplicated: ${order.id}`);
       // TODO: penalize peer
       return false;
@@ -733,7 +734,7 @@ class OrderBook extends EventEmitter {
   private removeOwnOrder = (orderId: string, pairId: string, quantityToRemove?: number, takerPubKey?: string) => {
     const tp = this.getTradingPair(pairId);
     try {
-      const removeResult = tp.removeOwnOrder(orderId, quantityToRemove);
+      const removeResult = tp.removeOrder(orderId, this.own_address, quantityToRemove);
       this.emit('ownOrder.removed', removeResult.order);
       if (removeResult.fullyRemoved) {
         this.localIdMap.delete(removeResult.order.localId);
@@ -758,7 +759,7 @@ class OrderBook extends EventEmitter {
   public removePeerOrder = (orderId: string, pairId: string, peerPubKey?: string, quantityToRemove?: number):
     { order: PeerOrder, fullyRemoved: boolean } => {
     const tp = this.getTradingPair(pairId);
-    return tp.removePeerOrder(orderId, peerPubKey, quantityToRemove);
+    return tp.removeOrder(orderId, peerPubKey, quantityToRemove);
   }
 
   private removePeerOrders = (peerPubKey?: string) => {
