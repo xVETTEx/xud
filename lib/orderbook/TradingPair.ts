@@ -243,27 +243,19 @@ class TradingPair {
 
   public getPeersOrders = (): OrderSidesArrays<PeerOrder> => {
     const res: OrderSidesArrays<PeerOrder> = { buyArray: [], sellArray: [] };
-    this.peersOrders.forEach((peerOrders) => {
+    this.orders.forEach((peerOrders) => {
       const peerOrdersArrs = this.getOrders(peerOrders);
       res.buyArray = res.buyArray.concat(peerOrdersArrs.buyArray);
       res.sellArray = res.sellArray.concat(peerOrdersArrs.sellArray);
     });
-
+  //pitää jotenki poistaa omat orderit tästä.
     return res;
   }
 
   public getOwnOrders = (): OrderSidesArrays<OwnOrder> => {
-    return this.getOrders(this.ownOrders);
+    return this.; //tähän joku joka hakee ordermapit omalla keyllä
   }
 
-  public getOwnOrder = (orderId: string): OwnOrder => {
-    const order = this.getOrder(orderId, this.ownOrders);
-    if (!order) {
-      throw errors.ORDER_NOT_FOUND(orderId);
-    }
-
-    return order;
-  }
 
   public getOrder = <T extends Order>(orderId: string, pubKey: string): T | undefined => { //string oikee keylle?
     maps = getOrderMap(pubKey);
