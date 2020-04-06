@@ -64,7 +64,7 @@ class OrderBook extends EventEmitter {
   /** A map between active trading pair ids and trading pair instances. */
   public tradingPairs = new Map<string, TradingPair>();
   public nomatching: boolean;
-  public own_address: string;
+  public ownAddress: string;
 
   /** A map between own orders local id and their global id. */
   private localIdMap = new Map<string, OrderIdentifier>();
@@ -227,7 +227,7 @@ class OrderBook extends EventEmitter {
    */
   public getOwnOrders = (pairId: string) => {
     const tp = this.getTradingPair(pairId);
-    return tp.getOwnOrders();
+    return tp.getOrders(this.ownAddress);
   }
 
   /** Get the trading pair instance for a given pairId, or throw an error if none exists. */
@@ -628,7 +628,7 @@ class OrderBook extends EventEmitter {
 
     const stampedOrder: PeerOrder = { ...order, createdAt: ms(), initialQuantity: order.quantity };
 
-    if (!tp.addOrder(stampedOrder)) { //pitäiskö lisätä pubKey, toisaalta orderistahan sen saa?
+    if (!tp.addOrder(stampedOrder)) {
       this.logger.debug(`incoming peer order is duplicated: ${order.id}`);
       // TODO: penalize peer
       return false;
@@ -775,7 +775,7 @@ class OrderBook extends EventEmitter {
 
   private removePeerPair = (peerPubKey: string, pairId: string) => {
     const tp = this.getTradingPair(pairId);
-    const orders = tp.removePeerOrders(peerPubKey);
+    const orders = tp.removeOrdersByPubkey(peerPubKey);
     orders.forEach((order) => {
       this.emit('peerOrder.invalidation', order);
     });
@@ -888,7 +888,7 @@ class OrderBook extends EventEmitter {
     this.tradingPairs.forEach((tp) => {
       // send only requested pairIds
       if (pairIds.includes(tp.pairId)) {
-        const orders = tp.getOwnOrders();
+        const orders = tp.getOrders(ownAddress);
         orders.buyArray.forEach(order => outgoingOrders.push(OrderBook.createOutgoingOrder(order)));
         orders.sellArray.forEach(order => outgoingOrders.push(OrderBook.createOutgoingOrder(order)));
       }
