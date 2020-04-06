@@ -33,9 +33,9 @@ class TradingPair {
   /** A map between peerPubKey and a pair of maps between active peer orders ids and orders for the buy and sell sides of this trading pair. */
   public orders: Map<string, OrderSidesMaps<PeerOrder>>;
   /** Node's own address*/
-  public own_address : string; //onko string oikee?
+  public own_address: string;
 
-  constructor(private logger: Logger, public pairId: string, private nomatching = false) {
+  constructor(private logger: Logger, public pairId: string, private nomatching = false) { //tohon own_address?
     if (!nomatching) {
       this.queues = {
         buyQueue: TradingPair.createPriorityQueue(OrderingDirection.Desc),
@@ -105,7 +105,6 @@ class TradingPair {
       };
       this.orders.set(pubKey, ordersMaps);
     }
-
     return orderMaps;
   }
   
@@ -139,21 +138,21 @@ class TradingPair {
    * Removes all of a peer's orders.
    * @param peerPubKey the node pub key of the peer
    */
-  public removePeerOrders = (peerPubKey?: string): PeerOrder[] => {
+  public removeOrdersByPubkey = (pubKey?: string): PeerOrder[] => {
     // if incoming peerPubKey is undefined or empty, don't even try to find it in order queues
-    if (!peerPubKey) return [];
+    if (!pubKey) return [];
 
-    const peerOrders = this.peersOrders.get(peerPubKey);
-    if (!peerOrders) return [];
+    const orders = this.orders.get(pubKey);
+    if (!orders) return [];
 
     if (!this.nomatching) {
-      const callback = (order: Order) => (order as PeerOrder).peerPubKey === peerPubKey;
+      const callback = (order: Order) => (order as PeerOrder).pubKey === pubKey;
       this.queues!.buyQueue.removeMany(callback);
       this.queues!.sellQueue.removeMany(callback);
     }
 
-    this.peersOrders.delete(peerPubKey);
-    return [...peerOrders.buyMap.values(), ...peerOrders.sellMap.values()];
+    this.peersOrders.delete(pubKey);
+    return [...orders.buyMap.values(), ...orders.sellMap.values()];
   }
 
   /**
@@ -162,25 +161,25 @@ class TradingPair {
    * quantity then the entire order is removed
    * @returns the portion of the order that was removed, and a flag indicating whether the entire order was removed
    */
-  public removePeerOrder = (orderId: string, peerPubKey?: string, quantityToRemove?: number): { order: PeerOrder, fullyRemoved: boolean} => {
+  public removeOrder_public = (orderId: string, pubKey?: string, quantityToRemove?: number): { order: PeerOrder, fullyRemoved: boolean} => {
     let peerOrdersMaps: OrderSidesMaps<PeerOrder> | undefined;
 
-    if (peerPubKey) {
-      peerOrdersMaps = this.peersOrders.get(peerPubKey);
+    if (pubKey) {
+      ordersMaps = this.orders.get(pubKey);
     } else {
-      // if not given a peerPubKey, we must check all peer order maps for the specified orderId
-      for (const orderSidesMaps of this.peersOrders.values()) {
+      // if not given a pubKey, we must check all peer order maps for the specified orderId
+      for (const orderSidesMaps of this.orders.values()) {
         if (orderSidesMaps.buyMap.has(orderId) || orderSidesMaps.sellMap.has(orderId)) {
-          peerOrdersMaps = orderSidesMaps;
+          ordersMaps = orderSidesMaps;
           break;
         }
       }
     }
 
-    if (!peerOrdersMaps) {
+    if (!ordersMaps) {
       throw errors.ORDER_NOT_FOUND(orderId);
     }
-    return this.removeOrder(orderId, peerOrdersMaps, quantityToRemove);
+    return this.removeOrder(orderId, ordersMaps, quantityToRemove);
   }
 
   /**
@@ -196,7 +195,7 @@ class TradingPair {
     if (!order) {
       throw errors.ORDER_NOT_FOUND(orderId);
     }
-    map = getOrderMap(); //pitää parametriks saada pubkey
+    map = getOrderMap(); //pitää parametriks saada pubkey?
 
     if (quantityToRemove && quantityToRemove < order.quantity) {
       // if quantityToRemove is below the order quantity, reduce the order quantity
@@ -225,13 +224,13 @@ class TradingPair {
   }
 
   private getOrderMap = (order: Order): OrderMap<Order> | undefined => {
-    if (isOwnOrder(order)) {
-      return order.isBuy ? this.ownOrders.buyMap : this.ownOrders.sellMap;
+    if (!order.peerPubKey)) { //vois käyttää isOwnOrder funktiotaki?
+      const ordersMaps = this.orders.get(ownAddress);
     } else {
-      const peerOrdersMaps = this.peersOrders.get(order.peerPubKey);
-      if (!peerOrdersMaps) return;
-      return order.isBuy ? peerOrdersMaps.buyMap : peerOrdersMaps.sellMap;
+      const ordersMaps = this.orders.get(order.peerPubKey);
     }
+    if (!ordersMaps) return;
+    return order.isBuy ? ordersMaps.buyMap : ordersMaps.sellMap;
   }
 
   private getOrders = <T extends Order>(lists: OrderSidesMaps<T>): OrderSidesArrays<T> => {
@@ -261,13 +260,13 @@ class TradingPair {
     maps = getOrderMap(pubKey);
     order = maps.buyMap.get(orderId) || maps.sellMap.get(orderId);
     if (!order) {
-      throw errors.ORDER_NOT_FOUND(orderId, peerPubKey);
+      throw errors.ORDER_NOT_FOUND(orderId, pubKey);
     }
     return order;
   }
 
   public addOrderHold = (orderId: string, holdAmount: number) => {
-    const order = this.getOwnOrder(orderId);
+    const order = this.getOrder(orderId, ownAddress);
     assert(holdAmount > 0);
     assert(order.hold + holdAmount <= order.quantity, 'the amount of an order on hold cannot exceed the available quantity');
     order.hold += holdAmount;
@@ -275,7 +274,7 @@ class TradingPair {
   }
 
   public removeOrderHold = (orderId: string, holdAmount: number) => {
-    const order = this.getOwnOrder(orderId);
+    const order = this.getOrder(orderId, ownAddress);
     assert(holdAmount > 0);
     assert(order.hold >= holdAmount, 'cannot remove more than is currently on hold for an order');
     order.hold -= holdAmount;
