@@ -33,7 +33,7 @@ class TradingPair {
   /** A map between peerPubKey and a pair of maps between active peer orders ids and orders for the buy and sell sides of this trading pair. */
   public orders: Map<string, OrderSidesMaps<PeerOrder>>;
   /** Node's own address*/
-  public own_address: string;
+  public ownAddress: string;
 
   constructor(private logger: Logger, public pairId: string, private nomatching = false) { //tohon own_address?
     if (!nomatching) {
