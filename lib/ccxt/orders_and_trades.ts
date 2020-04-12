@@ -77,4 +77,5 @@ function fillMyTrades(){
 }
 
 function fillFetchTrades(){
+  //julkiset treidit. Mitä juttuja niistä tarkalleen?
 }
