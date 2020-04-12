@@ -23,6 +23,8 @@ export type NodeState = {
   lndUris: { [currency: string]: string[] | undefined };
   /** An object mapping currency symbols to token identifiers such as lnd chains or raiden token contract addresses. */
   tokenIdentifiers: { [currency: string]: string | undefined };
+  matcher: boolean;
+  lightNode: boolean;
 };
 
 export type PoolConfig = {
