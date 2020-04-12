@@ -49,5 +49,32 @@ function createLimitBuyOrder(){
 
 function createLimitSellOrder(){
 }
+
 function cancelOrder(){
+}
+
+type trade {
+}
+
+function fillMyTrades(){
+    'info':         { ... },                    // ei varmaa tämmöstä oo
+    'id':           '12345-67890:09876/54321',  // onko tämmösiä? Jos ei oo ni voisko tän generoida sillai et orderId + orderId = tradeId?
+    'timestamp':    1502962946216,              // 
+    'datetime':     '2017-08-17 12:42:48.000',  // 
+    'symbol':       'ETH/BTC',                  // symbol
+    'order':        '12345-67890:09876/54321',  // string order id or undefined/None/null
+    'type':         'limit',                    // order type, 'market', 'limit' or undefined/None/null
+    'side':         'buy',                      // direction of the trade, 'buy' or 'sell'
+    'takerOrMaker': 'taker',                    // string, 'taker' or 'maker'
+    'price':        0.06917684,                 // float price in quote currency
+    'amount':       1.5,                        // amount of base currency
+    'cost':         0.10376526,                 // total cost (including fees), `price * amount`
+    'fee':          {                           // provided by exchange or calculated by ccxt
+        'cost':  0.0015,                        // eikö tähän voida paymentchanneleista kattoo et paljonko fee oli?
+        'currency': 'ETH',                      // usually base currency for buys, quote currency for sells
+        'rate': 0.002,                          // ei kai mitään kiinteää fee ratea?
+    },
+}
+
+function fillFetchTrades(){
 }
