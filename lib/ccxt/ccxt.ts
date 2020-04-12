@@ -80,21 +80,3 @@ function fillStatus(){
     'eta': undefined, // when the maintenance or outage is expected to end
     'url': undefined, // jätetään tyhjäks
 }
-
-type OHLCV {
-}
-
-function fillOHLCV(){
-    //Tääki on aika mahotonta tuottaa jos ei treidin yhteydessä tuoteta hintaa? Paitsi jos tradet säilyy ikuisesti ni niistähän saa oikeestaan hinnan.
-    {
-    [
-        1504541580000, // jostai utc timestamppi
-        4235.4,        // eka tänä aikana tehdyn kaupan hinta
-        4240.6,        // korkein hinta jolla tehty kauppa tänä aikana
-        4230.0,        // matalin hinta jollla tehty kauppa tänä aikana
-        4230.7,        // vikan tänä aikana tehdyn kaupan hinta
-        37.72941911    // lasketaan yhteen sinä aikana tässä symbolissa tehtyjen treidien amountit.
-    ],
-    ...
-    }
-}
