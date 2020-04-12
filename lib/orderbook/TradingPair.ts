@@ -154,33 +154,7 @@ class TradingPair {
     this.peersOrders.delete(pubKey);
     return [...orders.buyMap.values(), ...orders.sellMap.values()];
   }
-
-  /**
-   * Removes all or part of a peer order.
-   * @param quantityToRemove the quantity to remove, if undefined or if greater than or equal to the available
-   * quantity then the entire order is removed
-   * @returns the portion of the order that was removed, and a flag indicating whether the entire order was removed
-   */
-  public removeOrder_public = (orderId: string, pubKey?: string, quantityToRemove?: number): { order: PeerOrder, fullyRemoved: boolean} => {
-    let peerOrdersMaps: OrderSidesMaps<PeerOrder> | undefined;
-
-    if (pubKey) {
-      ordersMaps = this.orders.get(pubKey);
-    } else {
-      // if not given a pubKey, we must check all peer order maps for the specified orderId
-      for (const orderSidesMaps of this.orders.values()) {
-        if (orderSidesMaps.buyMap.has(orderId) || orderSidesMaps.sellMap.has(orderId)) {
-          ordersMaps = orderSidesMaps;
-          break;
-        }
-      }
-    }
-
-    if (!ordersMaps) {
-      throw errors.ORDER_NOT_FOUND(orderId);
-    }
-    return this.removeOrder(orderId, ordersMaps, quantityToRemove);
-  }
+ 
 
   /**
    * Removes all or part of an order.
@@ -188,7 +162,7 @@ class TradingPair {
    * quantity then the entire order is removed
    * @returns the portion of the order that was removed, and a flag indicating whether the entire order was removed
    */
-  private removeOrder = <T extends Order>(pubkey: string, orderId: string, quantityToRemove?: number): //string oikee pubkeylle?
+  public removeOrder = <T extends Order>(pubkey: string, orderId: string, quantityToRemove?: number): //string oikee pubkeylle?
     { order: T, fullyRemoved: boolean } => {
     assert(quantityToRemove === undefined || quantityToRemove > 0, 'quantityToRemove cannot be 0 or negative');
     const order = maps.buyMap.get(orderId) || maps.sellMap.get(orderId);
@@ -252,6 +226,8 @@ class TradingPair {
   }
 
   public getOwnOrders = (): OrderSidesArrays<OwnOrder> => {
+    //toimisko vähän samalla tavalla ku ylempi getPeerOrders?
+    maps = getOrderMap(pubKey); //onko tää nyt tommonen muoto joka pitää palauttaa?
     return this.; //tähän joku joka hakee ordermapit omalla keyllä
   }
 
