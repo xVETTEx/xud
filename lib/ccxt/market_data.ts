@@ -1,20 +1,25 @@
 type orderbook {
+    //pitää olla map bids ja asks objekteilla, ja valuena lista.
+    list = [price, amount}; //no siis syntaksi päin vittua tässä mut ei muuta.
 }
 
-function fillOrderbook(){
+function fillFetcOrderbook(){
+            //tässä vaan parhaat orderit.
     'bids': [
         [ price, amount ], // joku map pitäis kai olla, jossa price avaimena?
-        [ price, amount ],
         ...
     ],
     'asks': [
-        [ price, amount ],
         [ price, amount ],
         ...
     ],
     'timestamp' = Date.now() / 1000;, // Unix Timestamp in milliseconds, jostai saa kyl tän?
     'datetime': '2017-07-05T18:47:14.692Z', // josati saa tän kyl?
     'nonce': 1499280391811, // eli miten tää määräytyy tarkemmin?
+}
+        
+function fillFetchL2Orderbook(){
+        //tässä kaikki orderit siinä orderbookissa
 }
     
 type ticker {
