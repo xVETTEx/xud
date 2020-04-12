@@ -15,3 +15,15 @@ function getBase(pair string){
 
 function getQuote(pair string){
 }
+
+function getopen(pair string, timeframe string){
+}
+
+function getHighest(pair string, timeframe string){
+}
+
+function getLowest(pair string, timeframe string){
+}
+
+function getVolume(pair string, timeframe string){
+}
