@@ -34,6 +34,8 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) 
       },
     },
     banned: { type: DataTypes.BOOLEAN, allowNull: true },
+    matcher: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
+    lightNode: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
   };
 
   const indexes: Sequelize.DefineIndexesOptions[] = [{
