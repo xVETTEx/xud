@@ -1,3 +1,6 @@
+type market {
+}
+
 function fillMarket(symbol){
     'id':     ' btcusd',  // string literal for referencing within an exchange
     'symbol':  'BTC/USD', // uppercase string literal of a pair of currencies
@@ -22,6 +25,9 @@ function fillMarket(symbol){
     'info':      { ... }, // ei varmaan mitään tähän?
 }
 
+type currency {
+}
+
 function fillCurrency(currency){
     'id':       'btc',     // saadaan db:stä currency modelista
     'code':     'BTC',     // id vaa muutetaan uppercaseksi
@@ -41,6 +47,9 @@ function fillCurrency(currency){
     'info': { ... }, // the original unparsed currency info from the exchange
 }
 
+type orderbook {
+}
+
 function fillOrderbook(){
     'bids': [
         [ price, amount ], // joku map pitäis kai olla, jossa price avaimena?
@@ -56,13 +65,22 @@ function fillOrderbook(){
     'datetime': '2017-07-05T18:47:14.692Z', // josati saa tän kyl?
     'nonce': 1499280391811, // eli miten tää määräytyy tarkemmin?
 }
+    
+type ticker {
+    symbol string;
+    info string;
+    timestamp string;
+    datetime int;
+    high float;
+    
+}
 
 function fillTicker(symbol){
     //Tuotetaan 24h ticker. Tätä ei välttis oo järkevää tuottaa ku ei ainakaa saa high tai low mitenkään. Eikä open. Volumet ois kyl mahist saada, joten ehkä tää on ihan järkevä.
-    'symbol':        string symbol of the market ('BTC/USD', 'ETH/BTC', ...)
+    symbol: getSymbol(symbol);  
     'info':        { the original non-modified unparsed reply from exchange API },
-    'timestamp':     int (64-bit Unix Timestamp in milliseconds since Epoch 1 Jan 1970)
-    'datetime':      jostain saa tän kyl?
+    timestamp: getTimestamp();
+    datetime: getDatetime();
     'high':          float, // haetaan vaan kaikki treidit 24h ajalta ja katotaan korkein hinta
     'low':           float, // haetaan vaan kaikki treidit 24h ajalta ja katotaan matalin hinta
     'bid':           float, // orderbookista haetaan paras hinta
@@ -79,6 +97,9 @@ function fillTicker(symbol){
     'average':       float, // average price, `(last + open) / 2`
     'baseVolume':    float, // volume of base currency traded for last 24 hours
     'quoteVolume':   float, // volume of quote currency traded for last 24 hours
+}
+    
+type trade {
 }
 
 function fillTrade(){
@@ -101,11 +122,17 @@ function fillTrade(){
     },
 }
 
+type status {
+}
+
 function fillStatus(){
     'status': 'ok', // 'ok', 'shutdown', 'error', 'maintenance'
     'updated': undefined, // integer, last updated timestamp in milliseconds if updated via the API
     'eta': undefined, // when the maintenance or outage is expected to end
     'url': undefined, // jätetään tyhjäks
+}
+
+type OHLCV {
 }
 
 function fillOHLCV(){
