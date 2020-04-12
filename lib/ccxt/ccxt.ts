@@ -47,57 +47,6 @@ function fillCurrency(currency){
     'info': { ... }, // the original unparsed currency info from the exchange
 }
 
-type orderbook {
-}
-
-function fillOrderbook(){
-    'bids': [
-        [ price, amount ], // joku map pitäis kai olla, jossa price avaimena?
-        [ price, amount ],
-        ...
-    ],
-    'asks': [
-        [ price, amount ],
-        [ price, amount ],
-        ...
-    ],
-    'timestamp' = Date.now() / 1000;, // Unix Timestamp in milliseconds, jostai saa kyl tän?
-    'datetime': '2017-07-05T18:47:14.692Z', // josati saa tän kyl?
-    'nonce': 1499280391811, // eli miten tää määräytyy tarkemmin?
-}
-    
-type ticker {
-    symbol string;
-    info string;
-    timestamp string;
-    datetime int;
-    high float;
-    
-}
-
-function fillTicker(symbol){
-    //Tuotetaan 24h ticker. Tätä ei välttis oo järkevää tuottaa ku ei ainakaa saa high tai low mitenkään. Eikä open. Volumet ois kyl mahist saada, joten ehkä tää on ihan järkevä.
-    symbol: getSymbol(symbol);  
-    'info':        { the original non-modified unparsed reply from exchange API },
-    timestamp: getTimestamp();
-    datetime: getDatetime();
-    'high':          float, // haetaan vaan kaikki treidit 24h ajalta ja katotaan korkein hinta
-    'low':           float, // haetaan vaan kaikki treidit 24h ajalta ja katotaan matalin hinta
-    'bid':           float, // orderbookista haetaan paras hinta
-    'bidVolume':     float, // orderbookista haetaan amountti paljon on parhaalla hinnalla
-    'ask':           float, // orderbookista haetaan paras hnita
-    'askVolume':     float, // orderbookista haetaan amountti paljon on parhaalla hinnalla
-    'vwap':          float, // volume weighed average price
-    'open':          float, // lista joka oli ku tää 24h aikajakso alko
-    'close':         float, // viimisimmän tehdyn traden hinta
-    'last':          float, // same as `close`, duplicated for convenience
-    'previousClose': float, // closing price for the previous period
-    'change':        float, // absolute change, `last - open`
-    'percentage':    float, // relative change, `(change/open) * 100`
-    'average':       float, // average price, `(last + open) / 2`
-    'baseVolume':    float, // volume of base currency traded for last 24 hours
-    'quoteVolume':   float, // volume of quote currency traded for last 24 hours
-}
     
 type trade {
 }
