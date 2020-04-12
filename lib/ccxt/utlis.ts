@@ -33,11 +33,18 @@ function getVolume(pair string, timeframe string){
 
 function getMinQuantity(currency string){
   //currecylle db:stä min quantity?
+  //ei oo kai minimiä?
 }
 
 function getMaxQuantity(currency string){
+  //ei oo kai maximia?
 }
 
 function getPresicion(currency: string){
   //db:stä se et montako nollaa.
+  curency = await this.models.Currency.findOne({ where: { //tarviiko awaittia?
+        currency,
+      },
+    });
+  //sit pitäis currencysta saada decimalPlaces
 }
