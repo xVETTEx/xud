@@ -27,3 +27,14 @@ function getLowest(pair string, timeframe string){
 
 function getVolume(pair string, timeframe string){
 }
+
+function getMinQuantity(currency string){
+  //currecylle db:stä min quantity?
+}
+
+function getMaxQuantity(currency string){
+}
+
+function getPresicion(currency: string){
+  //db:stä se et montako nollaa.
+}
