@@ -1,9 +1,12 @@
 //onkohan utils sopiva nimi tälle folderille?
 
 function getTimestamp(){
+  return Date.now();
 }
 
 function getDaytime(){
+  var date = new Date();
+  return date.toISOString(); 
 }
 
 function getSymbol(pair string){
