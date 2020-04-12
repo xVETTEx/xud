@@ -90,23 +90,6 @@ class TradingPair {
     const matchedOrder = Object.assign({}, order, { quantity: matchingQuantity });
     return matchedOrder;
   }
-
-  /**
-   * Adds a peer order for this trading pair.
-   * @returns `true` if the order was added, `false` if it could not be added because there
-   * already exists an order with the same order id
-   */
-  private getOrCreateMap = (order: pubKey): boolean => {
-    let ordersMaps = this.orders.get(pubKey);
-    if (!ordersMaps) {
-      ordersMaps = {
-        buyMap: new Map<string, PeerOrder>(),
-        sellMap: new Map<string, PeerOrder>(),
-      };
-      this.orders.set(pubKey, ordersMaps);
-    }
-    return orderMaps;
-  }
   
 
   /**
@@ -117,7 +100,7 @@ class TradingPair {
   public addOrder = (order: Order): boolean => {
     //pitäis varmaan tehä niin ettei mapseja tarvii kertoa, vaan tää löytää ne, joku funktio sille?
     //verifyMapExists vois myös palauttaa mapin?
-    map = verifyMapExists(order.peerPubKey)
+    map = getOrderMap(order.peerPubKey)
     const map = order.isBuy ? maps.buyMap : maps.sellMap;
     if (map.has(order.id)) {
       return false;
@@ -165,12 +148,11 @@ class TradingPair {
   public removeOrder = <T extends Order>(pubkey: string, orderId: string, quantityToRemove?: number): //string oikee pubkeylle?
     { order: T, fullyRemoved: boolean } => {
     assert(quantityToRemove === undefined || quantityToRemove > 0, 'quantityToRemove cannot be 0 or negative');
+    maps = getOrderMaps(pubKey); //pitäsikö olla await?
     const order = maps.buyMap.get(orderId) || maps.sellMap.get(orderId);
     if (!order) {
       throw errors.ORDER_NOT_FOUND(orderId);
     }
-    map = getOrderMap(); //pitää parametriks saada pubkey?
-
     if (quantityToRemove && quantityToRemove < order.quantity) {
       // if quantityToRemove is below the order quantity, reduce the order quantity
       if (isOwnOrder(order)) {
@@ -197,14 +179,10 @@ class TradingPair {
     }
   }
 
-  private getOrderMap = (order: Order): OrderMap<Order> | undefined => {
-    if (!order.peerPubKey)) { //vois käyttää isOwnOrder funktiotaki?
-      const ordersMaps = this.orders.get(ownAddress);
-    } else {
-      const ordersMaps = this.orders.get(order.peerPubKey);
-    }
+  private getOrderMaps = (pubkey: string): OrderMap<Order> | undefined => {
+    const orderMaps = this.orders.get(pubKey); //pitäsikö await olla tässä?
     if (!ordersMaps) return;
-    return order.isBuy ? ordersMaps.buyMap : ordersMaps.sellMap;
+    return orderMaps;
   }
 
   private getOrders = <T extends Order>(lists: OrderSidesMaps<T>): OrderSidesArrays<T> => {
@@ -228,7 +206,7 @@ class TradingPair {
   public getOwnOrders = (): OrderSidesArrays<OwnOrder> => {
     //toimisko vähän samalla tavalla ku ylempi getPeerOrders?
     maps = getOrderMap(pubKey); //onko tää nyt tommonen muoto joka pitää palauttaa?
-    return this.; //tähän joku joka hakee ordermapit omalla keyllä
+    return maps; //tähän joku joka hakee ordermapit omalla keyllä
   }
 
 
