@@ -395,6 +395,12 @@ class TradingPair {
 
     return { matches, remainingOrder };
   }
+  
+  public getOrderbook = (): MatchingResult => { //eikö asynccia tohon, miks ei? Matchingresultin tilalle joku?
+  }
+  
+  public getBestPrices = () returnType => {
+  }
 }
 
 export default TradingPair;
