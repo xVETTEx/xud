@@ -85,7 +85,7 @@ export type NodeAttributes = NodeFactory & {
   lastAddressText: string;
   lastAddress: Address;
   matcher: boolean;
-  node  boolean;
+  lightNode: boolean;
 };
 
 export type NodeInstance = NodeAttributes & Sequelize.Instance<NodeAttributes> & {
