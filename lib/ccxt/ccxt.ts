@@ -16,8 +16,8 @@ function fillMarket(symbol){
     },
     'limits': {           // value limits when placing orders on this market
         'amount': {
-            'min': 0.01,  // order amount should be > min
-            'max': 1000,  // order amount should be < max
+            'min': 0,  
+            'max': 1000,  //tällä hetkellä jossai saattaa olla max jopa?
         },
         'price': { ... }, // same min/max limits for the price of the order
         'cost':  { ... }, // same limits for order cost = price * amount
