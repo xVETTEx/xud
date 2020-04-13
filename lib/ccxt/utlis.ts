@@ -1,5 +1,5 @@
-//onkohan utils sopiva nimi tälle folderille?
-
+import { Models } from '../db/DB';
+import { CurrencyAttributes, CurrencyInstance } from '../db/types';
 function getTimestamp(){
   return Date.now();
 }
@@ -37,5 +37,5 @@ function getPresicion(currency: string){
         currency,
       },
     });
-  //sit pitäis currencysta saada decimalPlaces
+  return currency.decimalPlaces; //en tiiä toimiiko
 }
