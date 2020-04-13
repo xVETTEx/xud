@@ -23,7 +23,8 @@ type Order {
 }
 }
 
-//Mites ku näissähän suurin osa parametreista on optionaalisia ni miten se tehdään?
+//Mites ku näissähän suurin osa parametreista on optionaalisia ni miten se tehdään? Optionaali, limit = 5. Tai
+//if symbol! { }
 
 function fetchOrder(id: string, symbol: string){
   //pitäiskö serviceen soittaa?
