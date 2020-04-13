@@ -9,30 +9,45 @@ function getDaytime(){
   return date.toISOString(); 
 }
 
-function getSymbol(pair string){
+function getSymbol(pair: string){
   //eli tää niinku tradinpair, mut ccxt:ssä kutsutaan symboliksi. ja uppercase lettereillä. BTC/LTC.
 }
 
-function getBase(pair string){
+function getBase(pair: string){
   //pitää jotenki löytää / merkki, ja sit poistetaan / ja siitä aiemmat, ni jää base.
   pair.split("/").pop());
 }
 
-function getQuote(pair string){
+function getQuote(pair: string){
   //pitää jotenki löytää / merkki ja sit poistetaan se ja sen jälkeiset ni jää quote.
   pair.split("/").shift
 }
 
-function getopen(pair string, timeframe string){
+function getTrades(pair: string, timeframe: string){
+  //tietylle aikavälille hakee kaikki tämän symbolin treidit. Palauttaa arrayn niistä, jossa aika järjestyksessä.
+  trades = await this.models.Trade.findAll({ where: { //tarviiko awaittia?
+        currency, //jotain tähän
+      },
+    });
 }
 
-function getHighest(pair string, timeframe string){
+function getOpen(pair: string, timeframe: string){
+  trades = getTrades();
+  return trades.shift(); //mut pitäis viel vaan hinta palauttaa.
 }
 
-function getLowest(pair string, timeframe string){
+function getHighest(pair: string, timeframe: string){
 }
 
-function getVolume(pair string, timeframe string){
+function getLowest(pair: string, timeframe: string){
+}
+
+function getClose(pair: string, timeframe: string)}
+  trades = getTrades();
+  return trades.pop(); //pitäis viel vaan hinta palauttaa
+}
+
+function getVolume(pair: string, timeframe: string){
 }
 
 function getPresicion(currency: string){
