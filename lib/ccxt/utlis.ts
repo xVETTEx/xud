@@ -14,9 +14,13 @@ function getSymbol(pair string){
 }
 
 function getBase(pair string){
+  //pitää jotenki löytää / merkki, ja sit poistetaan / ja siitä aiemmat, ni jää base.
+  pair.split("/").pop());
 }
 
 function getQuote(pair string){
+  //pitää jotenki löytää / merkki ja sit poistetaan se ja sen jälkeiset ni jää quote.
+  pair.split("/").shift
 }
 
 function getopen(pair string, timeframe string){
