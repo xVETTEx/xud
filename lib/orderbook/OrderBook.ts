@@ -63,6 +63,8 @@ interface OrderBook {
 class OrderBook extends EventEmitter {
   /** A map between active trading pair ids and trading pair instances. */
   public tradingPairs = new Map<string, TradingPair>();
+  public matchingTradingPairs = new Map<string, TradingPair>();
+  public matcherMode: boolean;
   public nomatching: boolean;
 
   /** A map between own orders local id and their global id. */
@@ -199,6 +201,19 @@ class OrderBook extends EventEmitter {
 
     this.pool.updatePairs(this.pairIds);
   }
+  
+  public startMatching = async () => {
+    tradingPairs.forEach(pair){ //sulkeisiin pitäis saada se pair.id?
+      //lisää samalla nimellä matcherTradingPairs mappiin, mut tradingPair kohtaan mapissa luodaan uus tradingpair?
+      this.matchingTradingPairs.set(pair, new TradingPair(this.logger, pair.id, this.nomatching));
+    }
+    matcherMode = true;
+  }
+                                
+  public stopMatching = async () => {
+    this.matchingTradingPairs.clear() 
+    matcherMode = false;
+  }
 
   public getCurrencyAttributes(currency: string) {
     const currencyInstance = this.currencyInstances.get(currency);
@@ -275,7 +290,9 @@ class OrderBook extends EventEmitter {
     const pairInstance = await this.repository.addPair(pair);
     this.pairInstances.set(pairInstance.id, pairInstance);
     this.tradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching));
-
+    if (matcherMode == true) {
+      this.matcherTradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching));
+    }
     this.pool.updatePairs(this.pairIds);
     return pairInstance;
   }
@@ -316,7 +333,9 @@ class OrderBook extends EventEmitter {
 
     this.pairInstances.delete(pairId);
     this.tradingPairs.delete(pairId);
-
+    if (matcherMode == true) {
+      this.matcherTradingPairs.delete(pairId);
+    }
     this.pool.updatePairs(this.pairIds);
     return pair.destroy();
   }
