@@ -34,8 +34,10 @@ class TradingPair {
   public ownOrders: OrderSidesMaps<OwnOrder>;
   /** A map between peerPubKey and a pair of maps between active peer orders ids and orders for the buy and sell sides of this trading pair. */
   public peersOrders: Map<string, OrderSidesMaps<PeerOrder>>;
+  /** some description here*/
+  public matcher: boolean; 
 
-  constructor(private logger: Logger, public pairId: string, private nomatching = false) {
+  constructor(private logger: Logger, public pairId: string, private nomatching = false, matcher = false) {
     if (!nomatching) {
       this.queues = {
         buyQueue: TradingPair.createPriorityQueue(OrderingDirection.Desc),
