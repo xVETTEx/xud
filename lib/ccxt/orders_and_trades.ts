@@ -23,34 +23,38 @@ type Order {
 }
 }
 
-function fetchOrder(){
+//Mites ku näissähän suurin osa parametreista on optionaalisia ni miten se tehdään?
+
+function fetchOrder(id: string, symbol: string){
+  //pitäiskö serviceen soittaa?
 }
 
-function fetchOrders(){
+function fetchOrders(symbol: string, since: int, limit: int){
 }
 
-function fetchOpenOrders(){
+function fetchOpenOrders(symbol: string, since: int, limit: int){
 }
 
-function fetchClosedOrders(){
+function fetchClosedOrders(symbol: string, since: int, limit: int){
 }
 
-function createOrder(){
+function createOrder(symbol: string, ){
 }
 
-function createMarketBuyOrder(){
+function createMarketBuyOrder(symbol: string, amount: int){
 }
 
-function createMarketSellOrder(){
+function createMarketSellOrder(symbol: string, amount: int){
 }
 
-function createLimitBuyOrder(){
+function createLimitBuyOrder(symbol: string, amount: int, price: int){
 }
 
-function createLimitSellOrder(){
+function createLimitSellOrder(symbol: string, amount: int, price: int){
 }
 
-function cancelOrder(){
+function cancelOrder(id: string, symbol: string){
+  //serviceen vai orderbookkiin soitetaan?
 }
 
 type trade {
