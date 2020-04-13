@@ -205,7 +205,7 @@ class OrderBook extends EventEmitter {
   public startMatching = async () => {
     tradingPairs.forEach(pair){ //sulkeisiin pitäis saada se pair.id?
       //lisää samalla nimellä matcherTradingPairs mappiin, mut tradingPair kohtaan mapissa luodaan uus tradingpair?
-      this.matchingTradingPairs.set(pair, new TradingPair(this.logger, pair.id, this.nomatching));
+      this.matchingTradingPairs.set(pair, new TradingPair(this.logger, pair.id, this.nomatching, true));
     }
     matcherMode = true;
   }
@@ -291,7 +291,7 @@ class OrderBook extends EventEmitter {
     this.pairInstances.set(pairInstance.id, pairInstance);
     this.tradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching));
     if (matcherMode == true) {
-      this.matcherTradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching));
+      this.matcherTradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching, true));
     }
     this.pool.updatePairs(this.pairIds);
     return pairInstance;
