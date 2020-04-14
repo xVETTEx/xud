@@ -181,7 +181,12 @@ class TradingPair {
 
   private getOrderMaps = (pubkey: string): OrderMap<Order> | undefined => {
     const orderMaps = this.orders.get(pubKey); //pitäsikö await olla tässä?
-    if (!ordersMaps) return;
+    if (!ordersMaps) {
+        ordersMaps = {
+        buyMap: new Map<string, PeerOrder>(), //onko hyvä et tos on peerOrder?
+        sellMap: new Map<string, PeerOrder>(),
+      };
+    }
     return orderMaps;
   }
 
