@@ -734,7 +734,7 @@ class OrderBook extends EventEmitter {
   private removeOwnOrder = (orderId: string, pairId: string, quantityToRemove?: number, takerPubKey?: string) => {
     const tp = this.getTradingPair(pairId);
     try {
-      const removeResult = tp.removeOrder(orderId, this.own_address, quantityToRemove);
+      const removeResult = tp.removeOrder(this.own_address, orderId, quantityToRemove);
       this.emit('ownOrder.removed', removeResult.order);
       if (removeResult.fullyRemoved) {
         this.localIdMap.delete(removeResult.order.localId);
@@ -759,7 +759,7 @@ class OrderBook extends EventEmitter {
   public removePeerOrder = (orderId: string, pairId: string, peerPubKey?: string, quantityToRemove?: number):
     { order: PeerOrder, fullyRemoved: boolean } => {
     const tp = this.getTradingPair(pairId);
-    return tp.removeOrder(orderId, peerPubKey, quantityToRemove);
+    return tp.removeOrder(peerPubKey, orderId, quantityToRemove);
   }
 
   private removePeerOrders = (peerPubKey?: string) => {
