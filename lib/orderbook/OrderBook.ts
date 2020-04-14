@@ -580,7 +580,7 @@ class OrderBook extends EventEmitter {
    */
   private addOwnOrder = (order: OwnOrder): boolean => {
     const tp = this.getTradingPair(order.pairId);
-    const result = tp.addOrder(order, this.own_address);
+    const result = tp.addOrder(order, this.ownAddress);
     assert(result, 'own order id is duplicated');
 
     this.localIdMap.set(order.localId, { id: order.id, pairId: order.pairId });
