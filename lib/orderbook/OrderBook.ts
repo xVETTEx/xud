@@ -217,17 +217,17 @@ class OrderBook extends EventEmitter {
   /**
    * Get lists of buy and sell orders of peers.
    */
-  public getPeersOrders = (pairId: string) => {
+  public getOrders = (pairId: string) => {
     const tp = this.getTradingPair(pairId);
-    return tp.getPeersOrders();
+    return tp.getOrders();
   }
 
   /**
    * Get lists of this node's own buy and sell orders.
    */
-  public getOwnOrders = (pairId: string) => {
+  public getOrdersByPubkey = (pubkey: string, pairId: string) => {
     const tp = this.getTradingPair(pairId);
-    return tp.getOrders(this.ownAddress);
+    return tp.getOrdersByPubkey(pubkey);
   }
 
   /** Get the trading pair instance for a given pairId, or throw an error if none exists. */
