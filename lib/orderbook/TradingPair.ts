@@ -100,7 +100,7 @@ class TradingPair {
   public addOrder = (order: Order): boolean => {
     //pitäis varmaan tehä niin ettei mapseja tarvii kertoa, vaan tää löytää ne, joku funktio sille?
     //verifyMapExists vois myös palauttaa mapin?
-    map = getOrderMap(order.peerPubKey)
+    map = getOrderMaps(order.peerPubKey)
     const map = order.isBuy ? maps.buyMap : maps.sellMap;
     if (map.has(order.id)) {
       return false;
@@ -205,7 +205,7 @@ class TradingPair {
 
   public getOwnOrders = (): OrderSidesArrays<OwnOrder> => {
     //toimisko vähän samalla tavalla ku ylempi getPeerOrders?
-    maps = getOrderMap(pubKey); //onko tää nyt tommonen muoto joka pitää palauttaa?
+    maps = getOrderMap(ownAddress); //onko tää nyt tommonen muoto joka pitää palauttaa?
     return maps; //tähän joku joka hakee ordermapit omalla keyllä
   }
 
