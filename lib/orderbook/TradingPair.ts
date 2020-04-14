@@ -31,7 +31,7 @@ class TradingPair {
   /** A pair of priority queues for the buy and sell sides of this trading pair */
   public queues?: OrderSidesQueues;
   /** A map between peerPubKey and a pair of maps between active peer orders ids and orders for the buy and sell sides of this trading pair. */
-  public orders: Map<string, OrderSidesMaps<PeerOrder>>;
+  public orderMaps: Map<string, OrderSidesMaps<PeerOrder>>;
   /** Node's own address*/
   public ownAddress: string;
 
@@ -125,7 +125,7 @@ class TradingPair {
     // if incoming peerPubKey is undefined or empty, don't even try to find it in order queues
     if (!pubKey) return [];
 
-    const orders = this.orders.get(pubKey);
+    const orders = this.orderMaps.get(pubKey);
     if (!orders) return [];
 
     if (!this.nomatching) {
@@ -180,7 +180,7 @@ class TradingPair {
   }
 
   private getOrderMaps = (pubkey: string): OrderMap<Order> | undefined => {
-    const orderMaps = this.orders.get(pubKey); //pitäsikö await olla tässä?
+    const orderMaps = this.orderMaps.get(pubKey); //pitäsikö await olla tässä?
     if (!ordersMaps) {
         ordersMaps = {
         buyMap: new Map<string, PeerOrder>(), //onko hyvä et tos on peerOrder?
@@ -191,24 +191,24 @@ class TradingPair {
   }
 
   private getOrders = <T extends Order>(lists: OrderSidesMaps<T>): OrderSidesArrays<T> => {
+    //tää lienee turha funktio nykyään?
     return {
       buyArray: Array.from(lists.buyMap.values()),
       sellArray: Array.from(lists.sellMap.values()),
     };
   }
 
-  public getPeersOrders = (): OrderSidesArrays<PeerOrder> => {
+  public getOrders = (): OrderSidesArrays<PeerOrder> => { //ei välttis peerOrder? Voi olla ownOrderki?
     const res: OrderSidesArrays<PeerOrder> = { buyArray: [], sellArray: [] };
     this.orders.forEach((peerOrders) => {
       const peerOrdersArrs = this.getOrders(peerOrders);
-      res.buyArray = res.buyArray.concat(peerOrdersArrs.buyArray);
+      res.buyArray = res.buyArray.concat(peerOrdersArrs.buyArray); //okei mitä vittua tää tekee?
       res.sellArray = res.sellArray.concat(peerOrdersArrs.sellArray);
     });
-  //pitää jotenki poistaa omat orderit tästä.
     return res;
   }
 
-  public getOwnOrders = (): OrderSidesArrays<OwnOrder> => {
+  public getOrdersByPubkey = (pubkey): OrderSidesArrays<OwnOrder> => {
     //toimisko vähän samalla tavalla ku ylempi getPeerOrders?
     maps = getOrderMap(ownAddress); //onko tää nyt tommonen muoto joka pitää palauttaa?
     return maps; //tähän joku joka hakee ordermapit omalla keyllä
