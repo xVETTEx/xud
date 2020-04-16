@@ -639,16 +639,6 @@ class OrderBook extends EventEmitter {
     return true;
   }
 
-  public getOwnOrderByLocalId = (localId: string) => {
-    const orderIdentifier = this.localIdMap.get(localId);
-    if (!orderIdentifier) {
-      throw errors.LOCAL_ID_DOES_NOT_EXIST(localId);
-    }
-
-    const order = this.getOwnOrder(orderIdentifier.id, orderIdentifier.pairId);
-    return order;
-  }
-
   /**
    * Removes all or part of an order from the order book by its local id. Throws an error if the
    * specified pairId is not supported or if the order to cancel could not be found.
