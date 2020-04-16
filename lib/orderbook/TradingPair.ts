@@ -54,6 +54,15 @@ class TradingPair {
 
     this.peersOrders = new Map<string, OrderSidesMaps<PeerOrder>>();
   }
+  
+  private triggerCheck = async (price: float) => {
+    triggered = ; //aluks jätetään tyhjäks
+    while triggered = false;
+      //triggerQueue listalta kattoo parhaan orderin, sekä buy että sell.
+      //kattoo pricen perusteella että triggeröityykö.
+      //jos triggeröityy ni poistaa ne triggerqueuesta ja asettaa orderqueueen
+      //jos triggeröityy ni asettaa trigered kohdan falseks
+  }
 
   private static createPriorityQueue = (orderingDirection: OrderingDirection): FastPriorityQueue<Order> => {
     const comparator = TradingPair.getOrdersPriorityQueueComparator(orderingDirection);
