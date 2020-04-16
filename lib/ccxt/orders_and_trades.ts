@@ -26,42 +26,45 @@ type Order {
 //Mites ku näissähän suurin osa parametreista on optionaalisia ni miten se tehdään? Optionaali, limit = 5. Tai
 //if symbol! { }
 
-function fetchOrder(id: string, symbol: string){
-  //pitäiskö serviceen soittaa?
-}
+class orders {
+  private localIds = new localIds; //ton pitäis se luokka tehä
+  
+  function fetchOrder(id: string, symbol: string){
+    //pitäiskö serviceen soittaa?
+  }
 
-function fetchOrders(symbol: string, since: int, limit: int){
-}
+  function fetchOrders(symbol: string, since: int, limit: int){
+  }
 
-function fetchOpenOrders(symbol: string, since: int, limit: int){
-}
+  function fetchOpenOrders(symbol: string, since: int, limit: int){
+  }
 
-function fetchClosedOrders(symbol: string, since: int, limit: int){
-}
+  function fetchClosedOrders(symbol: string, since: int, limit: int){
+  }
 
-function createOrder(symbol: string, ){
-}
+  function createOrder(symbol: string, ){
+  }
 
-function createMarketBuyOrder(symbol: string, amount: int){
-}
+  function createMarketBuyOrder(symbol: string, amount: int){
+  }
 
-function createMarketSellOrder(symbol: string, amount: int){
-}
+  function createMarketSellOrder(symbol: string, amount: int){
+  }
 
-function createLimitBuyOrder(symbol: string, amount: int, price: int){
-}
+  function createLimitBuyOrder(symbol: string, amount: int, price: int){
+  }
 
-function createLimitSellOrder(symbol: string, amount: int, price: int){
-}
+  function createLimitSellOrder(symbol: string, amount: int, price: int){
+  }
 
-function cancelOrder(id: string, symbol: string){
-  //serviceen vai orderbookkiin soitetaan?
-}
+  function cancelOrder(id: string, symbol: string){
+    //serviceen vai orderbookkiin soitetaan?
+  }
 
-type trade {
-}
+  type trade {
+  }
 
-function fillMyTrades(){
+  function fillMyTrades(){
     'info':         { ... },                    // ei varmaa tämmöstä oo
     'id':           '12345-67890:09876/54321',  // onko tämmösiä? Jos ei oo ni voisko tän generoida sillai et orderId + orderId = tradeId?
     'timestamp':    1502962946216,              // 
@@ -79,8 +82,24 @@ function fillMyTrades(){
         'currency': 'ETH',                      // usually base currency for buys, quote currency for sells
         'rate': 0.002,                          // ei kai mitään kiinteää fee ratea?
     },
-}
+  }
 
-function fillFetchTrades(){
-  //julkiset treidit. Mitä juttuja niistä tarkalleen?
+  function fillFetchTrades(){
+    //julkiset treidit. Mitä juttuja niistä tarkalleen?
+  }
+
+class localIds {
+  private localIds = new Map<string, string>
+    
+  public addOrder(localId: string){
+    //lisätään listaan tällä keyllä
+  }
+
+  public getOrder(localId: string){
+    return //mapista tätä keytä vastaava arvo
+  }
+
+  public removeOrder(localId: string){
+    //poistetaan mapista tällä keyllä oleva pairi
+  }
 }
