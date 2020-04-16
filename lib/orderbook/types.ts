@@ -44,6 +44,8 @@ type MarketOrder = {
   isBuy: boolean;
   /** pubKey */
   pubKey: string;
+  /** The amount of an order that is on hold pending swap execution. */
+  hold: number;
 };
 
 /** A limit order with a specified price that will enter the order book if it is not immediately matched. */
@@ -68,8 +70,7 @@ type Stamp = OrderIdentifier & {
 
 /** A local order that may enter the order book. */
 export type OwnOrder = OwnLimitOrder & Stamp & {
-  /** The amount of an order that is on hold pending swap execution. */
-  hold: number;
+  
 };
 
 /** A peer order that may enter the order book. */
