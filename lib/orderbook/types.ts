@@ -42,6 +42,8 @@ type MarketOrder = {
   pairId: string;
   /** Whether the order is a buy (if `true`) or a sell (if `false`). */
   isBuy: boolean;
+  /** pubKey */
+  pubKey: string;
 };
 
 /** A limit order with a specified price that will enter the order book if it is not immediately matched. */
@@ -56,18 +58,6 @@ export type OrderIdentifier = Pick<MarketOrder, 'pairId'> & {
   id: string;
 };
 
-/** Properties that apply only to orders placed by the local xud. */
-type Local = {
-  /** A local identifier for the order. */
-  localId: string;
-};
-
-/** Properties that apply only to orders placed by remote peers. */
-type Remote = {
-  /** The nodePubKey of the node which created this order. */
-  peerPubKey: string;
-};
-
 /** Properties that uniquely identify an order and make it ready to enter the order book. */
 type Stamp = OrderIdentifier & {
   /** Epoch timestamp when this order was created locally. */
@@ -75,10 +65,6 @@ type Stamp = OrderIdentifier & {
   /** The number of satoshis (or equivalent) initially available for the order, before any actions such as trades reduced the available quantity. */
   initialQuantity: number;
 };
-
-export type OwnMarketOrder = MarketOrder & Local;
-
-export type OwnLimitOrder = LimitOrder & Local;
 
 /** A local order that may enter the order book. */
 export type OwnOrder = OwnLimitOrder & Stamp & {
