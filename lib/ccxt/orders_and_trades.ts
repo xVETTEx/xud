@@ -43,18 +43,23 @@ class orders {
   }
 
   function createOrder(symbol: string, ){
+    placeOrder()
   }
 
   function createMarketBuyOrder(symbol: string, amount: int){
+    placeOrder()
   }
 
   function createMarketSellOrder(symbol: string, amount: int){
+    placeOrder()
   }
 
   function createLimitBuyOrder(symbol: string, amount: int, price: int){
+    placeOrder()
   }
 
   function createLimitSellOrder(symbol: string, amount: int, price: int){
+    placeOrder()
   }
 
   function cancelOrder(id: string, symbol: string){
