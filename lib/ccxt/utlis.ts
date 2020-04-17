@@ -11,6 +11,8 @@ function getDaytime(){
 
 function getSymbol(pair: string){
   //eli tää niinku tradinpair, mut ccxt:ssä kutsutaan symboliksi. ja uppercase lettereillä. BTC/LTC.
+  pair = ;
+  pair.toUpperCase();
 }
 
 function getBase(pair: string){
