@@ -47,6 +47,10 @@ function fillCurrency(currency){
     'info': { ... }, // the original unparsed currency info from the exchange
 }
 
+function fillGetBalance(){
+    balances = service.getBalance();
+    return balances;
+}
 
 type status {
 }
