@@ -1,0 +1,13 @@
+.MSG ban {
+  string node_id = 1;
+}
+
+.MSG open_channel {
+  string node_id = 1;
+  strng currency = 2;
+  string amount = 3;
+}
+
+.MSG
+
+.MSG
