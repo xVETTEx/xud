@@ -2,75 +2,75 @@ syntax = "proto3";
 
 package xudp2p;
 
-message Address {
+.MSG Address (
     string host = 1;
     uint32 port = 2;
-}
+)
 
-message Order {
+.MSG Order (
     string id = 1;
     string pair_id = 2;
     double price = 3;
     uint64 quantity = 4;
     bool is_buy = 5;
-}
+)
 
-message Node {
+.MSG Node (
     string node_pub_key = 1;
     repeated Address addresses = 2;
-}
+)
 
-message LndUris {
+.MSG LndUris (
     repeated string lnd_uri = 1;
-}
+)
 
-message NodeState {
+.MSG NodeState (
     repeated Address addresses = 3;
     repeated string pairs = 4;
     string raiden_address = 5;
     map<string, string> lnd_pub_keys = 6;
     map<string, string> token_identifiers = 7;
     map<string, LndUris> lnd_uris = 8;
-}
+)
 
-message PingPacket {
+.MSG PingPacket (
     string id = 1;
-}
+)
 
-message PongPacket {
+.MSG PongPacket (
     string id = 1;
     string req_id = 2;
-}
+)
 
-message OrderPacket {
+.MSG OrderPacket (
     string id = 1;
     Order order = 2;
-}
+)
 
-message OrderInvalidationPacket {
+.MSG OrderInvalidationPacket (
     string id = 1;
     string order_id = 2;
     string pair_id = 3;
     uint64 quantity = 4;
-}
+)
 
-message GetOrdersPacket {
+.MSG GetOrdersPacket (
     string id = 1;
     repeated string pair_ids = 2;
-}
+)
 
-message OrdersPacket {
+.MSG OrdersPacket (
     string id = 1;
     string req_id = 2;
     repeated Order orders = 3;
-}
+)
 
-message NodeStateUpdatePacket {
+.MSG NodeStateUpdatePacket (
     string id = 1;
     NodeState node_state = 5;
-}
+)
 
-message SessionInitPacket {
+.MSG SessionInitPacket (
     string id = 1;
     string sign = 2;
     // The node pub key of the peer we are connecting to.
@@ -81,68 +81,68 @@ message SessionInitPacket {
     string version = 6;
     // Our local node pub key.
     string node_pub_key = 7;
-}
+)
 
-message SessionAckPacket {
+.MSG SessionAckPacket (
     string id = 1;
     string req_id = 2;
     string ephemeral_pub_key = 3;
-}
+)
 
-message DisconnectingPacket {
+.MSG DisconnectingPacket (
     string id = 1;
     uint32 reason = 2;
     string payload = 3;
-}
+)
 
-message GetNodesPacket {
+.MSG GetNodesPacket (
     string id = 1;
-}
+)
 
-message NodesPacket {
+.MSG NodesPacket (
     string id = 1;
     string req_id = 2;
     repeated Node nodes = 3;
-}
+)
 
-message SanitySwapInitPacket {
+.MSG SanitySwapInitPacket (
     string id = 1;
     string currency = 2;
     string r_hash = 3;
-}
+)
 
-message SanitySwapAckPacket {
+.MSG SanitySwapAckPacket (
     string id = 1;
     string req_id = 2;
-}
+)
 
-message SwapRequestPacket {
+.MSG SwapRequestPacket (
     string id = 1;
     uint64 proposed_quantity = 2;
     string pair_id = 3;
     string order_id = 4;
     string r_hash = 5;
     uint32 taker_cltv_delta = 6;
-}
+)
 
-message SwapAcceptedPacket {
+.MSG SwapAcceptedPacket (
     string id = 1;
     string req_id = 2;
     string r_hash = 3;
     double quantity = 4;
     uint32 maker_cltv_delta = 5;
-}
+)
 
-message SwapCompletePacket {
+.MSG SwapCompletePacket (
     string id = 1;
     string req_id = 2;
     string r_hash = 3;
-}
+)
 
-message SwapFailedPacket {
+.MSG SwapFailedPacket (
     string id = 1;
     string req_id = 2;
     string r_hash = 3;
     string error_message = 4;
     uint32 failure_reason = 5;
-}
+)
