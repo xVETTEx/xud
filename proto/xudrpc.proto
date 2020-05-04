@@ -294,17 +294,18 @@ enum OrderSide {
   SELL = 1;
 }
 
-message AddCurrencyResponse {}
+.MSG AddCurrencyResponse ()
 
-message AddPairRequest {
+.MSG AddPairRequest (
   // The base currency that is bought and sold for this trading pair.
   string base_currency = 1 [json_name = "base_currency"];
   // The currency used to quote a price for the base currency.
   string quote_currency = 2 [json_name = "quote_currency"];
-}
-message AddPairResponse {}
+)
 
-message Balance {
+.MSG AddPairResponse ()
+
+.MSG Balance (
   // Total balance denominated in satoshis.
   uint64 total_balance = 1 [json_name = "total_balance"];
   // Sum of confirmed channel balances denominated in satoshis.
@@ -317,22 +318,23 @@ message Balance {
   uint64 wallet_balance = 5 [json_name = "wallet_balance"];
   // Unconfirmed wallet balance in satoshis.
   uint64 unconfirmed_wallet_balance = 6 [json_name = "unconfirmed_wallet_balance"];
-}
+)
 
-message BanRequest {
+.MSG BanRequest (
   // The node pub key or alias of the node to ban.
   string node_identifier = 1 [json_name = "node_identifier"];
-}
-message BanResponse {}
+)
 
-message Chain {
+.MSG BanResponse ()
+
+.MSG Chain (
   // The blockchain the swap client is on (eg bitcoin, litecoin)
   string chain = 1 [json_name = "chain"];
   // The network the swap client is on (eg regtest, testnet, mainnet)
   string network = 2 [json_name = "network"];
 }
 
-message Channels {
+.MSG Channels (
   // The number of active/online channels for this lnd instance that can be used for swaps.
   uint32 active = 1 [json_name = "active"];
   // The number of inactive/offline channels for this lnd instance.
@@ -341,30 +343,31 @@ message Channels {
   uint32 pending = 3 [json_name = "pending"];
   // The number of channels that have been closed.
   uint32 closed = 4 [json_name = "closed"];
-}
+)
 
-message ConnectRequest {
+.MSG ConnectRequest (
   // The uri of the node to connect to in "[nodePubKey]@[host]:[port]" format.
   string node_uri = 1 [json_name = "node_uri"];
-}
+)
 
-message ConnectResponse {}
+.MSG ConnectResponse ()
 
-message CreateNodeRequest {
+.MSG CreateNodeRequest (
   // The password in utf-8 with which to encrypt the new xud node key as well
   // as any uninitialized underlying wallets.
   string password = 1;
-}
-message CreateNodeResponse {
+)
+
+.MSG CreateNodeResponse (
   // The 24 word mnemonic to recover the xud identity key and underlying wallets
   repeated string seed_mnemonic = 1;
   // The list of lnd clients that were initialized.
   repeated string initialized_lnds = 2;
   // Whether raiden was initialized.
   bool initialized_raiden = 3;
-}
+)
 
-message Currency {
+.MSG Currency (
   // The ticker symbol for this currency such as BTC, LTC, ETH, etc...
   string currency = 1 [json_name = "currency"];
   enum SwapClient {
@@ -381,17 +384,18 @@ message Currency {
   // exponent of the smallest subunit expressed as a positive integer. A default value of 8 is
   // used if unspecified.
   uint32 decimal_places = 4 [json_name = "decimal_places"];
-}
+)
 
-message DiscoverNodesRequest {
+.MSG DiscoverNodesRequest (
   // The node pub key or alias of the peer to discover nodes from.
   string node_identifier = 1 [json_name = "node_identifier"];
-}
-message DiscoverNodesResponse {
-  uint32 num_nodes = 1 [json_name = "num_nodes"];
-}
+)
 
-message ExecuteSwapRequest {
+.MSG DiscoverNodesResponse (
+  uint32 num_nodes = 1 [json_name = "num_nodes"];
+)
+
+.MSG ExecuteSwapRequest (
   // The order id of the maker order.
   string order_id = 1 [json_name = "order_id"];
   // The trading pair of the swap orders.
@@ -400,20 +404,21 @@ message ExecuteSwapRequest {
   string peer_pub_key = 3 [json_name = "peer_pub_key"];
   // The quantity to swap denominated in satoshis. The whole order will be swapped if unspecified.
   uint64 quantity = 4 [json_name = "quantity"];
-}
+)
 
-message GetBalanceRequest {
+.MSG GetBalanceRequest (
   // The ticker symbol of the currency to query for, if unspecified then balances for all supported
   // currencies are queried.
   string currency = 1 [json_name = "currency"];
-}
-message GetBalanceResponse {
+)
+
+.MSG GetBalanceResponse (
   // A map between currency ticker symbols and their balances.
   map<string, Balance> balances = 1 [json_name = "orders"];
-}
+)
 
-message GetInfoRequest {}
-message GetInfoResponse {
+.MSG GetInfoRequest ()
+.MSG GetInfoResponse (
   // The version of this instance of xud.
   string version = 1 [json_name = "version"];
   // The node pub key of this node.
@@ -433,27 +438,29 @@ message GetInfoResponse {
   // The network of this node.
   string network = 10 [json_name = "network"];
   repeated string pending_swap_hashes = 11 [json_name = "pending_swap_hashes"];
-}
+)
 
-message GetNodeInfoRequest {
+.MSG GetNodeInfoRequest (
   // The node pub key or alias of the node for which to get information.
   string node_identifier = 1 [json_name = "node_identifier"];
-}
-message GetNodeInfoResponse {
+)
+
+.MSG GetNodeInfoResponse (
   // The node's reputation score. Points are subtracted for unexpected or potentially malicious
   // behavior. Points are added when swaps are successfully executed.
   sint32 reputationScore = 1 [json_name = "reputation"];
   // Whether the node is currently banned.
   bool banned = 2 [json_name = "banned"];
-}
+)
 
-message ListCurrenciesRequest {}
-message ListCurrenciesResponse {
+.MSG ListCurrenciesRequest ()
+
+.MSG ListCurrenciesResponse (
   // The list of available currencies in the orderbook.
   repeated Currency currencies = 1 [json_name = "currencies"];
-}
+)
 
-message ListOrdersRequest {
+.MSG ListOrdersRequest (
   // The trading pair for which to retrieve orders.
   string pair_id = 1 [json_name = "pair_id"];
   enum Owner {
@@ -465,34 +472,37 @@ message ListOrdersRequest {
   Owner owner = 2 [json_name = "owner"];
   // The maximum number of orders to return from each side of the order book.
   uint32 limit = 3 [json_name = "limit"];
-}
-message ListOrdersResponse {
+)
+
+.MSG ListOrdersResponse (
   // A map between pair ids and their buy and sell orders.
   map<string, Orders> orders = 1 [json_name = "orders"];
-}
+)
 
-message ListPairsRequest {}
-message ListPairsResponse {
+.MSG ListtPairsRequest ()
+
+.MSG ListPairsResponse (
   // The list of supported trading pair tickers in formats like "LTC/BTC".
   repeated string pairs = 1 [json_name = "pairs"];
-}
+)
 
-message ListPeersRequest {}
-message ListPeersResponse {
+.MSG ListPeersRequest ()
+
+.MSG ListPeersResponse (
   // The list of connected peers.
   repeated Peer peers = 1 [json_name = "peers"];
-}
+)
 
-message ListTradesRequest {
+.MSG ListTradesRequest (
   // The maximum number of trades to return
   int32 limit = 1 [json_name = "limit"];
-}
+)
 
-message ListTradesResponse {
+.MSG ListTradesResponse (
   repeated Trade trades = 1 [json_name = "trades"];
-}
+)
 
-message LndInfo {
+.MSG LndInfo (
   string status = 1 [json_name = "status"];
   Channels channels = 2 [json_name = "channels"];
   repeated Chain chains = 3 [json_name = "chains"];
@@ -500,20 +510,20 @@ message LndInfo {
   repeated string uris = 5 [json_name = "uris"];
   string version = 6 [json_name = "version"];
   string alias = 7 [json_name = "alias"];
-}
+)
 
-message OpenChannelRequest {
+.MSG OpenChannelRequest (
   // The node pub key or alias of the peer with which to open channel with.
   string node_identifier = 1 [json_name = "node_identifier"];
   // The ticker symbol of the currency to open the channel for.
   string currency = 2 [json_name = "currency"];
   // The amount of the channel denominated in satoshis.
   int64 amount = 3 [json_name = "amount"];
-}
+)
 
-message OpenChannelResponse {}
+.MSG OpenChannelResponse ()
 
-message Order {
+.MSG Order (
   // The price of the order.
   double price = 1 [json_name = "price"];
   // The quantity of the order in satoshis.
@@ -536,9 +546,9 @@ message Order {
   bool is_own_order = 9 [json_name = "is_own_order"];
   // The quantity on hold pending swap execution.
   uint64 hold = 10 [json_name = "hold"];
-}
+)
 
-message OrderRemoval {
+.MSG OrderRemoval {
   // The quantity removed from the order.
   uint64 quantity = 1 [json_name = "quantity"];
   // The trading pair that the order is for.
@@ -551,7 +561,7 @@ message OrderRemoval {
   bool is_own_order = 5 [json_name = "is_own_order"];
 }
 
-message Orders {
+.MSG Orders (
   // A list of buy orders sorted by descending price.
   repeated Order buy_orders = 1 [json_name = "buy_orders"];
   // A list of sell orders sorted by ascending price.
@@ -563,18 +573,18 @@ message OrdersCount {
   uint32 peer = 1 [json_name = "peer"];
   // The number of orders belonging to our local xud node.
   uint32 own = 2 [json_name = "own"];
-}
+)
 
-message OrderUpdate {
+.MSG OrderUpdate (
   oneof order_update {
     // An order that was added to the order book.
     Order order = 1 [json_name = "order"];
     // An order (or portion thereof) that was removed from the order book.
     OrderRemoval order_removal = 2 [json_name = "order_removal"];
   }
-}
+)
 
-message Peer {
+.MSG Peer (
   // The socket address with host and port for this peer.
   string address = 1 [json_name = "address"];
   // The node pub key to uniquely identify this peer.
@@ -593,9 +603,9 @@ message Peer {
   string raiden_address = 8 [json_name = "raiden_address"];
   // The alias for this peer's public key
   string alias = 9 [json_name = "alias"];
-}
+)
 
-message PlaceOrderRequest {
+.MSG PlaceOrderRequest (
   // The price of the order.
   double price = 1 [json_name = "price"];
   // The quantity of the order denominated in satoshis.
@@ -611,8 +621,9 @@ message PlaceOrderRequest {
   string replace_order_id = 6 [json_name = "replace_order_id"];
   // Whether the order must be filled immediately and not allowed to enter the order book.
   bool immediate_or_cancel = 7 [json_name = "immediate_or_cancel"];
-}
-message PlaceOrderResponse {
+)
+
+.MSG PlaceOrderResponse (
   // A list of own orders (or portions thereof) that matched the newly placed order.
   repeated Order internal_matches = 1 [json_name = "internal_matches"];
   // A list of successful swaps of peer orders that matched the newly placed order.
@@ -621,9 +632,9 @@ message PlaceOrderResponse {
   Order remaining_order = 3 [json_name = "remaining_order"];
   // A list of swap attempts that failed.
   repeated SwapFailure swap_failures = 4 [json_name = "swap_failures"];
-}
+)
 
-message PlaceOrderEvent {
+.MSG PlaceOrderEvent (
   oneof event {
     // An own order (or portion thereof) that matched the newly placed order.
     Order internal_match = 1 [json_name = "internal_match"];
@@ -634,42 +645,45 @@ message PlaceOrderEvent {
     // A swap attempt that failed.
     SwapFailure swap_failure = 4 [json_name = "swap_failure"];
   }
-}
+)
 
-message RaidenInfo {
+.MSG RaidenInfo (
   string status = 1 [json_name = "status"];
   string address = 2 [json_name = "address"];
   Channels channels = 3 [json_name = "channels"];
   string version = 4 [json_name = "version"];
   string chain = 5 [json_name = "chain"];
-}
+)
 
-message RemoveCurrencyRequest {
+.MSG RemoveCurrencyRequest (
   // The ticker symbol for this currency such as BTC, LTC, ETH, etc...
   string currency = 1 [json_name = "currency"];
-}
-message RemoveCurrencyResponse {}
+)
 
-message RemoveOrderRequest {
+.MSG RemoveCurrencyResponse ()
+
+.MSG RemoveOrderRequest (
   // The local id of the order to remove.
   string order_id = 1 [json_name = "order_id"];
   // The quantity to remove from the order denominated in satoshis.
   // If zero or unspecified then the entire order is removed.
   uint64 quantity = 2 [json_name = "quantity"];
-}
-message RemoveOrderResponse {
+)
+
+.MSG RemoveOrderResponse (
   // Any portion of the order that was on hold due to ongoing swaps at the time of the request
   // and could not be removed until after the swaps finish.
   uint64 quantity_on_hold = 1 [json_name = "hold"];
-}
+)
 
-message RemovePairRequest {
+.MSG RemovePairRequest (
   // The trading pair ticker to remove in a format such as "LTC/BTC".
   string pair_id = 1 [json_name = "pair_id"];
-}
-message RemovePairResponse {}
+)
 
-message RestoreNodeRequest {
+.MSG RemovePairResponse ()
+
+.MSG RestoreNodeRequest (
   // The 24 word mnemonic to recover the xud identity key and underlying wallets
   repeated string seed_mnemonic = 1;
   // The password in utf-8 with which to encrypt the restored xud node key as well
@@ -686,29 +700,30 @@ message RestoreNodeRequest {
 
   // The XUD database backup
   bytes xud_database = 6;
-}
-message RestoreNodeResponse {
+)
+
+.MSG RestoreNodeResponse (
   // The list of lnd clients that were initialized.
   repeated string restored_lnds = 1;
   // Whether raiden was initialized.
   bool restored_raiden = 2;
-}
+)
 
-message ShutdownRequest {}
-message ShutdownResponse {}
+.MSG ShutdownRequest ()
+.MSG ShutdownResponse ()
 
-message SubscribeOrdersRequest {
+.MSG SubscribeOrdersRequest (
   // Whether to transmit all existing active orders upon establishing the stream.
   bool existing = 1 [json_name = "existing"];
-}
+)
 
-message SubscribeSwapsRequest {
+.MSG SubscribeSwapsRequest (
   // Whether to include the results for swaps initiated via the PlaceOrder or ExecuteSwap calls.
   // These swap results are also returned in the responses for the respective calls.
   bool include_taker = 1 [json_name = "include_taker"];
-}
+)
 
-message SwapFailure {
+.MSG SwapFailure (
   // The global UUID for the order that failed the swap.
   string order_id = 1 [json_name = "order_id"];
   // The trading pair that the swap is for.
@@ -719,9 +734,9 @@ message SwapFailure {
   string peer_pub_key = 4 [json_name = "peer_pub_key"];
   // The reason why the swap failed.
   string failure_reason = 5 [json_name = "failure_reason"];
-}
+)
 
-message SwapSuccess {
+.MSG SwapSuccess (
   // The global UUID for the order that was swapped.
   string order_id = 1;
   // The local id for the order that was swapped.
@@ -752,16 +767,16 @@ message SwapSuccess {
   string r_preimage = 14 [json_name = "r_preimage"];
   // The price used for the swap.
   double price = 15 [json_name = "price"];
-}
+)
 
-message TradingLimits {
+.MSG TradingLimits (
   // Max outbound capacity for a distinct channel denominated in satoshis.
   uint64 MaxSell = 1 [json_name = "max_sell"];
   // Max inbound capacity for a distinct channel denominated in satoshis.
   uint64 MaxBuy = 2 [json_name = "max_buy"];
-}
+)
 
-message Trade {
+.MSG Trade (
   // The maker order involved in this trade.
   Order maker_order = 1 [json_name = "maker_order"];
   // The taker order involved in this trade.
@@ -772,36 +787,39 @@ message Trade {
   int64 quantity = 4 [json_name = "quantity"];
   // The trading pair for this trade.
   string pair_id = 5 [json_name = "pair_id"];
-}
+)
 
-message TradingLimitsRequest {
+.MSG TradingLimitsRequest (
     // The ticker symbol of the currency to query for, if unspecified then trading limits for all supported
     // currencies are queried.
     string currency = 1 [json_name = "currency"];
-}
-message TradingLimitsResponse {
+)
+
+.MSG TradingLimitsResponse (
     // A map between currency ticker symbols and their trading limits.
     map<string, TradingLimits> limits = 1 [json_name = "limits"];
-}
+)
 
-message UnbanRequest {
+.MSG UnbanRequest (
   // The node pub key or alias of the peer to unban.
   string node_identifier = 1 [json_name = "node_identifier"];
   // Whether to attempt to connect to the peer after it is unbanned.
   bool reconnect = 2  [json_name = "reconnect"];
-}
-message UnbanResponse {}
+)
 
-message UnlockNodeRequest {
+.MSG UnbanResponse ()
+
+.MSG UnlockNodeRequest (
   // The password in utf-8 with which to unlock an existing xud node key as
   // well as underlying client wallets such as lnd.
   string password = 1;
-}
-message UnlockNodeResponse {
+)
+
+.MSG UnlockNodeResponse (
   // The list of lnd clients that were unlocked.
   repeated string unlocked_lnds = 1;
   // Whether raiden was unlocked.
   bool unlocked_raiden = 2;
   // The list of lnd clients that could not be unlocked.
   repeated string locked_lnds = 3;
-}
+)
