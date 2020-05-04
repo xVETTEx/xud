@@ -4,23 +4,23 @@ import "annotations.proto";
 
 package xudrpc;
 
-message Currency {
+.MSG Currency (
   string id = 1;
   string token_address = 2;
   uint32 decimal_places = 3;
   string swap_clients = 4;
-}
+)
 
-message Node {
+.MSG Node (
   string id = 1;
   string node_pub_key = 2;
   x addresses_text = 3;
   repeated x addresses = 4;
   x last_address_text = 5;
   x last_address = 6;
-}
+)
 
-message Order {
+.MSG Order (
   string id = 1;
   string node_id = 2;
   string local_id = 3;
@@ -29,21 +29,21 @@ message Order {
   x price = 6;
   bool is_buy = 7;
   x created_at = 8;
-}
+)
 
-message Pair {
+.MSG Pair (
   string id = 1;
   string base_currency = 2;
   string quote_currency = 3;
-}
+)
 
-message ReputationEvent {
+.MSG ReputationEvent (
   string id = 1;
   string event = 2;
   string node_id = 3;
-}
+)
 
-message SwapDeal {
+.MSG SwapDeal (
   string rhash = 1;
   string role = 2;
   string state = 3;
@@ -67,11 +67,11 @@ message SwapDeal {
   string create_time = 21;
   string excecute_time = 22;
   string complete_time = 23;
-}
+)
 
-message Trade {
+.MSG Trade (
   string maker_order_id = 1;
   string taker_order_id = 2;
   string r_hash = 3;
   string quantity = 4;
-}
+)
