@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+import "annotations.proto";
+
+package xudrpc;
+
+message Currency {
+  string id = 1;
+  string token_address = 2;
+  uint32 decimal_places = 3;
+  string swap_clients = 4;
+}
+
+message Node {
+  string id = 1;
+  string node_pub_key = 2;
+  x addresses_text = 3;
+  repeated x addresses = 4;
+  x last_address_text = 5;
+  x last_address = 6;
+}
+
+message Order {
+  string id = 1;
+  string node_id = 2;
+  string local_id = 3;
+  x initialQuantity = 4;
+  string pair_id = 5;
+  x price = 6;
+  bool is_buy = 7;
+  x created_at = 8;
+}
+
+message Pair {
+  string id = 1;
+  string base_currency = 2;
+  string quote_currency = 3;
+}
+
+message ReputationEvent {
+  string id = 1;
+  string event = 2;
+  string node_id = 3;
+}
+
+message SwapDeal {
+  string rhash = 1;
+  string role = 2;
+  string state = 3;
+  string phase = 4;
+  string failure_reason = 5;
+  string error_message = 6;
+  string r_pre_image = 7;
+  string peer_pub_key = 8;
+  string node_id = 9;
+  string order_id = 10;
+  string local_id = 11;
+  string propsed_quantity = 12;
+  string quantit = 13;
+  string taker_amount = 14;
+  string taker_currency = 15;
+  string taker_pub_key = 16;
+  string taker_CLTV_delta = 17;
+  string maker_CLTV_delta = 18;
+  string maker_amount = 19;
+  string maker_currency = 20;
+  string create_time = 21;
+  string excecute_time = 22;
+  string complete_time = 23;
+}
+
+message Trade {
+  string maker_order_id = 1;
+  string taker_order_id = 2;
+  string r_hash = 3;
+  string quantity = 4;
+}
