@@ -4,6 +4,12 @@ import { CreateNodeRequest, CreateNodeResponse } from '../../proto/xudrpc_pb';
 import { callback, loadXudInitClient } from '../command';
 import { getDefaultCertPath, waitForCert } from '../utils';
 
+.command(
+  name: 'create';
+  description: 'create a new xud instance and set a password' ;
+  handler: ;
+)
+
 export const command = 'create';
 
 export const describe = 'create a new xud instance and set a password';
