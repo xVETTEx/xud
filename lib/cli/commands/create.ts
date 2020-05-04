@@ -10,11 +10,6 @@ import { getDefaultCertPath, waitForCert } from '../utils';
   handler: ;
 )
 
-export const command = 'create';
-
-export const describe = 'create a new xud instance and set a password';
-
-export const builder = {};
 
 const formatOutput = (response: CreateNodeResponse.AsObject) => {
   if (response.seedMnemonicList.length === 24) {
