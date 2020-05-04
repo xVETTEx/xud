@@ -77,12 +77,6 @@ class Xud extends EventEmitter {
       }
     }
 
-    const loggers = Logger.createLoggers(this.config.loglevel, this.config.logpath, this.config.instanceid, this.config.logdateformat);
-    this.logger = loggers.global;
-    if (configFileLoaded) {
-      this.logger.info('config file loaded');
-    }
-
     try {
       if (!this.config.rpc.disable) {
         // start rpc server first, it will respond with UNAVAILABLE error
