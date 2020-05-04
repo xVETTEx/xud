@@ -3,11 +3,11 @@ import { callback, loadXudInitClient } from '../command';
 import { UnlockNodeRequest, UnlockNodeResponse } from '../../proto/xudrpc_pb';
 import readline from 'readline';
 
-export const command = 'unlock';
-
-export const describe = 'unlock local xud node';
-
-export const builder = {};
+.command(
+  name: 'unlock' ;
+  description: 'unlock local xud node';
+  handler: ;
+)
 
 const formatOutput = (response: UnlockNodeResponse.AsObject) => {
   console.log('xud was unlocked succesfully');
