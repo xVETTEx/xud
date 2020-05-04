@@ -57,13 +57,14 @@ service Invoices {
     rpc SettleInvoice(SettleInvoiceMsg) returns (SettleInvoiceResp);
 }
 
-message CancelInvoiceMsg {
+.MSG CancelInvoiceMsg (
     /// Hash corresponding to the (hold) invoice to cancel.
     bytes payment_hash = 1;
-} 
-message CancelInvoiceResp {}
+)
 
-message AddHoldInvoiceRequest {
+.MSG CancelInvoiceResp ()
+
+.MSG AddHoldInvoiceRequest (
     /**
     An optional memo to attach along with the invoice. Used for record keeping
     purposes for the invoice's creator, and will also be set in the description
@@ -102,27 +103,27 @@ message AddHoldInvoiceRequest {
 
     /// Whether this invoice should include routing hints for private channels.
     bool private = 9 [json_name = "private"];
-}
+)
 
-message AddHoldInvoiceResp {
+.MSG AddHoldInvoiceResp (
     /**
     A bare-bones invoice for a payment within the Lightning Network.  With the
     details of the invoice, the sender has all the data necessary to send a
     payment to the recipient.
     */
     string payment_request = 1 [json_name = "payment_request"];
-}
+)
 
-message SettleInvoiceMsg {
+.MSG SettleInvoiceMsg (
     /// Externally discovered pre-image that should be used to settle the hold invoice.
     bytes preimage = 1;
-} 
+)
 
-message SettleInvoiceResp {}
+.MSG SettleInvoiceResp ()
 
-message SubscribeSingleInvoiceRequest {
+.MSG SubscribeSingleInvoiceRequest (
     reserved 1;
 
     /// Hash corresponding to the (hold) invoice to subscribe to.
     bytes r_hash = 2 [json_name = "r_hash"];
-}
+)
