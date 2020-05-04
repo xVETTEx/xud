@@ -1,17 +1,13 @@
-import { callback, loadXudClient } from '../command';
-import { Arguments } from 'yargs';
-import { BanRequest } from '../../proto/xudrpc_pb';
+.cmd(
+  name: 'Ban';
+  description: 'ban a remote node' ;
+  message: Ban;
+  handler: ;
+)
 
-export const command = 'ban <node_identifier>';
-
-export const describe = 'ban a remote node';
-
-export const builder = {
-  node_identifier: {
-    description: 'the node key or alias of the remote node to ban',
-    type: 'string',
-  },
-};
+.cmd_descriptions(
+  node_id: 'the node key or alias of the remote node to ban';
+)
 
 export const handler = (argv: Arguments<any>) => {
   const request = new BanRequest();
