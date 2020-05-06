@@ -4,7 +4,7 @@ import { Models } from '../db/DB';
 
 class OrderbookRepository {
 
-  constructor(private models: Models) {}
+  constructor() {}
 
   public getPairs = (): Bluebird<db.PairInstance[]> => {
     return this.models.Pair.findAll();
