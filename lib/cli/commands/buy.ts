@@ -1,10 +1,10 @@
-import { Arguments, Argv } from 'yargs';
-import { OrderSide } from '../../proto/xudrpc_pb';
-import { placeOrderBuilder, placeOrderHandler } from '../placeorder';
 
-export const command = 'buy <quantity> <pair_id> <price> [order_id]';
-
-export const describe = 'place a buy order';
+.cmd(
+	name: "buy",
+	description: "place a buy order",
+	message: buy,
+	handler: .,
+)
 
 export const builder = (argv: Argv) => placeOrderBuilder(argv, OrderSide.BUY);
 
