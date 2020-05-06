@@ -1,9 +1,4 @@
-import { callback, loadXudClient } from '../command';
-import { Arguments } from 'yargs';
-import { ExecuteSwapRequest, SwapSuccess } from '../../proto/xudrpc_pb';
-import { coinsToSats } from '../utils';
-import Table, { VerticalTable } from 'cli-table3';
-import colors from 'colors/safe';
+
 
 const displaySwapSuccess = (swap: SwapSuccess.AsObject) => {
   const table = new Table() as VerticalTable;
@@ -15,23 +10,18 @@ const displaySwapSuccess = (swap: SwapSuccess.AsObject) => {
   console.log(table.toString());
 };
 
-export const command = 'executeswap <pair_id> <order_id> [quantity]';
+.cmd(
+	name: "executeswap",
+	description: "",
+	message: execute_swap,
+	handler: ,
+)
 
-// export const describe = 'execute a swap on a peer order (nomatching mode only)';
-export const describe = undefined;
+.cmd_descriptions(
+  name: executeswap,
+  quantity: "the quantity to swap; the whole order will be swapped if unspecified",
+)
 
-export const builder = {
-  order_id: {
-    type: 'string',
-  },
-  pair_id: {
-    type: 'string',
-  },
-  quantity: {
-    type: 'number',
-    description: 'the quantity to swap; the whole order will be swapped if unspecified',
-  },
-};
 
 export const handler = (argv: Arguments<any>) => {
   const request = new ExecuteSwapRequest();
