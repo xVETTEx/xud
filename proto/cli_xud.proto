@@ -2,6 +2,27 @@
   string node_id = 1;
 }
 
+.MSG buy {
+  int quantity = 1;
+  string pair_id = 2;
+  int price = 3;
+  string order_id = 4;
+}
+
+.MSG connect {
+  string node_uri = 1;
+}
+
+.MSG discover_nodes {
+  string node_id = 1;
+}
+
+.MSG execute_swap {
+  string pair_id = 1;
+  string order_id = 2;
+  int quantity = 3;
+}
+
 .MSG get_balance {
   string currency = 1;
 }
