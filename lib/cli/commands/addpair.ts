@@ -2,20 +2,18 @@ import { Arguments } from 'yargs';
 import { callback, loadXudClient } from '../command';
 import { AddPairRequest } from '../../proto/xudrpc_pb';
 
-export const command = 'addpair <base_currency> <quote_currency>';
+.cmd(
+	name: "addpair",
+	description: "add a trading pair",
+	message: add_pair,
+	handler: ,
+)
 
-export const describe = 'add a trading pair';
-
-export const builder = {
-  base_currency: {
-    description: 'the currency bought and sold for this trading pair',
-    type: 'string',
-  },
-  quote_currency: {
-    description: 'the currency used to quote a price',
-    type: 'string',
-  },
-};
+.cmd_descriptions(
+  name: "addpair",
+  base_currency: "the currency bought and sold for this trading pair",
+  quote_currency: "the currency used to quote a price",
+)
 
 export const handler = (argv: Arguments<any>) => {
   const request = new AddPairRequest();
