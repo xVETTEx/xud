@@ -1,9 +1,3 @@
-import { callback, loadXudClient } from '../command';
-import { Arguments } from 'yargs';
-import { GetBalanceRequest, GetBalanceResponse } from '../../proto/xudrpc_pb';
-import { satsToCoinsStr } from '../utils';
-import Table, { HorizontalTable } from 'cli-table3';
-import colors from 'colors/safe';
 
 const HEADERS = [
   colors.blue('Currency'),
@@ -59,16 +53,17 @@ const displayBalances = (balances: GetBalanceResponse.AsObject) => {
   console.log(table.toString());
 };
 
-export const command = 'getbalance [currency]';
+.cmd(
+	name: "getbalance",
+	description: "get total balance for a given currency",
+	message: get_balance,
+	handler: ,
+)
 
-export const describe = 'get total balance for a given currency';
-
-export const builder = {
-  currency: {
-    describe: 'the currency to query for',
-    type: 'string',
-  },
-};
+.cmd_descriptions(
+  name: "getbalance",
+  currency: "the currency to query for",
+)
 
 export const handler = (argv: Arguments<any>) => {
   const request = new GetBalanceRequest();
