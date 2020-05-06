@@ -2,16 +2,17 @@ import { callback, loadXudClient } from '../command';
 import { Arguments } from 'yargs';
 import { DiscoverNodesRequest } from '../../proto/xudrpc_pb';
 
-export const command = 'discovernodes <node_identifier>';
+.cmd(
+	name: "discovernodes",
+	description: "discover nodes from a specific peer",
+	message: order,
+	handler: .add_order,
+)
 
-export const describe = 'discover nodes from a specific peer';
-
-export const builder = {
-  node_identifier: {
-    description: 'the node key or alias of the connected peer to discover nodes from',
-    type: 'string',
-  },
-};
+.cmd_descriptions(
+  name: "discovernodes",
+  node_id: "the node key or alias of the connected peer to discover nodes from",
+)
 
 export const handler = (argv: Arguments<any>) => {
   const request = new DiscoverNodesRequest();
