@@ -2,6 +2,14 @@
   string node_id = 1;
 }
 
+.MSG get_balance {
+  string currency = 1;
+}
+
+.MSG get_node_info {
+  string nodo_id = 1;
+}
+
 .MSG open_channel {
   string node_id = 1;
   strng currency = 2;
