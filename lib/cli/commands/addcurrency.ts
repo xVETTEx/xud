@@ -3,30 +3,20 @@ import { callback, loadXudClient } from '../command';
 import { Currency } from '../../proto/xudrpc_pb';
 import { SwapClientType } from '../../constants/enums';
 
-export const command = 'addcurrency <currency> <swap_client> [decimal_places] [token_address]';
+.cmd(
+	name: "addcurrency",
+	description: "add a currency",
+	message: add_currency,
+	handler: .,
+)
 
-export const describe = 'add a currency';
-
-export const builder = {
-  currency: {
-    description: 'the ticker symbol for the currency',
-    type: 'string',
-  },
-  swap_client: {
-    description: 'the payment channel network client for swaps',
-    type: 'string',
-    choices: ['Lnd', 'Raiden'],
-  },
-  decimal_places: {
-    description: 'the places to the right of the decimal point of the smallest subunit (e.g. satoshi)',
-    default: 8,
-    type: 'number',
-  },
-  token_address: {
-    description: 'the contract address for tokens such as ERC20',
-    type: 'string',
-  },
-};
+.cmd_descriptions(
+  name: "addcurrency",
+  currency: "the ticker symbol for the currency",
+  swap_client: "the payment channel network client for swaps",
+  decimal_places: "the places to the right of the decimal point of the smallest subunit (e.g. satoshi)",
+  token_address: "the contract address for tokens such as ERC20",
+)
 
 export const handler = (argv: Arguments<any>) => {
   const request = new Currency();
