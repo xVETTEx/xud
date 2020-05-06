@@ -1,17 +1,14 @@
-import { Arguments } from 'yargs';
-import { callback, loadXudClient } from '../command';
-import { ConnectRequest } from '../../proto/xudrpc_pb';
+.cmd(
+	name: "connect",
+	description: "connect to a remote node",
+	message: connect,
+	handler: ,
+)
 
-export const command = 'connect <node_uri>';
-
-export const describe = 'connect to a remote node';
-
-export const builder = {
-  node_uri: {
-    description: 'uri of remote node as [node_key]@[host]:[port]',
-    type: 'string',
-  },
-};
+.cmd_descriptions(
+  name: "connect",
+  node_uri: "uri of remote node as [node_key]@[host]:[port]",
+)
 
 export const handler = (argv: Arguments<any>) => {
   const request = new ConnectRequest();
