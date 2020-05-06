@@ -1,8 +1,3 @@
-import { callback, loadXudClient } from '../command';
-import { Arguments } from 'yargs';
-import Table, { VerticalTable } from 'cli-table3';
-import colors from 'colors/safe';
-import { GetInfoRequest, GetInfoResponse, LndInfo, RaidenInfo } from '../../proto/xudrpc_pb';
 
 const displayLndInfo = (asset: string, info: LndInfo.AsObject) => {
   const basicInfotable = new Table() as VerticalTable;
@@ -104,9 +99,12 @@ const displayGetInfo = (response: GetInfoResponse.AsObject) => {
   response.lndMap.forEach(asset => displayLndInfo(asset[0], asset[1]));
 };
 
-export const command = 'getinfo';
-
-export const describe = 'get general info from the local xud node';
+.cmd(
+	name: "getinfo",
+	description: "get general info from the local xud node",
+	message: get_info,
+	handler: ,
+)
 
 export const handler = (argv: Arguments) => {
   loadXudClient(argv).getInfo(new GetInfoRequest(), callback(argv, displayGetInfo));
