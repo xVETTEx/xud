@@ -30,9 +30,7 @@ bootstrap();
 /** Class representing a complete Exchange Union daemon. */
 class Xud extends EventEmitter {
   public service!: Service;
-  private logger!: Logger;
   private config: Config;
-  private db!: DB;
   private pool!: Pool;
   private orderBook!: OrderBook;
   private rpcServer?: GrpcServer;
@@ -152,8 +150,6 @@ class Xud extends EventEmitter {
         version,
         config: this.config.p2p,
         xuNetwork: this.config.network,
-        logger: loggers.p2p,
-        models: this.db.models,
       });
 
       const initPromises: Promise<any>[] = [];
@@ -162,8 +158,6 @@ class Xud extends EventEmitter {
       initPromises.push(this.swaps.init());
 
       this.orderBook = new OrderBook({
-        logger: loggers.orderbook,
-        models: this.db.models,
         thresholds: this.config.orderthresholds,
         nomatching: this.config.nomatching,
         pool: this.pool,
