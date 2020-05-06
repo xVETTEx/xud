@@ -1,7 +1,3 @@
-import { Arguments } from 'yargs';
-import { callback, loadXudClient } from '../command';
-import { Currency } from '../../proto/xudrpc_pb';
-import { SwapClientType } from '../../constants/enums';
 
 .cmd(
 	name: "addcurrency",
