@@ -1,6 +1,3 @@
-import { Arguments } from 'yargs';
-import { callback, loadXudClient } from '../command';
-import { AddPairRequest } from '../../proto/xudrpc_pb';
 
 .cmd(
 	name: "addpair",
