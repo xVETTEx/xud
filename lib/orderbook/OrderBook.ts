@@ -19,41 +19,7 @@ import { IncomingOrder, isOwnOrder, Order, OrderBookThresholds, OrderIdentifier,
   OwnOrder, Pair, PeerOrder, PlaceOrderEvent, PlaceOrderEventType, PlaceOrderResult } from './types';
 import { SwapFailedPacket, SwapRequestPacket } from '../p2p/packets';
 import { SwapDeal, SwapFailure, SwapSuccess } from '../swaps/types';
-// We add the Bluebird import to ts-ignore because it's actually being used.
-// @ts-ignore
-import Bluebird from 'bluebird';
 
-interface OrderBook {
-  /** Adds a listener to be called when a remote order was added. */
-  on(event: 'peerOrder.incoming', listener: (order: PeerOrder) => void): this;
-  /** Adds a listener to be called when all or part of a remote order was invalidated and removed */
-  on(event: 'peerOrder.invalidation', listener: (order: OrderPortion) => void): this;
-  /** Adds a listener to be called when all or part of a remote order was filled by an own order and removed */
-  on(event: 'peerOrder.filled', listener: (order: OrderPortion) => void): this;
-  /** Adds a listener to be called when all or part of a local order was swapped and removed, after it was filled and executed remotely */
-  on(event: 'ownOrder.swapped', listener: (order: OrderPortion) => void): this;
-  /** Adds a listener to be called when all or part of a local order was filled by an own order and removed */
-  on(event: 'ownOrder.filled', listener: (order: OrderPortion) => void): this;
-  /** Adds a listener to be called when a local order was added */
-  on(event: 'ownOrder.added', listener: (order: OwnOrder) => void): this;
-  /** Adds a listener to be called when a local order was removed */
-  on(event: 'ownOrder.removed', listener: (order: OrderPortion) => void): this;
-
-  /** Notifies listeners that a remote order was added */
-  emit(event: 'peerOrder.incoming', order: PeerOrder): boolean;
-  /** Notifies listeners that all or part of a remote order was invalidated and removed */
-  emit(event: 'peerOrder.invalidation', order: OrderPortion): boolean;
-  /** Notifies listeners that all or part of a remote order was filled by an own order and removed */
-  emit(event: 'peerOrder.filled', order: OrderPortion): boolean;
-  /** Notifies listeners that all or part of a local order was swapped and removed, after it was filled and executed remotely */
-  emit(event: 'ownOrder.swapped', order: OrderPortion): boolean;
-  /** Notifies listeners that all or part of a local order was filled by an own order and removed */
-  emit(event: 'ownOrder.filled', order: OrderPortion): boolean;
-  /** Notifies listeners that a local order was added */
-  emit(event: 'ownOrder.added', order: OwnOrder): boolean;
-  /** Notifies listeners that a local order was removed */
-  emit(event: 'ownOrder.removed', order: OrderPortion): boolean;
-}
 
 /**
  * Represents an order book containing all orders for all active trading pairs. This encompasses
@@ -96,9 +62,7 @@ class OrderBook extends EventEmitter {
   }
 
   constructor({ logger, models, thresholds, pool, swaps, nosanityswaps, nobalancechecks, nomatching = false, maxlimits = false }:
-  {
-    logger: Logger,
-    models: Models,
+               {
     thresholds: OrderBookThresholds,
     pool: Pool,
     swaps: Swaps,
@@ -109,7 +73,6 @@ class OrderBook extends EventEmitter {
   }) {
     super();
 
-    this.logger = logger;
     this.pool = pool;
     this.swaps = swaps;
     this.nomatching = nomatching;
@@ -118,10 +81,19 @@ class OrderBook extends EventEmitter {
     this.maxlimits = maxlimits;
     this.thresholds = thresholds;
 
-    this.repository = new OrderBookRepository(models);
+    this.repository = new OrderBookRepository();
 
     this.bindPool();
     this.bindSwaps();
+    
+  .event_type('peerOrder.incoming', order)
+  .event_type('peerOrder.invalidation', order)
+  .event_type('peerOrder.filled', order)
+  .event_type('ownOrder.swapped', order)
+  .event_type('ownOrder.filled', order)
+  .event_type('peerOrder.incoming', order)
+  .event_type('ownOrder.added', order)
+  .event_type('ownOrder.removed', order)
   }
 
   private static createOutgoingOrder = (order: OwnOrder): OutgoingOrder => {
