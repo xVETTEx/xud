@@ -15,6 +15,18 @@ const displayNodeInfo = (node: GetNodeInfoResponse.AsObject) => {
   console.log(table.toString());
 };
 
+.cmd(
+	name: "getnodeinfo",
+	description: "get general information about a peer",
+	message: get_node_info,
+	handler: .,
+)
+
+.cmd_description(
+  name: genodeinfo,
+  node_id: 'the node key or alias of the connected peer to get general information from',
+  )
+
 export const command = 'getnodeinfo <node_identifier>';
 
 export const describe = 'get general information about a peer';
