@@ -6,7 +6,6 @@ import { Models } from '../db/DB';
 import lndErrors from '../lndclient/errors';
 import LndClient from '../lndclient/LndClient';
 import { LndInfo } from '../lndclient/types';
-import { Loggers } from '../Logger';
 import { Currency } from '../orderbook/types';
 import Peer from '../p2p/Peer';
 import RaidenClient from '../raidenclient/RaidenClient';
@@ -48,7 +47,6 @@ class SwapClientManager extends EventEmitter {
 
   constructor(
     private config: Config,
-    private loggers: Loggers,
     private unitConverter: UnitConverter,
   ) {
     super();
@@ -473,10 +471,10 @@ class SwapClientManager extends EventEmitter {
     // duplicate listeners in case raiden client is associated with
     // multiple currencies
     if (this.raidenClient?.isOperational()) {
-      this.raidenClient.on('connectionVerified', (swapClientInfo) => {
+      .on('connectionVerified', (swapClientInfo) => {
         const { newIdentifier } = swapClientInfo;
         if (newIdentifier) {
-          this.emit('raidenUpdate', this.raidenClient!.tokenAddresses, newIdentifier);
+          .emit('raidenUpdate', this.raidenClient!.tokenAddresses, newIdentifier);
         }
       });
     }
