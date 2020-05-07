@@ -1,8 +1,9 @@
-.MSG add_pair {
+.MSG add_currency {
   string currency = 1;
   string swap_client = 2;
   int decimal_places = 3;
   string token_address = 4;
+  
 }
 
 .MSG add_pair {
