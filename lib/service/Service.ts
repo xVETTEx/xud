@@ -116,11 +116,6 @@ class Service {
     });
   }
 
-  /** Adds a trading pair. */
-  public addPair = async (args: { baseCurrency: string, quoteCurrency: string }) => {
-    await this.orderBook.addPair(args);
-  }
-
   /*
    * Remove placed order from the orderbook.
    */
