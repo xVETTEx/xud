@@ -104,34 +104,4 @@ class HttpServer {
     });
   }
 
-  /**
-   * Starts the server and begins listening on the provided port.
-   */
-  public listen = async (port: number, host: string) => {
-    return new Promise<void>((resolve, reject) => {
-      const listenErrHandler = (err: Error) => {
-        reject(err);
-      };
-
-      this.server.listen(port, host).once('listening', () => {
-        this.logger.info(`http server listening on ${host}:${port}`);
-        this.server.removeListener('error', listenErrHandler);
-        resolve();
-      }).on('error', listenErrHandler);
-    });
-  }
-
-  /**
-   * Stops listening for requests.
-   */
-  public close = () => {
-    return new Promise<void>((resolve) => {
-      this.server.close(() => {
-        this.logger.info('http server has closed');
-        resolve();
-      });
-    });
-  }
-}
-
 export default HttpServer;
