@@ -3,7 +3,7 @@
 	name: "addpair",
 	description: "add a trading pair",
 	message: add_pair,
-	handler: ,
+	handler: newOrderbook(base_currency + quote_currency),
 )
 
 .cmd_descriptions(
