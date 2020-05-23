@@ -201,11 +201,7 @@ class OrderBook extends EventEmitter {
     this.pool.updatePairs(this.pairIds);
   }
 
-  public getCurrencyAttributes(currency: string) {
-    const currencyInstance = this.currencyInstances.get(currency);
-    return currencyInstance ? currencyInstance.toJSON() : undefined;
-  }
-
+  
   /**
    * Gets all trades or a limited number of trades from the database.
    */
@@ -240,12 +236,12 @@ class OrderBook extends EventEmitter {
   }
 
   /**
-   * Gets an own order by order id and pair id.
+   * Gets an order by order id and pair id.
    * @returns The order matching parameters, or undefined if no order could be found.
    */
-  public getOwnOrder = (orderId: string, pairId: string): OwnOrder => {
+  public getOrder = (orderId: string, pairId: string, pubkey: string): Order => {
     const tp = this.getTradingPair(pairId);
-    return tp.getOrder(orderId, this.own_address);
+    return tp.getOrder(orderId, pubkey);
   }
 
   private tryGetOwnOrder = (orderId: string, pairId: string): OwnOrder | undefined => {
@@ -256,71 +252,6 @@ class OrderBook extends EventEmitter {
     }
   }
 
-  public getPeerOrder = (orderId: string, pairId: string, peerPubKey: string): PeerOrder => {
-    const tp = this.getTradingPair(pairId);
-    return tp.getOrder(orderId, peerPubKey);
-  }
-
-  public addPair = async (pair: Pair) => {
-    const pairId = derivePairId(pair);
-    if (this.pairInstances.has(pairId)) {
-      throw errors.PAIR_ALREADY_EXISTS(pairId);
-    }
-    if (!this.currencyInstances.has(pair.baseCurrency)) {
-      throw errors.CURRENCY_DOES_NOT_EXIST(pair.baseCurrency);
-    }
-    if (!this.currencyInstances.has(pair.quoteCurrency)) {
-      throw errors.CURRENCY_DOES_NOT_EXIST(pair.quoteCurrency);
-    }
-
-    const pairInstance = await this.repository.addPair(pair);
-    this.pairInstances.set(pairInstance.id, pairInstance);
-    this.tradingPairs.set(pairInstance.id, new TradingPair(this.logger, pairInstance.id, this.nomatching)); //own_address pitäis kai kertoo?
-
-    this.pool.updatePairs(this.pairIds);
-    return pairInstance;
-  }
-
-  public addCurrency = async (currency: CurrencyFactory) => {
-    if (this.currencyInstances.has(currency.id)) {
-      throw errors.CURRENCY_ALREADY_EXISTS(currency.id);
-    }
-    if (currency.swapClient === SwapClientType.Raiden && !currency.tokenAddress) {
-      throw errors.CURRENCY_MISSING_ETHEREUM_CONTRACT_ADDRESS(currency.id);
-    }
-    const currencyInstance = await this.repository.addCurrency({ ...currency, decimalPlaces: currency.decimalPlaces || 8 });
-    this.currencyInstances.set(currencyInstance.id, currencyInstance);
-    this.swaps.swapClientManager.add(currencyInstance);
-  }
-
-  public removeCurrency = async (currencyId: string) => {
-    const currency = this.currencyInstances.get(currencyId);
-    if (currency) {
-      for (const pair of this.pairInstances.values()) {
-        if (currencyId === pair.baseCurrency || currencyId === pair.quoteCurrency) {
-          throw errors.CURRENCY_CANNOT_BE_REMOVED(currencyId, pair.id);
-        }
-      }
-      this.currencyInstances.delete(currencyId);
-      this.swaps.swapClientManager.remove(currencyId);
-      await currency.destroy();
-    } else {
-      throw errors.CURRENCY_DOES_NOT_EXIST(currencyId);
-    }
-  }
-
-  public removePair = (pairId: string) => {
-    const pair = this.pairInstances.get(pairId);
-    if (!pair) {
-      throw errors.PAIR_DOES_NOT_EXIST(pairId);
-    }
-
-    this.pairInstances.delete(pairId);
-    this.tradingPairs.delete(pairId);
-
-    this.pool.updatePairs(this.pairIds);
-    return pair.destroy();
-  }
 
   public placeLimitOrder = async (order: OwnLimitOrder, immediateOrCancel = false,
     onUpdate?: (e: PlaceOrderEvent) => void): Promise<PlaceOrderResult> => {
@@ -338,17 +269,6 @@ class OrderBook extends EventEmitter {
     }
 
     return this.placeOrder(stampedOrder, immediateOrCancel, onUpdate, Date.now() + OrderBook.MAX_PLACEORDER_ITERATIONS_TIME);
-  }
-
-  public placeMarketOrder = async (order: OwnMarketOrder, onUpdate?: (e: PlaceOrderEvent) => void): Promise<PlaceOrderResult> => {
-    if (this.nomatching) {
-      throw errors.MARKET_ORDERS_NOT_ALLOWED();
-    }
-
-    const stampedOrder = this.stampOwnOrder({ ...order, price: order.isBuy ? Number.POSITIVE_INFINITY : 0 });
-    const addResult = await this.placeOrder(stampedOrder, true, onUpdate, Date.now() + OrderBook.MAX_PLACEORDER_ITERATIONS_TIME);
-    delete addResult.remainingOrder;
-    return addResult;
   }
 
   /**
@@ -485,7 +405,7 @@ class OrderBook extends EventEmitter {
       } else {
         // this is a match with a peer order which cannot be considered executed until after a
         // successful swap, which is an asynchronous process that can fail for numerous reasons
-        const alias = getAlias(maker.peerPubKey);
+        const alias = getAlias(maker.peerPubKey); //mikä vitun alias?
         this.logger.debug(`matched with peer ${maker.peerPubKey} (${alias}), executing swap on taker ${taker.id} and maker ${maker.id} for ${maker.quantity}`);
         try {
           const swapResult = await this.executeSwap(maker, taker);
@@ -583,12 +503,8 @@ class OrderBook extends EventEmitter {
     const result = tp.addOrder(order, this.ownAddress);
     assert(result, 'own order id is duplicated');
 
-    this.localIdMap.set(order.localId, { id: order.id, pairId: order.pairId });
-
-    this.emit('ownOrder.added', order);
-
-    const outgoingOrder = OrderBook.createOutgoingOrder(order);
-    this.pool.broadcastOrder(outgoingOrder);
+    
+    
     return true;
   }
 
@@ -611,9 +527,9 @@ class OrderBook extends EventEmitter {
    * enters the order book and also records its initial quantity upon being received.
    * @returns `false` if it's a duplicated order or with an invalid pair id, otherwise true
    */
-  private addPeerOrder = (order: IncomingOrder): boolean => {
-    if (this.thresholds.minQuantity > 0) {
-      if (!this.checkThresholdCompliance(order)) {
+  private addOrder = (order: IncomingOrder): boolean => {
+    if (this.thresholds.minQuantity > 0) { //mitä vittua tuo meinaa?
+      if (!this.checkThresholdCompliance(order)) { //mitä vittua tuo meinaa?
         this.removePeerOrder(order.id, order.pairId, order.peerPubKey, order.quantity);
         this.logger.debug('incoming peer order does not comply with configured threshold');
         return false;
@@ -634,34 +550,13 @@ class OrderBook extends EventEmitter {
       return false;
     }
 
-    this.emit('peerOrder.incoming', stampedOrder);
-
+    this.emit('peerOrder.incoming', stampedOrder); //kuka tätä kuuntelee? Ekö vois olla vaa order.incoming?
     return true;
   }
 
-  public getOwnOrderByLocalId = (localId: string) => {
-    const orderIdentifier = this.localIdMap.get(localId);
-    if (!orderIdentifier) {
-      throw errors.LOCAL_ID_DOES_NOT_EXIST(localId);
-    }
-
-    const order = this.getOwnOrder(orderIdentifier.id, orderIdentifier.pairId);
-    return order;
-  }
-
-  /**
-   * Removes all or part of an order from the order book by its local id. Throws an error if the
-   * specified pairId is not supported or if the order to cancel could not be found.
-   * @param allowAsyncRemoval whether to allow an eventual async removal of the order in case
-   * some quantity of the order is on hold and cannot be immediately removed. If false, while some quantity of
-   * the order is on hold, an error will be thrown.
-   * @param quantityToRemove the quantity to remove from the order, if undefined then the entire
-   * order is removed.
-   * @returns any quantity of the order that was on hold and could not be immediately removed (if allowed).
-   */
-  public removeOwnOrderByLocalId = (localId: string, allowAsyncRemoval?: boolean, quantityToRemove?: number) => {
-    const order = this.getOwnOrderByLocalId(localId);
-
+  
+  
+  function match(){ //tää oli aiemin removeOwnOrderByLocalId, johonki nyt pitää tää paska siirtää.
     let remainingQuantityToRemove = quantityToRemove || order.quantity;
 
     if (remainingQuantityToRemove > order.quantity) {
@@ -737,10 +632,8 @@ class OrderBook extends EventEmitter {
       const removeResult = tp.removeOrder(this.own_address, orderId, quantityToRemove);
       this.emit('ownOrder.removed', removeResult.order);
       if (removeResult.fullyRemoved) {
-        this.localIdMap.delete(removeResult.order.localId);
+        
       }
-
-      this.pool.broadcastOrderInvalidation(removeResult.order, takerPubKey);
       return removeResult.order;
     } catch (err) {
       if (quantityToRemove !== undefined) {
@@ -773,129 +666,6 @@ class OrderBook extends EventEmitter {
     this.logger.debug(`removed all orders for peer ${peerPubKey} (${getAlias(peerPubKey)})`);
   }
 
-  private removePeerPair = (peerPubKey: string, pairId: string) => {
-    const tp = this.getTradingPair(pairId);
-    const orders = tp.removeOrdersByPubkey(peerPubKey);
-    orders.forEach((order) => {
-      this.emit('peerOrder.invalidation', order);
-    });
-  }
-
-  private checkPeerCurrencies = (peer: Peer) => {
-    const advertisedCurrencies = peer.getAdvertisedCurrencies();
-
-    advertisedCurrencies.forEach((advertisedCurrency) => {
-      if (!this.isPeerCurrencySupported(peer, advertisedCurrency)) {
-        peer.disableCurrency(advertisedCurrency);
-      } else {
-        peer.enableCurrency(advertisedCurrency);
-      }
-    });
-  }
-
-  /**
-   * Verifies the advertised trading pairs of a peer. Checks that the peer has advertised
-   * lnd pub keys for both the base and quote currencies for each pair, and optionally attempts a
-   * "sanity swap" for each currency which is a 1 satoshi for 1 satoshi swap of a given currency
-   * that demonstrates that we can both accept and receive payments for this peer.
-   * @param pairIds the list of trading pair ids to verify
-   */
-  private verifyPeerPairs = async (peer: Peer) => {
-    /** An array of inactive trading pair ids that don't involve a disabled currency for this peer. */
-    const pairIdsToVerify = peer.advertisedPairs.filter((pairId) => {
-      if (peer.isPairActive(pairId)) {
-        return false; // don't verify a pair that is already active
-      }
-      const [baseCurrency, quoteCurrency] = pairId.split('/');
-      const peerCurrenciesEnabled = !peer.disabledCurrencies.has(baseCurrency)
-        && !peer.disabledCurrencies.has(quoteCurrency);
-      const ownCurrenciesConnected = this.swaps.swapClientManager.isConnected(baseCurrency)
-        && this.swaps.swapClientManager.isConnected(quoteCurrency);
-      return peerCurrenciesEnabled && ownCurrenciesConnected;
-    });
-
-    // identify the unique currencies we need to verify for specified trading pairs
-    /** A map between currencies we are verifying and whether the currency is swappable. */
-    const currenciesToVerify = new Map<string, boolean>();
-    pairIdsToVerify.forEach((pairId) => {
-      const [baseCurrency, quoteCurrency] = pairId.split('/');
-      if (!peer.isCurrencyActive(baseCurrency)) {
-        currenciesToVerify.set(baseCurrency, true);
-      }
-      if (!peer.isCurrencyActive(quoteCurrency)) {
-        currenciesToVerify.set(quoteCurrency, true);
-      }
-    });
-
-    currenciesToVerify.forEach(async (_, currency) => {
-      const canRoute = await this.swaps.swapClientManager.canRouteToPeer(peer, currency);
-      if (!canRoute) {
-        // don't attempt to verify if we can use a currency if a route to peer is impossible
-        currenciesToVerify.set(currency, false);
-      }
-    });
-
-    if (!this.nosanityswaps) {
-      const sanitySwapPromises: Promise<void>[] = [];
-
-      // Set a time limit for all sanity swaps to complete.
-      const sanitySwapTimeout = setTimeoutPromise(OrderBook.MAX_SANITY_SWAP_TIME, false);
-
-      currenciesToVerify.forEach((swappable, currency) => {
-        if (swappable && this.currencyInstances.has(currency)) {
-          // perform sanity swaps for each of the currencies that we support
-          const sanitySwapPromise = new Promise<void>(async (resolve) => {
-            // success resolves to true if the sanity swap succeeds before the timeout
-            const success = await Promise.race([this.swaps.executeSanitySwap(currency, peer), sanitySwapTimeout]);
-            if (!success) {
-              currenciesToVerify.set(currency, false);
-            }
-            resolve();
-          });
-          sanitySwapPromises.push(sanitySwapPromise);
-        }
-      });
-
-      // wait for all sanity swaps to finish or timeout
-      await Promise.all(sanitySwapPromises);
-    }
-
-    // activate verified currencies
-    currenciesToVerify.forEach((swappable, currency) => {
-      if (swappable) {
-        peer.activateCurrency(currency);
-      }
-    });
-
-    // activate pairs that have both currencies active
-    const activationPromises: Promise<void>[] = [];
-    pairIdsToVerify.forEach((pairId) => {
-      const [baseCurrency, quoteCurrency] = pairId.split('/');
-      if (peer.isCurrencyActive(baseCurrency) && peer.isCurrencyActive(quoteCurrency)) {
-        activationPromises.push(peer.activatePair(pairId));
-      }
-    });
-    await Promise.all(activationPromises);
-  }
-
-  /**
-   * Send local orders to a given peer in an [[OrdersPacket].
-   * @param reqId the request id of a [[GetOrdersPacket]] packet that this method is responding to
-   * @param pairIds a list of trading pair ids, only orders belonging to one of these pairs will be sent
-   */
-  private sendOrders = async (peer: Peer, reqId: string, pairIds: string[]) => {
-    const outgoingOrders: OutgoingOrder[] = [];
-    this.tradingPairs.forEach((tp) => {
-      // send only requested pairIds
-      if (pairIds.includes(tp.pairId)) {
-        const orders = tp.getOrders(ownAddress);
-        orders.buyArray.forEach(order => outgoingOrders.push(OrderBook.createOutgoingOrder(order)));
-        orders.sellArray.forEach(order => outgoingOrders.push(OrderBook.createOutgoingOrder(order)));
-      }
-    });
-    await peer.sendOrders(outgoingOrders, reqId);
-  }
-
   public stampOwnOrder = (order: OwnLimitOrder): OwnOrder => {
     const id = uuidv1();
     // verify localId isn't duplicated. use global id if blank
@@ -918,60 +688,30 @@ class OrderBook extends EventEmitter {
     }
   }
 
-  /**
-   * Handles a request from a peer to create a swap deal. Checks if the order for the requested swap
-   * is available and if a route exists to determine if the request should be accepted or rejected.
-   * Responds to the peer with a swap response packet containing either an accepted quantity or rejection reason.
-   */
-  private handleSwapRequest = async (requestPacket: SwapRequestPacket, peer: Peer) => {
-    assert(requestPacket.body, 'SwapRequestPacket does not contain a body');
-    assert(this.swaps, 'swaps module is disabled');
-    const { rHash, proposedQuantity, orderId, pairId } = requestPacket.body!;
-
-    if (!Swaps.validateSwapRequest(requestPacket.body!)) {
-      // TODO: penalize peer for invalid swap request
-      await peer.sendPacket(new SwapFailedPacket({
-        rHash,
-        failureReason: SwapFailureReason.InvalidSwapRequest,
-      }, requestPacket.header.id));
-      return;
-    }
-
-    const order = this.tryGetOwnOrder(orderId, pairId);
-    if (!order) {
-      await peer.sendPacket(new SwapFailedPacket({
-        rHash,
-        failureReason: SwapFailureReason.OrderNotFound,
-      }, requestPacket.header.id));
-      return;
-    }
-
-    const availableQuantity = order.quantity - order.hold;
-    if (availableQuantity > 0) {
-      /** The quantity of the order that we will accept */
-      const quantity = Math.min(proposedQuantity, availableQuantity);
-
-      this.addOrderHold(order.id, pairId, quantity);
-      await this.repository.addOrderIfNotExists(order);
-
-      // try to accept the deal
-      const orderToAccept = {
-        quantity,
-        localId: order.localId,
-        price: order.price,
-        isBuy: order.isBuy,
-      };
-      const dealAccepted = await this.swaps.acceptDeal(orderToAccept, requestPacket, peer);
-      if (!dealAccepted) {
-        this.removeOrderHold(order.id, pairId, quantity);
-      }
-    } else {
-      await peer.sendPacket(new SwapFailedPacket({
-        rHash,
-        failureReason: SwapFailureReason.OrderOnHold,
-      }, requestPacket.header.id));
-    }
-  }
+  
 }
 
 export default OrderBook;
+
+
+
+
+//ALLA OLEVA KYLLÄ ULKOISTETAAN SILLE JOKA SOITTAA TOHON NYKYÄÄN. EI OO ORDERBOOKIN TOIMIALAA PACKETIN LÄHETYS!!!!
+
+  /**
+   * Send local orders to a given peer in an [[OrdersPacket].
+   * @param reqId the request id of a [[GetOrdersPacket]] packet that this method is responding to
+   * @param pairIds a list of trading pair ids, only orders belonging to one of these pairs will be sent
+   */
+  private sendOrders = async (peer: Peer, reqId: string, pairIds: string[]) => {
+    const outgoingOrders: OutgoingOrder[] = [];
+    this.tradingPairs.forEach((tp) => {
+      // send only requested pairIds
+      if (pairIds.includes(tp.pairId)) {
+        const orders = tp.getOrders(ownAddress);
+        orders.buyArray.forEach(order => outgoingOrders.push(OrderBook.createOutgoingOrder(order)));
+        orders.sellArray.forEach(order => outgoingOrders.push(OrderBook.createOutgoingOrder(order)));
+      }
+    });
+    await peer.sendOrders(outgoingOrders, reqId);
+  }
