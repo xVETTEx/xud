@@ -394,12 +394,11 @@ class OrderBook extends EventEmitter {
      */
     const handleMatch = async (maker: Order, taker: OwnOrder) => {
       const portion: OrderPortion = { id: maker.id, pairId: maker.pairId, quantity: maker.quantity };
-      if (isOwnOrder(maker)) {
+      if (isOwnOrder(maker)) { //ei pitäis operaatiossa olla eroa riippuen onko oma vai peer order matchatty.
         // this is an internal match which is effectively executed immediately upon being found
         this.logger.info(`internal match executed on taker ${taker.id} and maker ${maker.id} for ${maker.quantity}`);
-        portion.localId = maker.localId;
         internalMatches.push(maker);
-        this.emit('ownOrder.filled', portion);
+        this.emit('ownOrder.filled', portion); //vaan orderfilled eventti pitäis emittaa? Kato kans et kuka näitä kuuntelee.
         await this.persistTrade(portion.quantity, maker, taker);
         onUpdate && onUpdate({ type: PlaceOrderEventType.InternalMatch, payload: maker });
       } else {
@@ -435,7 +434,7 @@ class OrderBook extends EventEmitter {
               peerPubKey: maker.peerPubKey,
             };
             swapFailures.push(swapFailure);
-            onUpdate && onUpdate({ type: PlaceOrderEventType.SwapFailure, payload: swapFailure });
+            onUpdate && onUpdate({ type: PlaceOrderEventType.SwapFailure, payload: swapFailure }); //mitä tää tekee?
             await retryFailedSwap(portion.quantity);
           } else {
             // treat this as a critical error and abort matching, we only expect SwapFailureReasons to be thrown in the try block above
