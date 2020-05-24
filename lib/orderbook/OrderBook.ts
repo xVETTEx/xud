@@ -63,16 +63,8 @@ interface OrderBook {
 class OrderBook extends EventEmitter {
   /** A map between active trading pair ids and trading pair instances. */
   public tradingPairs = new Map<string, TradingPair>();
-  public nomatching: boolean;
   public ownAddress: string;
 
-  /** A map between own orders local id and their global id. */
-  private localIdMap = new Map<string, OrderIdentifier>();
-
-  /** A map of supported currency tickers to currency instances. */
-  private currencyInstances = new Map<string, CurrencyInstance>();
-  /** A map of supported trading pair tickers and pair database instances. */
-  private pairInstances = new Map<string, PairInstance>();
   private repository: OrderBookRepository;
   private thresholds: OrderBookThresholds;
   private logger: Logger;
@@ -87,14 +79,7 @@ class OrderBook extends EventEmitter {
   /** Max time for sanity swaps to succeed. */
   private static readonly MAX_SANITY_SWAP_TIME = 15000;
 
-  /** Gets an array of supported pair ids. */
-  public get pairIds() {
-    return Array.from(this.pairInstances.keys());
-  }
 
-  public get currencies() {
-    return this.currencyInstances;
-  }
 
   constructor({ logger, models, thresholds, pool, swaps, nosanityswaps, nobalancechecks, nomatching = false, maxlimits = false }:
   {
@@ -113,7 +98,6 @@ class OrderBook extends EventEmitter {
     this.logger = logger;
     this.pool = pool;
     this.swaps = swaps;
-    this.nomatching = nomatching;
     this.nosanityswaps = nosanityswaps;
     this.nobalancechecks = nobalancechecks;
     this.maxlimits = maxlimits;
@@ -133,26 +117,6 @@ class OrderBook extends EventEmitter {
   private checkThresholdCompliance = (order: OwnOrder | IncomingOrder) => {
     const { minQuantity } = this.thresholds;
     return order.quantity >= minQuantity;
-  }
-
-  /**
-   * Checks that a currency advertised by a peer is known to us, has a swap client identifier,
-   * and that their token identifier matches ours.
-   */
-  private isPeerCurrencySupported = (peer: Peer, currency: string) => {
-    const currencyAttributes = this.getCurrencyAttributes(currency);
-    if (!currencyAttributes) {
-      return false; // we don't know about this currency
-    }
-
-    if (!peer.getIdentifier(currencyAttributes.swapClient, currency)) {
-      return false; // peer did not provide a swap client identifier for this currency
-    }
-
-    // ensure that our token identifiers match
-    const ourTokenIdentifier = this.pool.getTokenIdentifier(currency);
-    const peerTokenIdentifier = peer.getTokenIdentifier(currency);
-    return ourTokenIdentifier === peerTokenIdentifier;
   }
 
   private bindPool = () => {
