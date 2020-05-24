@@ -98,21 +98,16 @@ class TradingPair {
    * already exists an order with the same order id
    */
   public addOrder = (order: Order): boolean => {
-    //pitäis varmaan tehä niin ettei mapseja tarvii kertoa, vaan tää löytää ne, joku funktio sille?
-    //verifyMapExists vois myös palauttaa mapin?
     map = getOrderMaps(order.peerPubKey)
     const map = order.isBuy ? maps.buyMap : maps.sellMap;
     if (map.has(order.id)) {
       return false;
     }
-
     map.set(order.id, order);
     this.logger.debug(`order added: ${JSON.stringify(order)}`);
-
-    if (!this.nomatching) {
-      const queue = order.isBuy ? this.queues!.buyQueue : this.queues!.sellQueue;
-      queue.add(order);
-    }
+    const queue = order.isBuy ? this.queues!.buyQueue : this.queues!.sellQueue;
+    queue.add(order);
+    
 
     return true;
   }
@@ -129,13 +124,13 @@ class TradingPair {
     if (!orders) return [];
 
     if (!this.nomatching) {
-      const callback = (order: Order) => (order as PeerOrder).pubKey === pubKey;
+      const callback = (order: Order) => (order as PeerOrder).pubKey === pubKey; //eli mitä tää tekee?
       this.queues!.buyQueue.removeMany(callback);
       this.queues!.sellQueue.removeMany(callback);
     }
 
     this.peersOrders.delete(pubKey);
-    return [...orders.buyMap.values(), ...orders.sellMap.values()];
+    return [...orders.buyMap.values(), ...orders.sellMap.values()]; //miks tommosia palautetaan? Kuka niitä tarvii?
   }
  
 
@@ -164,15 +159,13 @@ class TradingPair {
     } else {
       // otherwise, remove the order entirely
       if (isOwnOrder(order)) {
-        assert(order.hold === 0, 'cannot remove an order with a hold');
+        assert(order.hold === 0, 'cannot remove an order with a hold'); //siis eikö sillon vaan pitäis oottaa et hold loppuu?
       }
       const map = order.isBuy ? maps.buyMap : maps.sellMap;
-      map.delete(order.id);
-
-      if (!this.nomatching) {
-        const queue = order.isBuy ? this.queues!.buyQueue : this.queues!.sellQueue;
-        queue.remove(order);
-      }
+      map.delete(order.id); //täs poistetaan mapista
+      const queue = order.isBuy ? this.queues!.buyQueue : this.queues!.sellQueue; 
+      queue.remove(order); //eli täs poistetaan queuesta
+      
 
       this.logger.debug(`order removed: ${orderId}`);
       return { order: order as T, fullyRemoved: true };
@@ -245,13 +238,11 @@ class TradingPair {
    * @returns a [[MatchingResult]] with the matches as well as the remaining, unmatched portion of the order
    */
   public match = (takerOrder: OwnOrder): MatchingResult => {
-    assert(!this.nomatching);
-
-    const matches: OrderMatch[] = [];
+    const matches: OrderMatch[] = []; //eli tässä pidetään matcheista kirjaa.
     /** The unmatched remaining taker order, if there is still leftover quantity after matching is complete it will enter the queue. */
     let remainingOrder: OwnOrder | undefined = { ...takerOrder };
 
-    const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue;
+    const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue; //tässä queue jossa order on.
     const queueRemovedOrdersWithHold: OwnOrder[] = [];
     const getMatchingQuantity = (remainingOrder: OwnOrder, oppositeOrder: Order) => takerOrder.isBuy
       ? TradingPair.getMatchingQuantity(remainingOrder, oppositeOrder)
@@ -260,7 +251,7 @@ class TradingPair {
     // as long as we have remaining quantity to match and orders to match against, keep checking for matches
     while (remainingOrder && !queue.isEmpty()) {
       // get the best available maker order from the top of the queue
-      const makerOrder = queue.peek()!;
+      const makerOrder = queue.peek()!; //queuesta parhaan orderin palauttaa, eli maker orderin.
       const makerAvailableQuantityOrder = isOwnOrder(makerOrder)
         ? { ...makerOrder, quantity: makerOrder.quantity - makerOrder.hold, hold: 0 }
         : makerOrder;
@@ -298,8 +289,8 @@ class TradingPair {
         if (makerFullyMatched) {
           // maker order is fully matched, so remove it from the queue and map
           assert(queue.poll() === makerOrder);
-          const map = this.getOrderMap(makerOrder)!;
-          map.delete(makerOrder.id);
+          const map = this.getOrderMap(makerOrder)!; //haetaan map makerille jotta voidaanp oistaa se.
+          map.delete(makerOrder.id); //poistetaan mapista, mutta siis maker, jos se on matchatty tän takerin kaa. Eikö pitäis poistaa myös queuesta?
           this.logger.debug(`removed order ${makerOrder.id} while matching order ${takerOrder.id}`);
         } else if (makerAvailableQuantityFullyMatched) {
           // only an own order can be fully matched for available quantity, but not fully matched in the overall
