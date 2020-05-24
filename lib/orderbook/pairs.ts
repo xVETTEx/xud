@@ -1,4 +1,19 @@
 class Pairs {
+  /** A map of supported currency tickers to currency instances. */
+  private currencyInstances = new Map<string, CurrencyInstance>();
+  /** A map of supported trading pair tickers and pair database instances. */
+  private pairInstances = new Map<string, PairInstance>();
+  
+    /** Gets an array of supported pair ids. */
+  public get pairIds() {
+    return Array.from(this.pairInstances.keys());
+  }
+
+  public get currencies() {
+    return this.currencyInstances;
+  }
+  
+  
   private removePeerPair = (peerPubKey: string, pairId: string) => {
     const tp = this.getTradingPair(pairId);
     const orders = tp.removeOrdersByPubkey(peerPubKey);
@@ -168,5 +183,25 @@ class Pairs {
 
     this.pool.updatePairs(this.pairIds);
     return pair.destroy();
+  }
+  
+    /**
+   * Checks that a currency advertised by a peer is known to us, has a swap client identifier,
+   * and that their token identifier matches ours.
+   */
+  private isPeerCurrencySupported = (peer: Peer, currency: string) => {
+    const currencyAttributes = this.getCurrencyAttributes(currency);
+    if (!currencyAttributes) {
+      return false; // we don't know about this currency
+    }
+
+    if (!peer.getIdentifier(currencyAttributes.swapClient, currency)) {
+      return false; // peer did not provide a swap client identifier for this currency
+    }
+
+    // ensure that our token identifiers match
+    const ourTokenIdentifier = this.pool.getTokenIdentifier(currency);
+    const peerTokenIdentifier = peer.getTokenIdentifier(currency);
+    return ourTokenIdentifier === peerTokenIdentifier;
   }
 }
