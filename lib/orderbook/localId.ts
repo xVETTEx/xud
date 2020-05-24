@@ -1,5 +1,6 @@
 class localId {
-  private idMaps: new Map<string, string>
+  /** A map between own orders local id and their global id. */
+  private localIdMap = new Map<string, OrderIdentifier>();
   private orderbook: Orderbook;
   private ownAddress: OwnAddress;
   
