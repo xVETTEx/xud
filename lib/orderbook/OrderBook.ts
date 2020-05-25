@@ -280,7 +280,7 @@ class OrderBook extends EventEmitter {
     const inboundSwapClient = this.swaps.swapClientManager.get(inboundCurrency);
 
     if (!this.nobalancechecks) {
-      // check if clients exists
+      // check if clients exists. EI OO VITTU ORDERBOOKIN TEHTÄVÄ KATTOO ET JOS JOKU CLEINT EXISTS. EHKÄ SWAP FOLDERIIN PITÄÄ SIIRTÄÄ SAATANA!
       if (!outboundSwapClient) {
         throw swapsErrors.SWAP_CLIENT_NOT_FOUND(outboundCurrency);
       }
@@ -299,7 +299,7 @@ class OrderBook extends EventEmitter {
     let outboundCurrencyLimit: number;
     let inboundCurrencyLimit: number;
 
-    if (this.pool.getNetwork() === XuNetwork.MainNet && !this.maxlimits) {
+    if (this.pool.getNetwork() === XuNetwork.MainNet && !this.maxlimits) { //ei kyl pitäis soittaa XuNetwork moduulille. Kuinka poistaa se?
       // if we're on mainnet and we haven't specified that we're using maximum limits
       // then use the hardcoded mainnet order size limits
       outboundCurrencyLimit = limits[outboundCurrency];
@@ -334,7 +334,8 @@ class OrderBook extends EventEmitter {
      * The routine for retrying a portion of the order that failed a swap attempt.
      * @param failedSwapQuantity the quantity of the failed portion to retry
      */
-    const retryFailedSwap = async (failedSwapQuantity: number) => {
+    //MIKÄ VITTU TÄMÄ ON? EI KUKAAN EDES SOITA TÄNNE?
+    const retryFailedSwap = async (failedSwapQuantity: number) => { 
       this.logger.debug(`repeating matching routine for ${order.id} for failed quantity of ${failedSwapQuantity}`);
       const orderToRetry: OwnOrder = { ...order, quantity: failedSwapQuantity };
 
