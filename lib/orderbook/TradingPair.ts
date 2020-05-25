@@ -66,18 +66,6 @@ class TradingPair {
   }
 
   /**
-   * Gets the quantity that can be matched between two orders.
-   * @returns the smaller of the quantity between the two orders if their price matches, 0 otherwise
-   */
-  private static getMatchingQuantity = (buyOrder: Order, sellOrder: Order): number => {
-    if (buyOrder.price >= sellOrder.price) {
-      return Math.min(buyOrder.quantity, sellOrder.quantity);
-    } else {
-      return 0;
-    }
-  }
-
-  /**
    * Splits an order by quantity into a matched portion and subtracts the matched quantity from the original order.
    * @param order the order that is being split
    * @param matchingQuantity the quantity for the split order and to subtract from the original order
@@ -232,6 +220,30 @@ class TradingPair {
     order.hold -= holdAmount;
     this.logger.debug(`removed hold of ${holdAmount} on order ${orderId}`);
   }
+  
+    /**
+   * Gets the quantity that can be matched between two orders.
+   * @returns the smaller of the quantity between the two orders if their price matches, 0 otherwise
+   */
+  
+  function getMatchingQuantity = async(taker: order, maker: order) => {
+	  if taker.side == 'buy'{
+		  if taker.price < maker.price {
+			  Math.min(maker.quantity, taker.quantity)
+		  }
+		  else {
+			  return 0;
+		  }
+	  }
+	  if taker.side == 'sell'{
+		  if maker.price < taker.price {
+			  Math.min(maker.quantity, taker.quantity)
+		  }
+		  else {
+			  return 0;
+		  }
+	  }
+  }
 
   /**
    * Matches an order against its opposite queue. Matched maker orders are removed immediately.
@@ -244,12 +256,10 @@ class TradingPair {
 
     const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue; //tässä queue jossa order on.
     const queueRemovedOrdersWithHold: OwnOrder[] = [];
-    const getMatchingQuantity = (remainingOrder: OwnOrder, oppositeOrder: Order) => takerOrder.isBuy
-      ? TradingPair.getMatchingQuantity(remainingOrder, oppositeOrder)
-      : TradingPair.getMatchingQuantity(oppositeOrder, remainingOrder);
 
     // as long as we have remaining quantity to match and orders to match against, keep checking for matches
-    while (remainingOrder && !queue.isEmpty()) {
+    while (remainingOrder && !queue.isEmpty()) { //eikö vois lopettaa sillon ku ei enää tuu matchia? Siis jos limit orderi. Ku
+      //hinta vaa huononee pidemmälle mentäessä ni turha nitä edes testata...
       // get the best available maker order from the top of the queue
       const makerOrder = queue.peek()!; //queuesta parhaan orderin palauttaa, eli maker orderin.
       const makerAvailableQuantityOrder = isOwnOrder(makerOrder)
@@ -262,19 +272,19 @@ class TradingPair {
         break;
       } else {
         /** Whether the maker order is fully matched and should be removed from the queue. */
-        const makerFullyMatched = makerOrder.quantity === matchingQuantity;
-        const makerAvailableQuantityFullyMatched = makerAvailableQuantityOrder.quantity === matchingQuantity;
-        const remainingFullyMatched = remainingOrder.quantity === matchingQuantity;
+        const makerFullyMatched = makerOrder.quantity === matchingQuantity; //eli mitä tää meinaa? Boolean?
+        const makerAvailableQuantityFullyMatched = makerAvailableQuantityOrder.quantity === matchingQuantity; //meinaa mitä? Boolean?
+        const remainingFullyMatched = remainingOrder.quantity === matchingQuantity; //meinaa mitä? Boolean?
 
-        if (makerFullyMatched && remainingFullyMatched) {
+        if (makerFullyMatched && remainingFullyMatched) { //vois vaihtoehtoisesti laittaa: makerOrder.quantity == remainingOrder.quantity.
           // maker & taker order quantities equal and fully matching
-          matches.push({ maker: makerOrder, taker: remainingOrder });
-        } else if (remainingFullyMatched) {
+          matches.push({ maker: makerOrder, taker: remainingOrder }); //matches arrayihin kirjottaa tän matchin.
+        } else if (remainingFullyMatched) { //vaihtoehtoisesti: remainingOrder.quantity === matchingQuantity
           // taker order quantity is not sufficient. maker order will split
           const matchedMakerOrder = TradingPair.splitOrderByQuantity(makerOrder, matchingQuantity);
           this.logger.debug(`reduced order ${makerOrder.id} by ${matchingQuantity} quantity while matching order ${takerOrder.id}`);
           matches.push({ maker: matchedMakerOrder, taker: remainingOrder });
-        } else if (makerAvailableQuantityFullyMatched) {
+        } else if (makerAvailableQuantityFullyMatched) { //vaihtoehtoisesti: makerAvailableQuantityOrder.quantity === matchingQuantity
           // maker order quantity is not sufficient. taker order will split
           const matchedTakerOrder = TradingPair.splitOrderByQuantity(remainingOrder, matchingQuantity);
           matches.push({ maker: makerAvailableQuantityOrder, taker: matchedTakerOrder });
@@ -286,7 +296,7 @@ class TradingPair {
           remainingOrder = undefined;
         }
 
-        if (makerFullyMatched) {
+        if (makerFullyMatched) { //MIKS EI VAAN SOITETA REMOVEORDER FUNKTIOLLE???
           // maker order is fully matched, so remove it from the queue and map
           assert(queue.poll() === makerOrder);
           const map = this.getOrderMap(makerOrder)!; //haetaan map makerille jotta voidaanp oistaa se.
@@ -296,15 +306,15 @@ class TradingPair {
           // only an own order can be fully matched for available quantity, but not fully matched in the overall
           assert(isOwnOrder(makerOrder));
 
-          assert(queue.poll() === makerOrder);
-          queueRemovedOrdersWithHold.push(makerOrder as OwnOrder);
+          assert(queue.poll() === makerOrder); //wtf is that
+          queueRemovedOrdersWithHold.push(makerOrder as OwnOrder); //wtf is that
         }
       }
     }
 
     // return the removed orders with hold to the queue.
     // their hold quantity might be released later
-    queueRemovedOrdersWithHold.forEach(order => queue.add(order));
+    queueRemovedOrdersWithHold.forEach(order => queue.add(order)); //wtf is that?
 
     return { matches, remainingOrder };
   }
