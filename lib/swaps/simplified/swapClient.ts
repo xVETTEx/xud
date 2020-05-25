@@ -24,6 +24,9 @@ class swapClient {
   
   public openChannel = async(){
   }
+
+  public closeChannel = async(){
+  }
   
   public walletBalance = async(){
   }
