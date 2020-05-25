@@ -34,38 +34,23 @@ export enum PlaceOrderEventType {
   SwapFailure,
 }
 
-/** An order without a price that is intended to match against any available orders on the opposite side of the book for its trading pair. */
-type MarketOrder = {
+type Order = {
   /** The number of currently satoshis (or equivalent) for the order. */
   quantity: number;
   /** A trading pair symbol with the base currency first followed by a '/' separator and the quote currency */
   pairId: string;
   /** Whether the order is a buy (if `true`) or a sell (if `false`). */
   isBuy: boolean;
-};
-
-/** A limit order with a specified price that will enter the order book if it is not immediately matched. */
-type LimitOrder = MarketOrder & {
   /** The price for the order expressed in units of the quote currency. */
   price: number;
+  /** The nodePubKey of the node which created this order. */
+  pubKey: string;
 };
 
 /** Properties that can be used to uniquely identify and fetch an order within an order book. */
-export type OrderIdentifier = Pick<MarketOrder, 'pairId'> & {
+export type OrderIdentifier = Pick<Order, 'pairId'> & {
   /** The global identifier for this order on the XU network. */
   id: string;
-};
-
-/** Properties that apply only to orders placed by the local xud. */
-type Local = {
-  /** A local identifier for the order. */
-  localId: string;
-};
-
-/** Properties that apply only to orders placed by remote peers. */
-type Remote = {
-  /** The nodePubKey of the node which created this order. */
-  peerPubKey: string;
 };
 
 /** Properties that uniquely identify an order and make it ready to enter the order book. */
@@ -76,18 +61,14 @@ type Stamp = OrderIdentifier & {
   initialQuantity: number;
 };
 
-export type OwnMarketOrder = MarketOrder & Local;
-
-export type OwnLimitOrder = LimitOrder & Local;
-
 /** A local order that may enter the order book. */
-export type OwnOrder = OwnLimitOrder & Stamp & {
+export type OwnOrder = Order & Stamp & {
   /** The amount of an order that is on hold pending swap execution. */
   hold: number;
 };
 
 /** A peer order that may enter the order book. */
-export type PeerOrder = LimitOrder & Stamp & Remote;
+export type PeerOrder = Order & Stamp & Remote;
 
 export type Order = OwnOrder | PeerOrder;
 
