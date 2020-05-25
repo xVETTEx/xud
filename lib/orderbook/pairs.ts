@@ -204,4 +204,17 @@ class Pairs {
     const peerTokenIdentifier = peer.getTokenIdentifier(currency);
     return ourTokenIdentifier === peerTokenIdentifier;
   }
+  
+   /** Loads the supported pairs and currencies from the database. */
+  public init = async () => {
+    const [pairs, currencies] = await Promise.all([this.repository.getPairs(), this.repository.getCurrencies()]);
+
+    currencies.forEach(currency => this.currencyInstances.set(currency.id, currency));
+    pairs.forEach((pair) => {
+      this.pairInstances.set(pair.id, pair);
+      this.tradingPairs.set(pair.id, new TradingPair(this.logger, pair.id, this.nomatching));
+    });
+
+    this.pool.updatePairs(this.pairIds);
+  }
 }
