@@ -434,20 +434,6 @@ class OrderBook extends EventEmitter {
     }
   }
 
-  /**
-   * Adds an own order to the order book and broadcasts it to peers.
-   * @returns false if it's a duplicated order or with an invalid pair id, otherwise true
-   */
-  private addOwnOrder = (order: OwnOrder): boolean => {
-    const tp = this.getTradingPair(order.pairId);
-    const result = tp.addOrder(order, this.ownAddress);
-    assert(result, 'own order id is duplicated');
-
-    
-    
-    return true;
-  }
-
   private persistTrade = async (quantity: number, makerOrder: Order, takerOrder?: OwnOrder, rHash?: string) => {
     const addOrderPromises = [this.repository.addOrderIfNotExists(makerOrder)];
     if (takerOrder) {
@@ -468,12 +454,10 @@ class OrderBook extends EventEmitter {
    * @returns `false` if it's a duplicated order or with an invalid pair id, otherwise true
    */
   private addOrder = (order: IncomingOrder): boolean => {
-    if (this.thresholds.minQuantity > 0) { //mitä vittua tuo meinaa?
-      if (!this.checkThresholdCompliance(order)) { //mitä vittua tuo meinaa?
-        this.removePeerOrder(order.id, order.pairId, order.peerPubKey, order.quantity);
-        this.logger.debug('incoming peer order does not comply with configured threshold');
-        return false;
-      }
+    if (!this.checkThresholdCompliance(order)) { //kattoo ettei oo liian pieni määrä.
+      this.removePeerOrder(order.id, order.pairId, order.peerPubKey, order.quantity);
+      this.logger.debug('incoming peer order does not comply with configured threshold');
+      return false;
     }
 
     const tp = this.tradingPairs.get(order.pairId);
@@ -570,7 +554,7 @@ class OrderBook extends EventEmitter {
     const tp = this.getTradingPair(pairId);
     try {
       const removeResult = tp.removeOrder(this.own_address, orderId, quantityToRemove);
-      this.emit('ownOrder.removed', removeResult.order);
+      this.emit('order.invalidation', removeResult.order); //kuka kuuntelee? Eikö voi olla Ownorder.removed oli aiempi nimi.
       if (removeResult.fullyRemoved) {
         
       }
@@ -621,7 +605,7 @@ class OrderBook extends EventEmitter {
   private handleOrderInvalidation = (oi: OrderPortion, peerPubKey: string) => {
     try {
       const removeResult = this.removePeerOrder(oi.id, oi.pairId, peerPubKey, oi.quantity);
-      this.emit('peerOrder.invalidation', removeResult.order);
+      this.emit('peerOrder.invalidation', removeResult.order); //kuka kuuntelee? Voiko tähän yhdistää omat orderitki?
     } catch {
       this.logger.error(`failed to remove order (${oi.id}) of peer ${peerPubKey} (${getAlias(peerPubKey)})`);
       // TODO: Penalize peer
