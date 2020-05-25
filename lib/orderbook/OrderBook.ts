@@ -1,5 +1,4 @@
 import assert from 'assert';
-import uuidv1 from 'uuid/v1';
 import { EventEmitter } from 'events';
 import OrderBookRepository from './OrderBookRepository';
 import TradingPair from './TradingPair';
@@ -64,12 +63,9 @@ class OrderBook extends EventEmitter {
   /** A map between active trading pair ids and trading pair instances. */
   public tradingPairs = new Map<string, TradingPair>();
   public ownAddress: string;
-
   private repository: OrderBookRepository;
   private thresholds: OrderBookThresholds;
   private logger: Logger;
-  private nosanityswaps: boolean;
-  private nobalancechecks: boolean;
   private maxlimits: boolean;
   private pool: Pool;
   private swaps: Swaps; 
@@ -81,16 +77,13 @@ class OrderBook extends EventEmitter {
 
 
 
-  constructor({ logger, models, thresholds, pool, swaps, nosanityswaps, nobalancechecks, nomatching = false, maxlimits = false }:
+  constructor({ logger, models, thresholds, pool, swaps, maxlimits = false }:
   {
     logger: Logger,
     models: Models,
     thresholds: OrderBookThresholds,
     pool: Pool,
     swaps: Swaps,
-    nosanityswaps: boolean,
-    nobalancechecks: boolean,
-    nomatching?: boolean,
     maxlimits?: boolean,
   }) {
     super();
@@ -98,13 +91,9 @@ class OrderBook extends EventEmitter {
     this.logger = logger;
     this.pool = pool;
     this.swaps = swaps;
-    this.nosanityswaps = nosanityswaps;
-    this.nobalancechecks = nobalancechecks;
     this.maxlimits = maxlimits;
     this.thresholds = thresholds;
-
     this.repository = new OrderBookRepository(models);
-
     this.bindPool();
     this.bindSwaps();
   }
@@ -150,19 +139,6 @@ class OrderBook extends EventEmitter {
         this.removeOrderHold(deal.orderId, deal.pairId, deal.quantity!);
       }
     });
-  }
-
-  /** Loads the supported pairs and currencies from the database. */
-  public init = async () => {
-    const [pairs, currencies] = await Promise.all([this.repository.getPairs(), this.repository.getCurrencies()]);
-
-    currencies.forEach(currency => this.currencyInstances.set(currency.id, currency));
-    pairs.forEach((pair) => {
-      this.pairInstances.set(pair.id, pair);
-      this.tradingPairs.set(pair.id, new TradingPair(this.logger, pair.id, this.nomatching));
-    });
-
-    this.pool.updatePairs(this.pairIds);
   }
 
   
