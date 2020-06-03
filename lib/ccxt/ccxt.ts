@@ -27,7 +27,17 @@ type amount {
     max: int,
 }
 
-function fillMarket(symbol){
+function fillMarket(pair){
+    response = market(
+        id =,
+        symbol = getSymbol(pair),
+        base = getBase(pair),
+        quote = getQuote(pair),
+        baseId =,
+        quoteId =,
+        active =,
+        presision =,
+        limits =,
     'id':     ' btcusd',  // string literal for referencing within an exchange
     'symbol':  'BTC/USD', // uppercase string literal of a pair of currencies
     'base':    'BTC',     // uppercase string, unified base currency code, 3 or more letters
@@ -73,8 +83,8 @@ type currency_limita {
 function fillCurrency(currency){
     response = currency(
         id = ,
-        code = ,
-        name = ,
+        code = getCode(currency),
+        name = getName(currency),
         active = ,
         fee = ,
         precision = ,
