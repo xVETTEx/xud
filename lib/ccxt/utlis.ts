@@ -28,6 +28,10 @@ function getCode(currency: string){
   return currency.toUpperCase()
 }
 
+function getName(currency: string){
+  //niinku BTC pitäis muuttaa muotoon Bitcoin
+}
+
 function getTrades(pair: string, timeframe: string){
   //tietylle aikavälille hakee kaikki tämän symbolin treidit. Palauttaa arrayn niistä, jossa aika järjestyksessä.
   trades = await this.models.Trade.findAll({ where: { //tarviiko awaittia?
