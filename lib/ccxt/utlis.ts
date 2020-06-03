@@ -45,10 +45,10 @@ function getOpen(pair: string, timeframe: string){
   return trades.shift(); //mut pitäis viel vaan hinta palauttaa.
 }
 
-function getHighest(pair: string, timeframe: string){
+function getHigh(pair: string, timeframe: string){ //timeframe sekunteina
 }
 
-function getLowest(pair: string, timeframe: string){
+function getLow(pair: string, timeframe: string){ //timeframe sekunteina
 }
 
 function getClose(pair: string, timeframe: string)}
