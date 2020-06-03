@@ -1,4 +1,30 @@
 type market {
+    id: string,
+    symbol: string,
+    base: string,
+    quote: string,
+    baseId: string,
+    quoteId: string,
+    active: boolean,
+    precision: presicion,
+    limits: limits,
+}
+
+type precision {
+    price: float,
+    amount: int,
+    cost: int,
+}
+
+type limits {
+    amount: amount,
+    price: int,
+    cost: int,
+}
+
+type amount {
+    min: int,
+    max: int,
 }
 
 function fillMarket(symbol){
