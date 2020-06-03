@@ -23,15 +23,51 @@ function fillFetchL2Orderbook(){
 }
     
 type ticker {
-    symbol string;
-    info string;
-    timestamp string;
-    datetime int;
-    high float;
-    
+    symbol: string;
+    info: string;
+    timestamp: string;
+    datetime: int;
+    high: float;
+    low: float;
+    bid: float,
+    bidVolume: float,
+    ask: float,
+    askVolume: float,
+    vwap: float,
+    open: float,
+    close: float,
+    last: float,
+    previousClose: float,
+    change: float,
+    percentage: float,
+    average: float,
+    baseVolume: float,
+    quoteVolume: float,
 }
 
-function fillTicker(symbol){
+function fillTicker(pair){
+    response = ticker(
+        symbol = getSymbol(pair),
+        info =,
+        timestamp = getTimeStamp(),
+        datetime = getDatetime(),
+        high = getHigh(pair, ) //tohon varmaa sekunteina 24h?
+        low = getLow(pair, )
+        bid = getBid(pair)
+        bidVolume = getBidVolume(pair)
+        ask = getAsk(pair),
+        askVolume = getAskVolume(pair),
+        vwap = getvwap(pair),
+        open = getOpen(pair),
+        close = getClose(pair),
+        last =,
+        previousClose =,
+        cahnge =,
+        percentage =,
+        average =,
+        basevolume =,
+        quoteVolume =,
+    )
     //Tuotetaan 24h ticker. Tätä ei välttis oo järkevää tuottaa ku ei ainakaa saa high tai low mitenkään. Eikä open. Volumet ois kyl mahist saada, joten ehkä tää on ihan järkevä.
     symbol: getSymbol(symbol);  
     'info':        { the original non-modified unparsed reply from exchange API },
