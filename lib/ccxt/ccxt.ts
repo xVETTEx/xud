@@ -52,9 +52,34 @@ function fillMarket(symbol){
 }
 
 type currency {
+    id: stirng,
+    code: string,
+    name: string,
+    active: boolean,
+    fee: float,
+    precision: int,
+    limits: cyrrency_limits,
+    
 }
 
+type currency_limita {
+    amount: amoun,
+    price: int,
+    cost: int,
+    withdraw: int,
+}
+
+
 function fillCurrency(currency){
+    response = currency(
+        id = ,
+        code = ,
+        name = ,
+        active = ,
+        fee = ,
+        precision = ,
+        lmiits = ,
+        
     'id':       'btc',     // saadaan db:stä currency modelista
     'code':     'BTC',     // id vaa muutetaan uppercaseksi
     'name':     'Bitcoin', // tämmöstä tuskin xudista saa?
