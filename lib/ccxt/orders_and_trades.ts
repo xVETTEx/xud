@@ -92,19 +92,4 @@ class orders {
   function fillFetchTrades(){
     //julkiset treidit. Mitä juttuja niistä tarkalleen?
   }
-
-class localIds {
-  private localIds = new Map<string, string>
-    
-  public addOrder(localId: string){
-    //lisätään listaan tällä keyllä
-  }
-
-  public getOrder(localId: string){
-    return //mapista tätä keytä vastaava arvo
-  }
-
-  public removeOrder(localId: string){
-    //poistetaan mapista tällä keyllä oleva pairi
-  }
 }
