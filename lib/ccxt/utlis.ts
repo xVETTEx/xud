@@ -14,12 +14,12 @@ function getSymbol(pair: string){
   return pair.toUpperCase();
 }
 
-function getBase(pair: string){
+function getBase(pair: string){ //pitäiskö palauttaa uppercase vai lowercase?
   //pitää jotenki löytää / merkki, ja sit poistetaan / ja siitä aiemmat, ni jää base.
   return pair.split("/").pop());
 }
 
-function getQuote(pair: string){
+function getQuote(pair: string){ //pitäiskö palauttaa uppercase vai lowercase?
   //pitää jotenki löytää / merkki ja sit poistetaan se ja sen jälkeiset ni jää quote.
   return pair.split("/").shift
 }
