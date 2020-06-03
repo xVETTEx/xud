@@ -16,12 +16,16 @@ function getSymbol(pair: string){
 
 function getBase(pair: string){
   //pitää jotenki löytää / merkki, ja sit poistetaan / ja siitä aiemmat, ni jää base.
-  pair.split("/").pop());
+  return pair.split("/").pop());
 }
 
 function getQuote(pair: string){
   //pitää jotenki löytää / merkki ja sit poistetaan se ja sen jälkeiset ni jää quote.
-  pair.split("/").shift
+  return pair.split("/").shift
+}
+
+function getCode(currency: string){
+  return currency.toUpperCase()
 }
 
 function getTrades(pair: string, timeframe: string){
