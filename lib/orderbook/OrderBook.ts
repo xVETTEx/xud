@@ -590,18 +590,6 @@ class OrderBook extends EventEmitter {
     this.logger.debug(`removed all orders for peer ${peerPubKey} (${getAlias(peerPubKey)})`);
   }
 
-  public stampOwnOrder = (order: OwnLimitOrder): OwnOrder => {
-    const id = uuidv1();
-    // verify localId isn't duplicated. use global id if blank
-    if (order.localId === '') {
-      order.localId = id;
-    } else if (this.localIdMap.has(order.localId)) {
-      throw errors.DUPLICATE_ORDER(order.localId);
-    }
-
-    return { ...order, id, initialQuantity: order.quantity, hold: 0, createdAt: ms() };
-  }
-
   private handleOrderInvalidation = (oi: OrderPortion, peerPubKey: string) => {
     try {
       const removeResult = this.removePeerOrder(oi.id, oi.pairId, peerPubKey, oi.quantity);
