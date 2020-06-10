@@ -36,4 +36,16 @@ class localId {
     this.localIdMap.delete(removeResult.order.localId);
     this.pool.broadcastOrderInvalidation(removeResult.order, takerPubKey);
   }
+  
+  public stampOwnOrder = (order: OwnLimitOrder): OwnOrder => {
+    const id = uuidv1();
+    // verify localId isn't duplicated. use global id if blank
+    if (order.localId === '') {
+      order.localId = id;
+    } else if (this.localIdMap.has(order.localId)) {
+      throw errors.DUPLICATE_ORDER(order.localId);
+    }
+
+    return { ...order, id, initialQuantity: order.quantity, hold: 0, createdAt: ms() };
+  }
 }
