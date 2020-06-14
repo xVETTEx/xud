@@ -33,8 +33,6 @@ interface Pool {
   on(event: 'packet.orderInvalidation', listener: (orderInvalidation: OrderPortion, peer: string) => void): this;
   on(event: 'peer.active', listener: (peerPubKey?: string) => void): this;
   on(event: 'peer.close', listener: (peerPubKey?: string) => void): this;
-  /** Adds a listener to be called when a peer's advertised but inactive pairs should be verified. */
-  on(event: 'peer.verifyPairs', listener: (peer: Peer) => void): this;
   /** Adds a listener to be called when a previously active pair is dropped by the peer or deactivated. */
   on(event: 'peer.pairDropped', listener: (peerPubKey: string, pairId: string) => void): this;
   on(event: 'peer.nodeStateUpdate', listener: (peer: Peer) => void): this;
@@ -48,8 +46,6 @@ interface Pool {
   emit(event: 'packet.orderInvalidation', orderInvalidation: OrderPortion, peer: string): boolean;
   emit(event: 'peer.active', peerPubKey?: string): boolean;
   emit(event: 'peer.close', peerPubKey?: string): boolean;
-  /** Notifies listeners that a peer's advertised but inactive pairs should be verified. */
-  emit(event: 'peer.verifyPairs', peer: Peer): boolean;
   /** Notifies listeners that a previously active pair was dropped by the peer or deactivated. */
   emit(event: 'peer.pairDropped', peerPubKey: string, pairId: string): boolean;
   emit(event: 'peer.nodeStateUpdate', peer: Peer): boolean;
