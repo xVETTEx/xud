@@ -236,6 +236,7 @@ class OrderBook extends EventEmitter {
 
     // this method can be called recursively on swap failures retries.
     // if max time exceeded, don't try to match
+    //MILLON TOMMONEN MAXTIME SAATTAA TAPAHTUA?
     if (maxTime && Date.now() > maxTime) {
       assert(discardRemaining, 'discardRemaining must be true on recursive calls where maxTime could exceed');
       this.logger.debug(`placeOrder max time exceeded. order (${JSON.stringify(order)}) won't be fully matched`);
@@ -301,7 +302,7 @@ class OrderBook extends EventEmitter {
       } else {
         // this is a match with a peer order which cannot be considered executed until after a
         // successful swap, which is an asynchronous process that can fail for numerous reasons
-        const alias = getAlias(maker.peerPubKey); //mikä vitun alias?
+        const alias = getAlias(maker.peerPubKey); //mikä vitun alias? TÄÄ MODUULI EI HOIDA ALIAKSIA...
         this.logger.debug(`matched with peer ${maker.peerPubKey} (${alias}), executing swap on taker ${taker.id} and maker ${maker.id} for ${maker.quantity}`);
         try {
           const swapResult = await this.executeSwap(maker, taker);
@@ -374,17 +375,17 @@ class OrderBook extends EventEmitter {
    * succeeds and `peerOrder.invalidation` if the swap fails.
    * @returns A promise that resolves to a [[SwapSuccess]] once the swap is completed, throws a [[SwapFailureReason]] if it fails
    */
-  public executeSwap = async (maker: PeerOrder, taker: OwnOrder): Promise<SwapSuccess> => {
+  public executeSwap = async (maker: Order, taker: Order): Promise<SwapSuccess> => {
     // make sure the order is in the database before we begin the swap
     await this.repository.addOrderIfNotExists(maker);
     try {
       const swapResult = await this.swaps.executeSwap(maker, taker);
-      this.emit('peerOrder.filled', maker);
+      this.emit('peerOrder.filled', maker); //mut entä jos ownOrder on filled?
       await this.persistTrade(swapResult.quantity, maker, taker, swapResult.rHash);
       return swapResult;
     } catch (err) {
       const failureReason: number = err;
-      this.emit('peerOrder.invalidation', maker);
+      this.emit('peerOrder.invalidation', maker); //voiko ownOrder makerina feilata?
       this.logger.error(`swap between orders ${maker.id} & ${taker.id} failed due to ${SwapFailureReason[failureReason]}`);
       throw failureReason;
     }
