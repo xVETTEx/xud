@@ -878,11 +878,6 @@ class Pool extends EventEmitter {
       }
     });
 
-    peer.on('verifyPairs', () => {
-      // drop all orders for trading pairs that are no longer supported
-      this.emit('peer.verifyPairs', peer);
-    });
-
     peer.on('nodeStateUpdate', () => {
       this.emit('peer.nodeStateUpdate', peer);
     });
