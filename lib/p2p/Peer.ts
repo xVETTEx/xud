@@ -48,8 +48,6 @@ enum PeerStatus {
 interface Peer {
   on(event: 'packet', listener: (packet: Packet) => void): this;
   on(event: 'reputation', listener: (event: ReputationEvent) => void): this;
-  /** Adds a listener to be called when the peer's advertised but inactive pairs should be verified. */
-  on(event: 'verifyPairs', listener: () => void): this;
   /** Adds a listener to be called when a previously active pair is dropped by the peer or deactivated. */
   on(event: 'pairDropped', listener: (pairId: string) => void): this;
   on(event: 'nodeStateUpdate', listener: () => void): this;
@@ -58,8 +56,6 @@ interface Peer {
   emit(event: 'reputation', reputationEvent: ReputationEvent): boolean;
   emit(event: 'close'): boolean;
   emit(event: 'packet', packet: Packet): boolean;
-  /** Notifies listeners that the peer's advertised but inactive pairs should be verified. */
-  emit(event: 'verifyPairs'): boolean;
   /** Notifies listeners that a previously active pair was dropped by the peer or deactivated. */
   emit(event: 'pairDropped', pairId: string): boolean;
   emit(event: 'nodeStateUpdate'): boolean;
@@ -1016,7 +1012,6 @@ class Peer extends EventEmitter {
 
     this.nodeState = nodeStateUpdate;
     this.emit('nodeStateUpdate');
-    this.emit('verifyPairs');
   }
 
   private setOutEncryption = (key: Buffer) => {
