@@ -111,11 +111,10 @@ class OrderBook extends EventEmitter {
   private bindPool = () => {
     this.pool.on('packet.order', this.addPeerOrder);
     this.pool.on('packet.orderInvalidation', this.handleOrderInvalidation);
-    this.pool.on('packet.getOrders', this.sendOrders);
     this.pool.on('packet.swapRequest', this.handleSwapRequest);
     this.pool.on('peer.close', this.removePeerOrders);
     this.pool.on('peer.pairDropped', this.removePeerPair);
-    this.pool.on('peer.verifyPairs', this.verifyPeerPairs);
+    this.pool.on('peer.nodeStateUpdate', this.verifyPeerPairs);
     this.pool.on('peer.nodeStateUpdate', this.checkPeerCurrencies);
   }
 
@@ -248,49 +247,6 @@ class OrderBook extends EventEmitter {
         swapFailures: [],
         remainingOrder: order,
       };
-    }
-
-    const { outboundCurrency, inboundCurrency, outboundAmount, inboundAmount } =
-        Swaps.calculateInboundOutboundAmounts(order.quantity, order.price, order.isBuy, order.pairId);
-    const outboundSwapClient = this.swaps.swapClientManager.get(outboundCurrency);
-    const inboundSwapClient = this.swaps.swapClientManager.get(inboundCurrency);
-
-    if (!this.nobalancechecks) {
-      // check if clients exists. EI OO VITTU ORDERBOOKIN TEHTÄVÄ KATTOO ET JOS JOKU CLEINT EXISTS. EHKÄ SWAP FOLDERIIN PITÄÄ SIIRTÄÄ SAATANA!
-      if (!outboundSwapClient) {
-        throw swapsErrors.SWAP_CLIENT_NOT_FOUND(outboundCurrency);
-      }
-      if (!inboundSwapClient) {
-        throw swapsErrors.SWAP_CLIENT_NOT_FOUND(inboundCurrency);
-      }
-
-      // check if sufficient outbound channel capacity exists
-      const totalOutboundAmount = outboundSwapClient.totalOutboundAmount(outboundCurrency);
-      if (outboundAmount > totalOutboundAmount) {
-        throw errors.INSUFFICIENT_OUTBOUND_BALANCE(outboundCurrency, outboundAmount, totalOutboundAmount);
-      }
-    }
-
-    // check if order abides by limits
-    let outboundCurrencyLimit: number;
-    let inboundCurrencyLimit: number;
-
-    if (this.pool.getNetwork() === XuNetwork.MainNet && !this.maxlimits) { //ei kyl pitäis soittaa XuNetwork moduulille. Kuinka poistaa se?
-      // if we're on mainnet and we haven't specified that we're using maximum limits
-      // then use the hardcoded mainnet order size limits
-      outboundCurrencyLimit = limits[outboundCurrency];
-      inboundCurrencyLimit = limits[inboundCurrency];
-    } else {
-      // otherwise use the maximum channel sizes as order size limits
-      outboundCurrencyLimit = maxLimits[outboundCurrency];
-      inboundCurrencyLimit = maxLimits[inboundCurrency];
-    }
-
-    if (outboundCurrencyLimit && outboundAmount > outboundCurrencyLimit) {
-      throw errors.EXCEEDING_LIMIT(outboundCurrency, outboundAmount, outboundCurrencyLimit);
-    }
-    if (inboundCurrencyLimit && inboundAmount > inboundCurrencyLimit) {
-      throw errors.EXCEEDING_LIMIT(inboundCurrency, inboundAmount, inboundCurrencyLimit);
     }
 
     // perform matching routine. maker orders that are matched will be removed from the order book.
@@ -627,3 +583,51 @@ export default OrderBook;
     });
     await peer.sendOrders(outgoingOrders, reqId);
   }
+  
+  
+  
+  //tää oli placeOrder funktiossa, johonki muualle itäis vittu siirtää.
+
+  
+  const { outboundCurrency, inboundCurrency, outboundAmount, inboundAmount } =
+        Swaps.calculateInboundOutboundAmounts(order.quantity, order.price, order.isBuy, order.pairId);
+    const outboundSwapClient = this.swaps.swapClientManager.get(outboundCurrency);
+    const inboundSwapClient = this.swaps.swapClientManager.get(inboundCurrency);
+
+    if (!this.nobalancechecks) {
+      // check if clients exists. EI OO VITTU ORDERBOOKIN TEHTÄVÄ KATTOO ET JOS JOKU CLEINT EXISTS. EHKÄ SWAP FOLDERIIN PITÄÄ SIIRTÄÄ SAATANA!
+      if (!outboundSwapClient) {
+        throw swapsErrors.SWAP_CLIENT_NOT_FOUND(outboundCurrency);
+      }
+      if (!inboundSwapClient) {
+        throw swapsErrors.SWAP_CLIENT_NOT_FOUND(inboundCurrency);
+      }
+
+      // check if sufficient outbound channel capacity exists
+      const totalOutboundAmount = outboundSwapClient.totalOutboundAmount(outboundCurrency);
+      if (outboundAmount > totalOutboundAmount) {
+        throw errors.INSUFFICIENT_OUTBOUND_BALANCE(outboundCurrency, outboundAmount, totalOutboundAmount);
+      }
+    }
+
+    // check if order abides by limits
+    let outboundCurrencyLimit: number;
+    let inboundCurrencyLimit: number;
+
+    if (this.pool.getNetwork() === XuNetwork.MainNet && !this.maxlimits) { //ei kyl pitäis soittaa XuNetwork moduulille. Kuinka poistaa se?
+      // if we're on mainnet and we haven't specified that we're using maximum limits
+      // then use the hardcoded mainnet order size limits
+      outboundCurrencyLimit = limits[outboundCurrency];
+      inboundCurrencyLimit = limits[inboundCurrency];
+    } else {
+      // otherwise use the maximum channel sizes as order size limits
+      outboundCurrencyLimit = maxLimits[outboundCurrency];
+      inboundCurrencyLimit = maxLimits[inboundCurrency];
+    }
+
+    if (outboundCurrencyLimit && outboundAmount > outboundCurrencyLimit) {
+      throw errors.EXCEEDING_LIMIT(outboundCurrency, outboundAmount, outboundCurrencyLimit);
+    }
+    if (inboundCurrencyLimit && inboundAmount > inboundCurrencyLimit) {
+      throw errors.EXCEEDING_LIMIT(inboundCurrency, inboundAmount, inboundCurrencyLimit);
+    }
