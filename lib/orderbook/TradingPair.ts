@@ -249,42 +249,35 @@ class TradingPair {
    * Matches an order against its opposite queue. Matched maker orders are removed immediately.
    * @returns a [[MatchingResult]] with the matches as well as the remaining, unmatched portion of the order
    */
-  public match = (takerOrder: OwnOrder): MatchingResult => {
+  public match = (takerOrder: Order): MatchingResult => {
     const matches: OrderMatch[] = []; //eli tässä pidetään matcheista kirjaa.
     /** The unmatched remaining taker order, if there is still leftover quantity after matching is complete it will enter the queue. */
     let remainingOrder: OwnOrder | undefined = { ...takerOrder };
 
     const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue; //tässä queue jossa order on.
-    const queueRemovedOrdersWithHold: OwnOrder[] = [];
+    const queueRemovedOrdersWithHold: Order[] = [];
 
     // as long as we have remaining quantity to match and orders to match against, keep checking for matches
     while (remainingOrder && !queue.isEmpty()) { //eikö vois lopettaa sillon ku ei enää tuu matchia? Siis jos limit orderi. Ku
       //hinta vaa huononee pidemmälle mentäessä ni turha nitä edes testata...
       // get the best available maker order from the top of the queue
       const makerOrder = queue.peek()!; //queuesta parhaan orderin palauttaa, eli maker orderin.
-      const makerAvailableQuantityOrder = isOwnOrder(makerOrder)
-        ? { ...makerOrder, quantity: makerOrder.quantity - makerOrder.hold, hold: 0 }
-        : makerOrder;
+      makerAvailableQuantityOrder = { ...makerOrder, quantity: makerOrder.quantity - makerOrder.hold, hold: 0 }; //onko oikee syntaks?
 
       const matchingQuantity = getMatchingQuantity(remainingOrder, makerAvailableQuantityOrder);
       if (matchingQuantity <= 0) {
         // there's no match with the best available maker order, so end the matching routine
         break;
       } else {
-        /** Whether the maker order is fully matched and should be removed from the queue. */
-        const makerFullyMatched = makerOrder.quantity === matchingQuantity; //eli mitä tää meinaa? Boolean?
-        const makerAvailableQuantityFullyMatched = makerAvailableQuantityOrder.quantity === matchingQuantity; //meinaa mitä? Boolean?
-        const remainingFullyMatched = remainingOrder.quantity === matchingQuantity; //meinaa mitä? Boolean?
-
-        if (makerFullyMatched && remainingFullyMatched) { //vois vaihtoehtoisesti laittaa: makerOrder.quantity == remainingOrder.quantity.
+        if (makerOrder.quantity == remainingOrder.quantity) {
           // maker & taker order quantities equal and fully matching
           matches.push({ maker: makerOrder, taker: remainingOrder }); //matches arrayihin kirjottaa tän matchin.
-        } else if (remainingFullyMatched) { //vaihtoehtoisesti: remainingOrder.quantity === matchingQuantity
+        } else if (remainingOrder.quantity === matchingQuantity) {
           // taker order quantity is not sufficient. maker order will split
           const matchedMakerOrder = TradingPair.splitOrderByQuantity(makerOrder, matchingQuantity);
           this.logger.debug(`reduced order ${makerOrder.id} by ${matchingQuantity} quantity while matching order ${takerOrder.id}`);
           matches.push({ maker: matchedMakerOrder, taker: remainingOrder });
-        } else if (makerAvailableQuantityFullyMatched) { //vaihtoehtoisesti: makerAvailableQuantityOrder.quantity === matchingQuantity
+        } else if (makerAvailableQuantityOrder.quantity === matchingQuantity) {
           // maker order quantity is not sufficient. taker order will split
           const matchedTakerOrder = TradingPair.splitOrderByQuantity(remainingOrder, matchingQuantity);
           matches.push({ maker: makerAvailableQuantityOrder, taker: matchedTakerOrder });
@@ -292,21 +285,16 @@ class TradingPair {
           assert(false, 'matchingQuantity should not be lower than both orders available quantity values');
         }
 
-        if (remainingFullyMatched) {
+        if (remainingOrder.quantity === matchingQuantity) {
           remainingOrder = undefined;
         }
 
-        if (makerFullyMatched) { //MIKS EI VAAN SOITETA REMOVEORDER FUNKTIOLLE???
+        if (makerFullyMatched) {
           // maker order is fully matched, so remove it from the queue and map
-          assert(queue.poll() === makerOrder);
-          const map = this.getOrderMap(makerOrder)!; //haetaan map makerille jotta voidaanp oistaa se.
-          map.delete(makerOrder.id); //poistetaan mapista, mutta siis maker, jos se on matchatty tän takerin kaa. Eikö pitäis poistaa myös queuesta?
-          this.logger.debug(`removed order ${makerOrder.id} while matching order ${takerOrder.id}`);
-        } else if (makerAvailableQuantityFullyMatched) {
+	  removeOrder(order.pubkey, order.id)
+        } else if (makerAvailableQuantityOrder.quantity === matchingQuantity) {
           // only an own order can be fully matched for available quantity, but not fully matched in the overall
-          assert(isOwnOrder(makerOrder));
-
-          assert(queue.poll() === makerOrder); //wtf is that
+          assert(queue.poll() === makerOrder); //googlaa mitä poll meinaa.
           queueRemovedOrdersWithHold.push(makerOrder as OwnOrder); //wtf is that
         }
       }
@@ -314,7 +302,7 @@ class TradingPair {
 
     // return the removed orders with hold to the queue.
     // their hold quantity might be released later
-    queueRemovedOrdersWithHold.forEach(order => queue.add(order)); //wtf is that?
+    queueRemovedOrdersWithHold.forEach(order => queue.add(order)); //Eli sit ku on poistettu queuesta orderit holdilla, ni pistetään takas.
 
     return { matches, remainingOrder };
   }
