@@ -457,11 +457,12 @@ class Service {
    */
   public placeOrder = async (
     args: { pairId: string, price: number, quantity: number, orderId: string, side: number,
-      replaceOrderId?: string, immediateOrCancel: boolean },
+      replaceOrderId?: string, type: string }, //type vois kyl olla enum hyvin?
     callback?: (e: PlaceOrderEvent) => void,
   ) => {
-    const { pairId, price, quantity, orderId, side, replaceOrderId, immediateOrCancel } = args;
-    argChecks.PRICE_NON_NEGATIVE(args);
+    const { pairId, price, quantity, orderId, side, replaceOrderId, type } = args;
+    argChecks.PRICE_NON_NEGATIVE(args); //EIKÖ ORDERBOOK NÄITÄ KATO MUKA? VAI KATTOOKO P2P MODUULI ORDERBOKIN SIJASTA?
+    //KYLL ORDERBOKIN PITÄSI NÄÄ KATTOO!
     argChecks.POSITIVE_QUANTITY(args);
     argChecks.PRICE_MAX_DECIMAL_PLACES(args);
     argChecks.HAS_PAIR_ID(args);
@@ -478,8 +479,7 @@ class Service {
       localId: orderId,
     };
 
-    return price > 0 ? await this.orderBook.placeLimitOrder(order, immediateOrCancel, callback) :
-      await this.orderBook.placeMarketOrder(order, callback);
+    return await this.orderBook.addOrder(order, callback) : //mitä callback meinaa?
   }
 
   /** Removes a currency. */
