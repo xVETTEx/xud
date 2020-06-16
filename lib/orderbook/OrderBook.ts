@@ -319,21 +319,7 @@ class OrderBook extends EventEmitter {
           swapSuccesses.push(swapResult);
           onUpdate && onUpdate({ type: PlaceOrderEventType.SwapSuccess, payload: swapResult });
         } catch (err) {
-          const failMsg = `swap for ${portion.quantity} failed during order matching`;
-          if (typeof err === 'number' && SwapFailureReason[err] !== undefined) {
-            // treat the error as a SwapFailureReason
-            this.logger.warn(`${failMsg} due to ${SwapFailureReason[err]}, will repeat matching routine for failed quantity`);
-
-            const swapFailure: SwapFailure = {
-              failureReason: err,
-              orderId: maker.id,
-              pairId: maker.pairId,
-              quantity: portion.quantity,
-              peerPubKey: maker.peerPubKey,
-            };
-            swapFailures.push(swapFailure);
-            onUpdate && onUpdate({ type: PlaceOrderEventType.SwapFailure, payload: swapFailure }); //mitä tää tekee?
-            await retryFailedSwap(portion.quantity);
+          swarFailureHandler(order, err)
           } else {
             // treat this as a critical error and abort matching, we only expect SwapFailureReasons to be thrown in the try block above
             this.logger.error(`${failMsg} due to unexpected error`, err);
@@ -368,6 +354,24 @@ class OrderBook extends EventEmitter {
       swapFailures,
       remainingOrder,
     };
+  }
+
+  function swapFailureHandler = async (order: order, err: string){
+    const failMsg = `swap for ${portion.quantity} failed during order matching`; //mitä tää const nyt meinaa tässä? Pitäiskö ottaa helvettiin?
+          if (typeof err === 'number' && SwapFailureReason[err] !== undefined) {
+            // treat the error as a SwapFailureReason
+            this.logger.warn(`${failMsg} due to ${SwapFailureReason[err]}, will repeat matching routine for failed quantity`);
+
+            const swapFailure: SwapFailure = {
+              failureReason: err,
+              orderId: maker.id,
+              pairId: maker.pairId,
+              quantity: portion.quantity,
+              peerPubKey: maker.peerPubKey,
+            };
+            swapFailures.push(swapFailure);
+            onUpdate && onUpdate({ type: PlaceOrderEventType.SwapFailure, payload: swapFailure }); //mitä tää tekee?
+            await retryFailedSwap(portion.quantity);
   }
 
   /**
