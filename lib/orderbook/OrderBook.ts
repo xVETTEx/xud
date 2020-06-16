@@ -215,15 +215,12 @@ class OrderBook extends EventEmitter {
    * orders by price and initiate swaps for any matches with peer orders. It can be called recursively
    * for any portions of the order that fail swaps.
    * @param order the order to place
-   * @param discardRemaining whether to discard any unmatched portion of the order, if `false` the
-   * unmatched portion will enter the order book.
    * @param onUpdate a callback for when there are updates to the matching and order placement
    * routine including internal matches, successful swaps, failed swaps, and remaining orders
    * @param maxTime the deadline in epoch milliseconds for this method to end recursive calls
    */
   private placeOrder = async (
     order: OwnOrder,
-    discardRemaining = false,
     onUpdate?: (e: PlaceOrderEvent) => void,
     maxTime?: number,
   ): Promise<PlaceOrderResult> => {
