@@ -195,16 +195,15 @@ class OrderBook extends EventEmitter {
   public placeLimitOrder = async (order: OwnLimitOrder, immediateOrCancel = false,
     onUpdate?: (e: PlaceOrderEvent) => void): Promise<PlaceOrderResult> => {
     const stampedOrder = this.stampOwnOrder(order);
-    if (this.nomatching) {
-      this.addOwnOrder(stampedOrder);
-      onUpdate && onUpdate({ type: PlaceOrderEventType.RemainingOrder, payload: stampedOrder });
+    
+    this.addOwnOrder(stampedOrder);
+    onUpdate && onUpdate({ type: PlaceOrderEventType.RemainingOrder, payload: stampedOrder });
 
-      return {
-        internalMatches: [],
-        swapSuccesses: [],
-        swapFailures: [],
-        remainingOrder: stampedOrder,
-      };
+    return {
+      internalMatches: [],
+      swapSuccesses: [],
+      swapFailures: [],
+      remainingOrder: stampedOrder,
     }
 
     return this.placeOrder(stampedOrder, immediateOrCancel, onUpdate, Date.now() + OrderBook.MAX_PLACEORDER_ITERATIONS_TIME);
@@ -253,8 +252,6 @@ class OrderBook extends EventEmitter {
 
     /** Any portion of the placed order that could not be swapped or matched internally. */
     let { remainingOrder } = matchingResult;
-    /** Local orders that matched with the placed order. */
-    const internalMatches: OwnOrder[] = [];
     /** Successful swaps performed for the placed order. */
     const swapSuccesses: SwapSuccess[] = [];
     /** Failed swaps attempted for the placed order. */
@@ -271,7 +268,6 @@ class OrderBook extends EventEmitter {
 
       // invoke placeOrder recursively, append matches/swaps and any remaining order
       const retryResult = await this.placeOrder(orderToRetry, true, onUpdate, maxTime);
-      internalMatches.push(...retryResult.internalMatches);
       swapSuccesses.push(...retryResult.swapSuccesses);
       if (retryResult.remainingOrder) {
         if (remainingOrder) {
@@ -346,7 +342,6 @@ class OrderBook extends EventEmitter {
     }
 
     return {
-      internalMatches,
       swapSuccesses,
       swapFailures,
       remainingOrder,
