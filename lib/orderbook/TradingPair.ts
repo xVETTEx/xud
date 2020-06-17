@@ -274,12 +274,14 @@ class TradingPair {
           matches.push({ maker: makerOrder, taker: remainingOrder }); //matches arrayihin kirjottaa tän matchin.
         } else if (remainingOrder.quantity === matchingQuantity) {
           // taker order quantity is not sufficient. maker order will split
-          const matchedMakerOrder = TradingPair.splitOrderByQuantity(makerOrder, matchingQuantity);
+          const matchedMakerOrder = TradingPair.splitOrderByQuantity(makerOrder, matchingQuantity); 
+		//VOISKO SPLITIT HOITAA TUO SPLIT FUNKTIO? SINNE ORDERIT JA MATCHINGQUANTITY JA SE HOITAA KOKONAAN? PIENENIS TÄÄ FUNKTIO...
           this.logger.debug(`reduced order ${makerOrder.id} by ${matchingQuantity} quantity while matching order ${takerOrder.id}`);
           matches.push({ maker: matchedMakerOrder, taker: remainingOrder });
         } else if (makerAvailableQuantityOrder.quantity === matchingQuantity) {
           // maker order quantity is not sufficient. taker order will split
           const matchedTakerOrder = TradingPair.splitOrderByQuantity(remainingOrder, matchingQuantity);
+	  executeSwap() //oisko wortti jos tältä soitettais tonne?
           matches.push({ maker: makerAvailableQuantityOrder, taker: matchedTakerOrder });
         } else {
           assert(false, 'matchingQuantity should not be lower than both orders available quantity values');
