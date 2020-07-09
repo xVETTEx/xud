@@ -1,5 +1,6 @@
 //ainaki stop price ja liqu price queueiden käyttöön täs helpper funktiot. Ehkä tää vois perus queueenki toimia?
 //sen kuka ttä käyttää ni pitää joka pairille luoda queue.
+//voisko tää olla nii et se kuka tänne soittaa ni luo jokaiselle pairille ja pubkeylle oman queuen?
 
 /** A map between orders and their order ids. */
 type OrderMap<T extends Order> = Map<string, T>;
