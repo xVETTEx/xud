@@ -354,59 +354,6 @@ class Swaps extends EventEmitter {
   }
 
   /**
-   * Executes a sanity swap with a peer for a specified currency.
-   * @returns `true` if the swap succeeds, otherwise `false`
-   */
-  public executeSanitySwap = async (currency: string, peer: Peer) => {
-    const { rPreimage, rHash } = await generatePreimageAndHash();
-    const peerPubKey = peer.nodePubKey!;
-    const swapClient = this.swapClientManager.get(currency);
-    if (!swapClient) {
-      return false;
-    }
-
-    const destination = peer.getIdentifier(swapClient.type, currency);
-    if (!destination) {
-      return false;
-    }
-
-    const sanitySwap: SanitySwap = {
-      rHash,
-      rPreimage,
-      currency,
-      peerPubKey,
-    };
-    this.sanitySwaps.set(rHash, sanitySwap);
-
-    const sanitySwapInitPacket = new packets.SanitySwapInitPacket({
-      currency,
-      rHash,
-    });
-
-    try {
-      await Promise.all([
-        swapClient.addInvoice(rHash, 1),
-        peer.sendPacket(sanitySwapInitPacket),
-        peer.wait(sanitySwapInitPacket.header.id, PacketType.SanitySwapAck, Swaps.SANITY_SWAP_INIT_TIMEOUT),
-      ]);
-    } catch (err) {
-      this.logger.warn(`sanity swap could not be initiated for ${currency} using rHash ${rHash}: ${err.message}`);
-      swapClient.removeInvoice(rHash).catch(this.logger.error);
-      return false;
-    }
-
-    try {
-      await swapClient.sendSmallestAmount(rHash, destination, currency);
-      this.logger.debug(`performed successful sanity swap with peer ${peerPubKey} for ${currency} using rHash ${rHash}`);
-      return true;
-    } catch (err) {
-      this.logger.warn(`got payment error during sanity swap with ${peerPubKey} for ${currency} using rHash ${rHash}: ${err.message}`);
-      swapClient.removeInvoice(rHash).catch(this.logger.error);
-      return false;
-    }
-  }
-
-  /**
    * Begins a swap to fill an order by sending a [[SwapRequestPacket]] to the maker.
    * @param maker The remote maker order we are filling
    * @param taker Our local taker order
@@ -861,44 +808,6 @@ class Swaps extends EventEmitter {
     return true;
   }
 
-  /** Attempts to resolve the preimage for the payment hash of a pending sanity swap. */
-  private resolveSanitySwap = async (rHash: string, amount: number, htlcCurrency?: string) => {
-    assert(amount === 1, 'sanity swaps must have an amount of exactly 1 of the smallest unit supported by the currency');
-
-    const sanitySwap = this.sanitySwaps.get(rHash);
-
-    if (sanitySwap) {
-      assert(htlcCurrency === undefined || htlcCurrency === sanitySwap.currency, 'incoming htlc does not match sanity swap currency');
-      const { currency, peerPubKey, rPreimage } = sanitySwap;
-      this.sanitySwaps.delete(rHash); // we don't need to track sanity swaps that we've already attempted to resolve, delete to prevent a memory leak
-
-      if (rPreimage) {
-        // we initiated this sanity swap and can release the preimage immediately
-        return rPreimage;
-      } else {
-        // we need to get the preimage by making a payment
-        const swapClient = this.swapClientManager.get(currency);
-        if (!swapClient) {
-          throw new Error('unsupported currency');
-        }
-
-        const peer = this.pool.getPeer(peerPubKey);
-        const destination = peer.getIdentifier(swapClient.type, currency)!;
-
-        try {
-          const preimage = await swapClient.sendSmallestAmount(rHash, destination, currency);
-          this.logger.debug(`performed successful sanity swap with peer ${peerPubKey} for ${currency} using rHash ${rHash}`);
-          return preimage;
-        } catch (err) {
-          this.logger.warn(`got payment error during sanity swap with ${peerPubKey} for ${currency} using rHash ${rHash}: ${err.message}`);
-          swapClient.removeInvoice(rHash).catch(this.logger.error);
-          throw err;
-        }
-      }
-    } else {
-      throw errors.PAYMENT_HASH_NOT_FOUND(rHash);
-    }
-  }
 
   /**
    * Resolves the hash for an incoming HTLC to its preimage.
