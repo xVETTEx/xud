@@ -327,7 +327,9 @@ class Swaps extends EventEmitter {
    * @param taker our local taker order
    * @returns A promise that resolves to a [[SwapSuccess]] once the swap is completed, throws a [[SwapFailureReason]] if it fails
    */
-  public executeSwap = async (maker: PeerOrder, taker: OwnOrder): Promise<SwapSuccess> => {
+  public executeSwap = async (peer: string, pair: string, amount1: int, amount2: int, orderId: string): Promise<SwapSuccess> => {
+    //amount 1 on ekan currencyn amunt, amount 2 tokan.
+    //orderId on peerin orderin
     await this.verifyExecution(maker, taker);
     const rHash = await this.beginSwap(maker, taker);
 
@@ -359,10 +361,8 @@ class Swaps extends EventEmitter {
    * @param taker Our local taker order
    * @returns The rHash for the swap, or a [[SwapFailureReason]] if the swap could not be initiated
    */
-  private beginSwap = async (maker: PeerOrder, taker: OwnOrder): Promise<string> => {
+  private beginSwap = async (): Promise<string> => {
     const peer = this.pool.getPeer(maker.peerPubKey);
-
-    const quantity = Math.min(maker.quantity, taker.quantity);
     const { makerCurrency, makerAmount, makerUnits, takerCurrency, takerAmount, takerUnits } =
       Swaps.calculateMakerTakerAmounts(quantity, maker.price, maker.isBuy, maker.pairId);
     const clientType = this.swapClientManager.get(makerCurrency)!.type;
@@ -374,12 +374,13 @@ class Swaps extends EventEmitter {
     const swapRequestBody: packets.SwapRequestPacketBody = {
       takerCltvDelta,
       rHash,
-      orderId: maker.id,
-      pairId: maker.pairId,
-      proposedQuantity: taker.quantity,
+      orderId: orderId,
+      pairId: pair,
+      proposedQuantity: taker.quantity, //mikäs tähän sitte?
     };
 
-    const deal: SwapDeal = {
+    const deal: SwapDeal = { //oikeestaan orderbook vois hoitaa näiden kirjaamisen kokonaan? Mitä swappiin liittyviä asioita siihen kirjataan? Muutaku state?
+      //rhash ehkä? Kyl orderbook vois hitaa ne?
       ...swapRequestBody,
       rPreimage,
       takerCurrency,
@@ -387,6 +388,7 @@ class Swaps extends EventEmitter {
       takerAmount,
       makerAmount,
       takerUnits,
+      
       makerUnits,
       destination,
       peerPubKey: peer.nodePubKey!,
