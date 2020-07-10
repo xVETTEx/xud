@@ -807,12 +807,7 @@ class Swaps extends EventEmitter {
     const deal = this.getDeal(rHash);
 
     if (!deal) {
-      if (amount === 1) {
-        // if we don't have a deal for this hash, but its amount is exactly 1 satoshi, try to resolve it as a sanity swap
-        return this.resolveSanitySwap(rHash, amount, htlcCurrency);
-      } else {
-        throw errors.PAYMENT_HASH_NOT_FOUND(rHash);
-      }
+      throw errors.PAYMENT_HASH_NOT_FOUND(rHash);
     }
 
     const peer = this.pool.getPeer(deal.peerPubKey);
