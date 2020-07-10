@@ -361,15 +361,14 @@ class Swaps extends EventEmitter {
       rHash,
       orderId: orderId,
       pairId: pair,
-      proposedQuantity: taker.quantity, //mikäs tähän sitte?
+      proposedQuantity: amount1, //mikäs tähän sitte?
     };
 
     const deal: SwapDeal = { //oikeestaan orderbook vois hoitaa näiden kirjaamisen kokonaan? Mitä swappiin liittyviä asioita siihen kirjataan? Muutaku state?
       //rhash ehkä? Kyl orderbook vois hitaa ne?
       ...swapRequestBody,
       rPreimage,
-      takerCurrency,
-      makerCurrency,
+      pair,
       takerAmount,
       makerAmount,
       takerUnits,
@@ -461,16 +460,13 @@ class Swaps extends EventEmitter {
       price,
       isBuy,
       quantity,
-      makerAmount,
-      takerAmount,
-      makerCurrency,
-      takerCurrency,
+      pair,
       makerUnits,
       takerUnits,
       takerPubKey: takerIdentifier,
       destination: takerIdentifier,
       peerPubKey: peer.nodePubKey!,
-      localId: orderToAccept.localId,
+      localId: orderId,
       phase: SwapPhase.SwapCreated,
       state: SwapState.Active,
       role: SwapRole.Maker,
