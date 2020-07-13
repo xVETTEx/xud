@@ -223,12 +223,6 @@ class OrderBook extends EventEmitter {
     onUpdate?: (e: PlaceOrderEvent) => void,
     maxTime?: number,
   ): Promise<PlaceOrderResult> => {
-    // Check if order complies to thresholds
-    if (this.thresholds.minQuantity > 0) {
-      if (!this.checkThresholdCompliance(order)) {
-        throw errors.MIN_QUANTITY_VIOLATED(order.id);
-      }
-    }
 
     // this method can be called recursively on swap failures retries.
     // if max time exceeded, don't try to match
@@ -301,7 +295,7 @@ class OrderBook extends EventEmitter {
           const swapResult = await this.executeSwap(maker, taker);
           if (swapResult.quantity < maker.quantity) {
             // swap was only partially completed
-            portion.quantity = swapResult.quantity;
+            portion.quantity  = swapResult.quantity;
             const rejectedQuantity = maker.quantity - swapResult.quantity;
             this.logger.info(`match partially executed on taker ${taker.id} and maker ${maker.id} for ${swapResult.quantity} ` +
               `with peer ${maker.peerPubKey} (${alias}), ${rejectedQuantity} quantity not accepted and will repeat matching routine`);
@@ -347,6 +341,28 @@ class OrderBook extends EventEmitter {
       remainingOrder,
     };
   }
+  
+  function matchOrder(order: order){
+    //sinne ordermapien luokkaan soittaa ja aina vuorotellen ottaa parhaan orderin mapista ja kattoo tuleeko matchia?
+    //tradingpair luokassa oon tainnu tän jo kirjottaa ni sieltä visin vaa siirtää tänne?
+    
+    return //palauttaa true jos kokonaan matchatty, jos ei kokonaan matchatty ni sen joka jäi. Mut mitäs ku ennenku tiedetään swappien onnistumisista ni
+    //pitäis palauttaa ja laittaa orderbookkiin ne mitä ei saatu matchattyä? Jos tää funktio jo laittais ne orderbookkiin, mut ei se kyl oo tän homma...
+    //entä jos jakaisin tän parin osaan, ni vois olla osa tän hommaa ehkö sit?
+  }
+
+  function handleMatch(taker: order, maker: order){
+    //jos ollaan matcher, ni lähettää swaprequest msg:t molemmille osapuolille.
+    //jos ei matcher, ni soittaa swap classin executeSwap() funktiolle.
+    if(){ //pair on matcher.
+       //soitetaan senPacket swaprequest. Ja swaprequest struktuurit täytetään?
+    }
+    else {
+       swapResult = await this.executeSwap(maker, taker); //täähän soittaa tän luokan funktiolle! Mut siis soitetaan sille. Mut jos saadaan
+    //se funktio lyhyeks ni ne koodit voi siirtää tähän.
+    }
+  }
+
 
   function swapFailureHandler = async (order: order, err: string){
     const failMsg = `swap for ${portion.quantity} failed during order matching`; //mitä tää const nyt meinaa tässä? Pitäiskö ottaa helvettiin?
@@ -373,7 +389,7 @@ class OrderBook extends EventEmitter {
    */
   public executeSwap = async (maker: Order, taker: Order): Promise<SwapSuccess> => {
     // make sure the order is in the database before we begin the swap
-    await this.repository.addOrderIfNotExists(maker);
+    await this.repository.addOrderIfNotExists(maker); //miks ei ois? Onko taker sit varmasti siellä?
     try {
       const swapResult = await this.swaps.executeSwap(maker, taker);
       this.emit('peerOrder.filled', maker); //mut entä jos ownOrder on filled?
@@ -388,6 +404,7 @@ class OrderBook extends EventEmitter {
   }
 
   private persistTrade = async (quantity: number, makerOrder: Order, takerOrder?: OwnOrder, rHash?: string) => {
+    //mitä vittuu tää tekee?
     const addOrderPromises = [this.repository.addOrderIfNotExists(makerOrder)];
     if (takerOrder) {
       addOrderPromises.push(this.repository.addOrderIfNotExists(takerOrder));
@@ -407,24 +424,24 @@ class OrderBook extends EventEmitter {
    * @returns `false` if it's a duplicated order or with an invalid pair id, otherwise true
    */
   private addOrder = (order: IncomingOrder): boolean => {
-    if (!this.checkThresholdCompliance(order)) { //kattoo ettei oo liian pieni määrä.
-      this.removePeerOrder(order.id, order.pairId, order.peerPubKey, order.quantity);
-      this.logger.debug('incoming peer order does not comply with configured threshold');
+    if (!this.checkThresholdCompliance(order)) {
+      throw errors.MIN_QUANTITY_VIOLATED(order.id); //meneekö tästä loggeriin tai jotai? Jos peer order ni vois miinuspisteitä antaa reputationiin? 
+      //Jos oma ni loggeriin?
       return false;
     }
 
     const tp = this.tradingPairs.get(order.pairId);
     if (!tp) {
-      // TODO: penalize peer for sending an order for an unsupported pair
+      // TODO: penalize peer for sending an order for an unsupported pair. Jos main branchiin ei oo tätä tehty ni kirjota nyt!!!
       return false;
     }
 
-    const stampedOrder: PeerOrder = { ...order, createdAt: ms(), initialQuantity: order.quantity };
-
+    const stampedOrder: PeerOrder = { ...order, createdAt: ms(), initialQuantity: order.quantity }; //miks stampataan?
+    matchingResult = matchOrder(order); //onko järkevä eka matchata ennenku lisätään orderbookkiin? Ei se ainakaa haittaa vaik ois duplicated?
     if (!tp.addOrder(stampedOrder)) {
-      this.logger.debug(`incoming peer order is duplicated: ${order.id}`);
+      this.logger.debug(`incoming peer order is duplicated: ${order.id}`); //jos tulee false ni onko se aina duplicated?
       // TODO: penalize peer
-      return false;
+      return false; //ekö tp.addOrder vois palauttaa true tai false?
     }
 
     this.emit('peerOrder.incoming', stampedOrder); //kuka tätä kuuntelee? Ekö vois olla vaa order.incoming?
@@ -506,10 +523,10 @@ class OrderBook extends EventEmitter {
   private removeOwnOrder = (orderId: string, pairId: string, quantityToRemove?: number, takerPubKey?: string) => {
     const tp = this.getTradingPair(pairId);
     try {
-      const removeResult = tp.removeOrder(this.own_address, orderId, quantityToRemove);
+      const removeResult = tp.removeOrder(this.ownAddress, orderId, quantityToRemove);
       this.emit('order.invalidation', removeResult.order); //kuka kuuntelee? Eikö voi olla Ownorder.removed oli aiempi nimi.
       if (removeResult.fullyRemoved) {
-        
+        //onko tää tehny jotai joskus? Ja voiko tulla joku muu ku fullyremoved?
       }
       return removeResult.order;
     } catch (err) {
@@ -526,19 +543,17 @@ class OrderBook extends EventEmitter {
    * Removes all or part of a peer order from the order book and emits the `peerOrder.invalidation` event.
    * @param quantityToRemove the quantity to remove from the order, if undefined then the full order is removed
    */
-  public removePeerOrder = (orderId: string, pairId: string, peerPubKey?: string, quantityToRemove?: number):
+  public removePeerOrder = (orderId: string, pairId: string, pubKey: string, quantityToRemove?: number):
     { order: PeerOrder, fullyRemoved: boolean } => {
     const tp = this.getTradingPair(pairId);
-    return tp.removeOrder(peerPubKey, orderId, quantityToRemove);
+    removeResult = tp.removeOrder(pubKey, orderId, quantityToRemove);
+    this.emit('order.invalidation', removeResult.order);
+    return removeResult;
   }
 
-  private removePeerOrders = (peerPubKey?: string) => {
-    if (!peerPubKey) {
-      return;
-    }
-
-    for (const pairId of this.pairInstances.keys()) {
-      this.removePeerPair(peerPubKey, pairId);
+  private removeOrdersByPubkey = (pubKey: string) => {
+    for (const pairId of this.pairInstances.keys()) { //meinaa mitä?
+      this.removePeerPair(peerPubKey, pairId); //mitäs tää meinaa. Nyt soitto menee toiseen luokkaan nykkyyään?
     }
     this.logger.debug(`removed all orders for peer ${peerPubKey} (${getAlias(peerPubKey)})`);
   }
