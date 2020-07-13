@@ -132,6 +132,7 @@ class Parser extends EventEmitter {
   private parsePacket = (header: WireMsgHeader, payload: Uint8Array): Packet => {
     let packetOrPbObj;
     switch (header.type) {
+        //tutki et hakis vaa sllä nimellä. Sit jos ei löydy ni tulee err ja heittää ton errorin mikä tuol vikana
       case PacketType.SessionInit:
         packetOrPbObj = packetTypes.SessionInitPacket.deserialize(payload);
         break;
@@ -186,6 +187,12 @@ class Parser extends EventEmitter {
       case PacketType.SwapFailed:
         packetOrPbObj = packetTypes.SwapFailedPacket.deserialize(payload);
         break;
+      case PacketType.Subscribe:
+        packetOrPbObj = packetTypes.SubscribeResponse.deserialize(payload);
+        break;
+      case PacketType.SubscribeResponse:
+        packetOrPbObj = packetTypes.SubscribeResponse.deserialize(payload);
+        break
       default:
         throw errors.PARSER_UNKNOWN_PACKET_TYPE(header.type.toString());
     }
