@@ -42,7 +42,12 @@ interface Pool {
   on(event: 'packet.swapComplete', listener: (packet: packets.SwapCompletePacket) => void): this;
   on(event: 'packet.swapFailed', listener: (packet: packets.SwapFailedPacket) => void): this;
   on(event: 'packet.subscribe', listener (packet: packets.SubscribePacket) => void): this; //mitä void meinaa ja onko oikein?
-  on(event: 'packet.subscribeResponse', listener (packet: packets.SubscribeResponse) => void): this; //mikä on void ja onko oikein?
+  on(event: 'packet.subscribeResponse', listener (packet: packets.SubscribeResponsePacket) => void): this; //mikä on void ja onko oikein?
+  on(event: 'packet.newOrderEvent', listener (packet.NewOrderEventPacket) => void): this;
+  on(event: 'packet.', listener (packet.OrderInvalidationEventPacket) => void): this;
+  on(event: 'packet.swapRequestEvent', listener (packet.SwapRequestEventPacket) => void): this;
+  on(event: 'packet.', listener (packet.SwapFailedEventPacket) => void): this;
+  on(event: 'packet.swapCompleted', listener (packet.SwapCompletedEventPacket) => void): this;
   emit(event: 'packet.order', order: IncomingOrder): boolean;
   emit(event: 'packet.getOrders', peer: Peer, reqId: string, pairIds: string[]): boolean;
   emit(event: 'packet.orderInvalidation', orderInvalidation: OrderPortion, peer: string): boolean;
@@ -58,6 +63,12 @@ interface Pool {
   emit(event: 'packet.swapFailed', packet: packets.SwapFailedPacket): boolean;
   emit(event: 'packet.subscribe', packet: packets.Subscribe): boolean;
   emit(event: 'packet.subscribeResponse', packet: packets.SubscribeResponse): boolean;
+  emit(event: 'packet.newOrderEvent', packet: packets.NewOrderEvent): boolean;
+  emit(event: 'packet.orderInvalidationEvent', packet: packets.OrderInvalidationEvent): boolean;
+  emit(event: 'packet.swapRequestEvent', packet: packets.SwapRequestEvent): boolean;
+  emit(event: 'packet.swapFailedEvent', packet: packets.SwapFailedEvent): boolean;
+  emit(event: 'packet.swapCompletedEvent', packet: packets.SwapCompletedEvent): boolean;
+  
 }
 
 /** An interface for an object with a `forEach` method that iterates over [[NodeConnectionInfo]] objects. */
