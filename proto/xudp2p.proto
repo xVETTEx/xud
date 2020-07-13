@@ -146,3 +146,13 @@ message SwapFailedPacket {
     string error_message = 4;
     uint32 failure_reason = 5;
 }
+
+message SubscribePacket {
+    string orderbook_id = 1;
+    string state = 2;
+}
+
+message SubscribeResponsePacket {
+    string orderbook_id = 1;
+    string state = 2;
+}
