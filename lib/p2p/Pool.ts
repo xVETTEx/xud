@@ -41,6 +41,8 @@ interface Pool {
   on(event: 'packet.swapAccepted', listener: (packet: packets.SwapAcceptedPacket, peer: Peer) => void): this;
   on(event: 'packet.swapComplete', listener: (packet: packets.SwapCompletePacket) => void): this;
   on(event: 'packet.swapFailed', listener: (packet: packets.SwapFailedPacket) => void): this;
+  on(event: 'packet.subscribe', listener (packet: packets.SubscribePacket) => void): this; //mitä void meinaa ja onko oikein?
+  on(event: 'packet.subscribeResponse', listener (packet: packets.SubscribeResponse) => void): this; //mikä on void ja onko oikein?
   emit(event: 'packet.order', order: IncomingOrder): boolean;
   emit(event: 'packet.getOrders', peer: Peer, reqId: string, pairIds: string[]): boolean;
   emit(event: 'packet.orderInvalidation', orderInvalidation: OrderPortion, peer: string): boolean;
@@ -54,6 +56,8 @@ interface Pool {
   emit(event: 'packet.swapAccepted', packet: packets.SwapAcceptedPacket, peer: Peer): boolean;
   emit(event: 'packet.swapComplete', packet: packets.SwapCompletePacket): boolean;
   emit(event: 'packet.swapFailed', packet: packets.SwapFailedPacket): boolean;
+  emit(event: 'packet.subscribe', packet: packets.Subscribe): boolean;
+  emit(event: 'packet.subscribeResponse', packet: packets.SubscribeResponse): boolean;
 }
 
 /** An interface for an object with a `forEach` method that iterates over [[NodeConnectionInfo]] objects. */
