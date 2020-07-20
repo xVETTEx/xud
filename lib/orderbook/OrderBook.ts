@@ -283,7 +283,6 @@ class OrderBook extends EventEmitter {
         // this is an internal match which is effectively executed immediately upon being found
         this.logger.info(`internal match executed on taker ${taker.id} and maker ${maker.id} for ${maker.quantity}`);
         internalMatches.push(maker);
-        this.emit('ownOrder.filled', portion); //vaan orderfilled eventti pitäis emittaa? Kato kans et kuka näitä kuuntelee.
         await this.persistTrade(portion.quantity, maker, taker);
         onUpdate && onUpdate({ type: PlaceOrderEventType.InternalMatch, payload: maker });
       } else {
@@ -330,7 +329,6 @@ class OrderBook extends EventEmitter {
       if (discardRemaining) {
         remainingOrder = undefined;
       } else {
-        this.addOwnOrder(remainingOrder);
         onUpdate && onUpdate({ type: PlaceOrderEventType.RemainingOrder, payload: remainingOrder });
       }
     }
@@ -343,6 +341,56 @@ class OrderBook extends EventEmitter {
   }
   
   function matchOrder(order: order){
+    const matches: OrderMatch[] = [];
+    /** The unmatched remaining taker order, if there is still leftover quantity after matching is complete it will enter the queue. */
+    let remainingOrder: OwnOrder | undefined = { ...takerOrder };
+    
+    const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue; 
+    const queueRemovedOrdersWithHold: Order[] = [];
+    
+    while (remainingOrder && !queue.isEmpty()) { //ku siis ei oo taker ordereita, ni lopetetaan siinä ku ei enää tuu matchia.
+      const makerOrder = queue.peek()!; //queuesta parhaan orderin palauttaa, eli maker orderin.
+      makerAvailableQuantityOrder = { ...makerOrder, quantity: makerOrder.quantity - makerOrder.hold, hold: 0 }; //onko oikee syntaks?
+      const matchingQuantity = getMatchingQuantity(remainingOrder, makerAvailableQuantityOrder);
+      if (matchingQuantity <= 0) {
+        // there's no match with the best available maker order, so end the matching routine
+        break;
+      if (makerOrder.quantity == remainingOrder.quantity) {
+          // maker & taker order quantities equal and fully matching
+          matches.push({ maker: makerOrder, taker: remainingOrder }); //matches arrayihin kirjottaa tän matchin.
+      } else if (remainingOrder.quantity === matchingQuantity) {
+          // taker order quantity is not sufficient. maker order will split
+          const matchedMakerOrder = TradingPair.splitOrderByQuantity(makerOrder, matchingQuantity); 
+		//VOISKO SPLITIT HOITAA TUO SPLIT FUNKTIO? SINNE ORDERIT JA MATCHINGQUANTITY JA SE HOITAA KOKONAAN? PIENENIS TÄÄ FUNKTIO...
+          this.logger.debug(`reduced order ${makerOrder.id} by ${matchingQuantity} quantity while matching order ${takerOrder.id}`);
+          matches.push({ maker: matchedMakerOrder, taker: remainingOrder });
+      } else if (makerAvailableQuantityOrder.quantity === matchingQuantity) {
+          // maker order quantity is not sufficient. taker order will split
+          const matchedTakerOrder = TradingPair.splitOrderByQuantity(remainingOrder, matchingQuantity);
+	  executeSwap() //oisko wortti jos tältä soitettais tonne?
+          matches.push({ maker: makerAvailableQuantityOrder, taker: matchedTakerOrder });
+        }
+        if (remainingOrder.quantity === matchingQuantity) {
+          remainingOrder = undefined;
+        }
+        
+        f (makerFullyMatched) {
+          // maker order is fully matched, so remove it from the queue and map
+	  removeOrder(order.pubkey, order.id)
+        } else if (makerAvailableQuantityOrder.quantity === matchingQuantity) {
+          // only an own order can be fully matched for available quantity, but not fully matched in the overall
+          assert(queue.poll() === makerOrder); //googlaa mitä poll meinaa.
+          queueRemovedOrdersWithHold.push(makerOrder as OwnOrder); //wtf is that
+        }
+      }
+    }
+
+    // return the removed orders with hold to the queue.
+    // their hold quantity might be released later
+    queueRemovedOrdersWithHold.forEach(order => queue.add(order)); //Eli sit ku on poistettu queuesta orderit holdilla, ni pistetään takas.
+
+    return { matches, remainingOrder };
+    
     //sinne ordermapien luokkaan soittaa ja aina vuorotellen ottaa parhaan orderin mapista ja kattoo tuleeko matchia?
     //tradingpair luokassa oon tainnu tän jo kirjottaa ni sieltä visin vaa siirtää tänne?
     
@@ -360,6 +408,7 @@ class OrderBook extends EventEmitter {
     else {
        swapResult = await this.executeSwap(maker, taker); //täähän soittaa tän luokan funktiolle! Mut siis soitetaan sille. Mut jos saadaan
     //se funktio lyhyeks ni ne koodit voi siirtää tähän.
+        //jos success ni emittaa order.filled eventin. Vai pitäiskö excecuteSwap funktion emittaa se? Ei ainakaan sen.
     }
   }
 
@@ -438,13 +487,14 @@ class OrderBook extends EventEmitter {
 
     const stampedOrder: PeerOrder = { ...order, createdAt: ms(), initialQuantity: order.quantity }; //miks stampataan?
     matchingResult = matchOrder(order); //onko järkevä eka matchata ennenku lisätään orderbookkiin? Ei se ainakaa haittaa vaik ois duplicated?
+    //siis ne mitä ei saatu matchattyä ni pitäis tässä laittaa orderbookkeihin.
     if (!tp.addOrder(stampedOrder)) {
       this.logger.debug(`incoming peer order is duplicated: ${order.id}`); //jos tulee false ni onko se aina duplicated?
       // TODO: penalize peer
       return false; //ekö tp.addOrder vois palauttaa true tai false?
     }
 
-    this.emit('peerOrder.incoming', stampedOrder); //kuka tätä kuuntelee? Ekö vois olla vaa order.incoming?
+    this.emit('order.new', stampedOrder); //kuka tätä kuuntelee? Ekö vois olla vaa order.incoming?
     return true;
   }
 
