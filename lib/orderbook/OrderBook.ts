@@ -157,21 +157,10 @@ class OrderBook extends EventEmitter {
     return tp.getOrders();
   }
 
-  /**
-   * Get lists of this node's own buy and sell orders.
-   */
-  public getOrdersByPubkey = (pubkey: string, pairId: string) => {
-    const tp = this.getTradingPair(pairId);
-    return tp.getOrdersByPubkey(pubkey);
-  }
-
-  /** Get the trading pair instance for a given pairId, or throw an error if none exists. */
-  private getTradingPair = (pairId: string): TradingPair => {
-    const tp = this.tradingPairs.get(pairId);
-    if (!tp) {
-      throw errors.PAIR_DOES_NOT_EXIST(pairId);
-    }
-    return tp;
+  public getOrdersByPubkey = (pubkey: string, pairId?: string) => {
+	  //hakekko kukaa pairin perusteella kans? Jos hakee ni eikö se voi omassa päässään prosessoida niitä oikein? Jos moni hakee ni kai tässäki vois.
+    maps = getOrderMap(pubkey); //onko tää nyt tommonen muoto joka pitää palauttaa?
+    return maps;
   }
 
   /**
@@ -345,22 +334,22 @@ class OrderBook extends EventEmitter {
     /** The unmatched remaining taker order, if there is still leftover quantity after matching is complete it will enter the queue. */
     let remainingOrder: OwnOrder | undefined = { ...takerOrder };
     
-    const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue; 
-    const queueRemovedOrdersWithHold: Order[] = [];
-    
-    while (remainingOrder && !queue.isEmpty()) { //ku siis ei oo taker ordereita, ni lopetetaan siinä ku ei enää tuu matchia.
-      const makerOrder = queue.peek()!; //queuesta parhaan orderin palauttaa, eli maker orderin.
+    const queue = takerOrder.isBuy ? this.queues!.sellQueue : this.queues!.buyQueue; //tähän kyl maps.jotai
+    const queueRemovedOrdersWithHold: Order[] = []; //mitä meinaa?
+    lastOrderMatched = boolean;
+    while (lastOrderMatched = true) { //ku siis ei oo taker ordereita, ni lopetetaan siinä ku ei enää tuu matchia.
+      const makerOrder = queue.peek();
       makerAvailableQuantityOrder = { ...makerOrder, quantity: makerOrder.quantity - makerOrder.hold, hold: 0 }; //onko oikee syntaks?
       const matchingQuantity = getMatchingQuantity(remainingOrder, makerAvailableQuantityOrder);
       if (matchingQuantity <= 0) {
         // there's no match with the best available maker order, so end the matching routine
-        break;
+        break; //breakataanko while näin, vai sillai et laitetan lastOrdeMatchedin false?
       if (makerOrder.quantity == remainingOrder.quantity) {
           // maker & taker order quantities equal and fully matching
           matches.push({ maker: makerOrder, taker: remainingOrder }); //matches arrayihin kirjottaa tän matchin.
       } else if (remainingOrder.quantity === matchingQuantity) {
           // taker order quantity is not sufficient. maker order will split
-          const matchedMakerOrder = TradingPair.splitOrderByQuantity(makerOrder, matchingQuantity); 
+          const matchedMakerOrder = splitOrderByQuantity(makerOrder, matchingQuantity); 
 		//VOISKO SPLITIT HOITAA TUO SPLIT FUNKTIO? SINNE ORDERIT JA MATCHINGQUANTITY JA SE HOITAA KOKONAAN? PIENENIS TÄÄ FUNKTIO...
           this.logger.debug(`reduced order ${makerOrder.id} by ${matchingQuantity} quantity while matching order ${takerOrder.id}`);
           matches.push({ maker: matchedMakerOrder, taker: remainingOrder });
@@ -399,7 +388,34 @@ class OrderBook extends EventEmitter {
     //entä jos jakaisin tän parin osaan, ni vois olla osa tän hommaa ehkö sit?
   }
 
-  function handleMatch(taker: order, maker: order){
+ function getMatchingQuantity = async(taker: order, maker: order) => {
+	  if taker.side == 'buy'{
+		  if taker.price < maker.price {
+			  Math.min(maker.quantity, taker.quantity)
+		  }
+		  else {
+			  return 0;
+		  }
+	  }
+	  if taker.side == 'sell'{
+		  if maker.price < taker.price {
+			  Math.min(maker.quantity, taker.quantity)
+		  }
+		  else {
+			  return 0;
+		  }
+	  }
+  }
+ 
+  private static splitOrderByQuantity = <T extends Order>(order: T, matchingQuantity: number): T => {
+    assert(order.quantity > matchingQuantity, 'order quantity must be greater than matchingQuantity');
+
+    order.quantity -= matchingQuantity;
+    const matchedOrder = Object.assign({}, order, { quantity: matchingQuantity });
+    return matchedOrder;
+  }
+
+  function handleMatch(taker: order, maker: order, amount: int){
     //jos ollaan matcher, ni lähettää swaprequest msg:t molemmille osapuolille.
     //jos ei matcher, ni soittaa swap classin executeSwap() funktiolle.
     if(){ //pair on matcher.
