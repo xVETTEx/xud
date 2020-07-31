@@ -1,3 +1,4 @@
+
 class Pairs {
   /** A map of supported currency tickers to currency instances. */
   private currencyInstances = new Map<string, CurrencyInstance>();
@@ -13,8 +14,17 @@ class Pairs {
     return this.currencyInstances;
   }
   
+  private bind = () => {
+    this.pool.on('packet.order', this.addPeerOrder);
+    this.pool.on('packet.orderInvalidation', this.handleOrderInvalidation);
+    this.pool.on('packet.swapRequest', this.handleSwapRequest);
+    this.pool.on('peer.close', this.removePeerOrders);
+    this.pool.on('peer.pairDropped', this.removePair);
+    this.pool.on('peer.nodeStateUpdate', this.verifyPeerPairs);
+    this.pool.on('peer.nodeStateUpdate', this.checkPeerCurrencies);
+  }
   
-  private removePeerPair = (peerPubKey: string, pairId: string) => {
+  private removePair = (peerPubKey: string, pairId: string) => {
     const tp = this.getTradingPair(pairId);
     const orders = tp.removeOrdersByPubkey(peerPubKey);
     orders.forEach((order) => {
@@ -75,31 +85,6 @@ class Pairs {
         currenciesToVerify.set(currency, false);
       }
     });
-
-    if (!this.nosanityswaps) {
-      const sanitySwapPromises: Promise<void>[] = [];
-
-      // Set a time limit for all sanity swaps to complete.
-      const sanitySwapTimeout = setTimeoutPromise(OrderBook.MAX_SANITY_SWAP_TIME, false);
-
-      currenciesToVerify.forEach((swappable, currency) => {
-        if (swappable && this.currencyInstances.has(currency)) {
-          // perform sanity swaps for each of the currencies that we support
-          const sanitySwapPromise = new Promise<void>(async (resolve) => {
-            // success resolves to true if the sanity swap succeeds before the timeout
-            const success = await Promise.race([this.swaps.executeSanitySwap(currency, peer), sanitySwapTimeout]);
-            if (!success) {
-              currenciesToVerify.set(currency, false);
-            }
-            resolve();
-          });
-          sanitySwapPromises.push(sanitySwapPromise);
-        }
-      });
-
-      // wait for all sanity swaps to finish or timeout
-      await Promise.all(sanitySwapPromises);
-    }
 
     // activate verified currencies
     currenciesToVerify.forEach((swappable, currency) => {
